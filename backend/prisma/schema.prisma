@@ -61,7 +61,6 @@ model equipos {
   responsables     responsables?     @relation(fields: [responsable_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   ubicaciones      ubicaciones?      @relation(fields: [ubicacion_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   grupos_comodidad grupos_comodidad? @relation(fields: [categoria_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  tareas_soporte   tareas_soporte[]
   componentes_instalados componentes_instalados[]
   componentes_repuestos  componentes_repuestos[]
   historial_personal     historial_personal[]
@@ -174,7 +173,6 @@ model responsables {
   activo         Int?             @default(1)
   grados         grados?          @relation(fields: [grado_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   equipos        equipos[]
-  tareas_soporte tareas_soporte[]
 }
 
 model soporte_tareas {
@@ -191,18 +189,6 @@ model soporte_tareas {
   equipos           equipos?            @relation(fields: [equipo_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([equipo_id])
-}
-
-model tareas_soporte {
-  id              Int           @id @default(autoincrement())
-  equipo_id       String?
-  responsable_id  Int?
-  usuario_id      Int?
-  tarea_realizada String
-  fecha           DateTime?     @default(now())
-  usuarios        usuarios?     @relation(fields: [usuario_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  responsables    responsables? @relation(fields: [responsable_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  equipos         equipos?      @relation(fields: [equipo_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model ubicaciones {
@@ -222,7 +208,6 @@ model usuarios {
   last_login     DateTime?
   created_at     DateTime?        @default(now())
   updated_at     DateTime?        @default(now())
-  tareas_soporte    tareas_soporte[]
   push_subscriptions push_subscriptions[]
   alertas_notificaciones alertas_notificaciones[]
   mensajes_admin         mensajes_admin[]

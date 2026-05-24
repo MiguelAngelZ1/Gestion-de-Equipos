@@ -1,6 +1,3 @@
-const sqlite3 = require("sqlite3").verbose();
-const { Client } = require("pg");
-const path = require("path");
 const { obtenerEquiposCompletos } = require("../repositorios/equiposRepositorio");
 const { sincronizarEquipos } = require("../servicios/sincronizacionEquipos");
 const {
@@ -11,10 +8,7 @@ const { imprimirResumenSync } = require("../servicios/syncLogger");
 const SyncManager = require("../servicios/syncManager");
 const database = require("./database");
 
-require("dotenv").config({ path: path.resolve(__dirname, "../.env") });
-
-const SQLITE_PATH = path.resolve(__dirname, "../equipos.db");
-const DATABASE_URL = process.env.DATABASE_URL || process.env.DATABASE_PUBLIC_URL;
+require("dotenv").config({ path: require("path").resolve(__dirname, "../.env") });
 
 let syncManager;
 
@@ -24,69 +18,6 @@ async function getSyncManager() {
     syncManager = new SyncManager(database);
   }
   return syncManager;
-}
-
-async function upsertEquipo(db, equipo, isPostgreSQL) {
-  if (isPostgreSQL) {
-    const sql = `
-      INSERT INTO equipos (
-        id, ine, nne, serie,
-        is_deleted, created_at, updated_at,
-        categoria_id, estado_id, ubicacion_id, responsable_id
-      )
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
-      ON CONFLICT (id) DO UPDATE SET
-        ine = EXCLUDED.ine,
-        nne = EXCLUDED.nne,
-        serie = EXCLUDED.serie,
-        is_deleted = EXCLUDED.is_deleted,
-        categoria_id = EXCLUDED.categoria_id,
-        estado_id = EXCLUDED.estado_id,
-        ubicacion_id = EXCLUDED.ubicacion_id,
-        responsable_id = EXCLUDED.responsable_id,
-        updated_at = NOW()
-    `;
-
-    const params = [
-      equipo.id,
-      equipo.ine || null,
-      equipo.nne || null,
-      equipo.serie || null,
-      equipo.is_deleted ? true : false,
-      equipo.created_at ? new Date(equipo.created_at).toISOString() : new Date().toISOString(),
-      equipo.updated_at ? new Date(equipo.updated_at).toISOString() : new Date().toISOString(),
-      equipo.categoria_id || null,
-      equipo.estado_id || null,
-      equipo.ubicacion_id || null,
-      equipo.responsable_id || null
-    ];
-
-    await db.query(sql, params);
-  } else {
-    await new Promise((resolve, reject) => {
-      db.run(
-        `INSERT OR REPLACE INTO equipos (
-          id, ine, nne, serie, categoria_id, estado_id,
-          responsable_id, ubicacion_id, is_deleted,
-          created_at, updated_at
-        )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
-        [
-          equipo.id,
-          equipo.ine,
-          equipo.nne,
-          equipo.serie,
-          equipo.categoria_id,
-          equipo.estado_id,
-          equipo.responsable_id,
-          equipo.ubicacion_id,
-          equipo.is_deleted ? 1 : 0,
-          equipo.created_at || new Date().toISOString()
-        ],
-        err => (err ? reject(err) : resolve())
-      );
-    });
-  }
 }
 
 async function withRetry(fn, label, maxRetries = 3) {
@@ -111,13 +42,34 @@ function withTimeout(promise, ms = 30000) {
   ]);
 }
 
+async function upsertEquipo(equipo) {
+  await new Promise((resolve, reject) => {
+    database.client.run(
+      `INSERT OR REPLACE INTO equipos (
+        id, ine, nne, serie, categoria_id, estado_id,
+        responsable_id, ubicacion_id, is_deleted,
+        created_at, updated_at
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+      [
+        equipo.id,
+        equipo.ine,
+        equipo.nne,
+        equipo.serie,
+        equipo.categoria_id,
+        equipo.estado_id,
+        equipo.responsable_id,
+        equipo.ubicacion_id,
+        equipo.is_deleted ? 1 : 0,
+        equipo.created_at || new Date().toISOString()
+      ],
+      err => (err ? reject(err) : resolve())
+    );
+  });
+}
+
 async function sync() {
   const manager = await getSyncManager();
-
-  if (!DATABASE_URL) {
-    console.error("❌ DATABASE_URL no encontrada.");
-    return { success: false, error: "DATABASE_URL no encontrada" };
-  }
 
   try {
     const isLocked = await manager.checkLock();
@@ -136,21 +88,12 @@ async function sync() {
       console.log(`📅 [Sync] Usando sincronización incremental (desde: ${lastSync})`);
     }
 
-    const sqliteDB = new sqlite3.Database(SQLITE_PATH);
-    const pgClient = new Client({
-      connectionString: DATABASE_URL,
-      ssl: { rejectUnauthorized: false }
-    });
-
     let heartbeat = null;
 
     try {
-      await pgClient.connect();
+      const equiposLocal = await obtenerEquiposCompletos(database.client, false, lastSync);
 
-      const equiposLocal = await obtenerEquiposCompletos(sqliteDB, false, lastSync);
-      const equiposRemote = await obtenerEquiposCompletos(pgClient, true, lastSync);
-
-      console.log(`📊 [Sync] Local: ${equiposLocal.length} equipos, Remoto: ${equiposRemote.length} equipos`);
+      console.log(`📊 [Sync] Local: ${equiposLocal.length} equipos`);
 
       heartbeat = setInterval(async () => {
         try { await manager.renewLock(); } catch (e) { /* ignore */ }
@@ -159,72 +102,51 @@ async function sync() {
       const actualizarLocalConRetry = async (equipo) => {
         await withRetry(async () => {
           await new Promise((resolve, reject) => {
-            sqliteDB.serialize(() => {
-              sqliteDB.run("BEGIN TRANSACTION");
+            database.client.serialize(() => {
+              database.client.run("BEGIN TRANSACTION");
               try {
-                upsertEquipo(sqliteDB, equipo, false);
-                borrarEspecificacionesPorEquipo(sqliteDB, false, equipo.id);
+                upsertEquipo(equipo);
+                borrarEspecificacionesPorEquipo(database.client, false, equipo.id);
                 insertarEspecificaciones(
-                  sqliteDB,
+                  database.client,
                   false,
                   equipo.id,
                   equipo.especificaciones || []
                 );
-                sqliteDB.run("COMMIT", (err) => err ? reject(err) : resolve());
+                database.client.run("COMMIT", (err) => err ? reject(err) : resolve());
               } catch (error) {
-                sqliteDB.run("ROLLBACK", () => reject(error));
+                database.client.run("ROLLBACK", () => reject(error));
               }
             });
           });
         }, `actualizarLocal(${equipo.id})`);
       };
 
-      const actualizarRemoteConRetry = async (equipo) => {
-        await withRetry(async () => {
-          await pgClient.query('BEGIN');
-          try {
-            await upsertEquipo(pgClient, equipo, true);
-            await borrarEspecificacionesPorEquipo(pgClient, true, equipo.id);
-            await insertarEspecificaciones(
-              pgClient,
-              true,
-              equipo.id,
-              equipo.especificaciones || []
-            );
-            await pgClient.query('COMMIT');
-          } catch (error) {
-            await pgClient.query('ROLLBACK');
-            throw error;
-          }
-        }, `actualizarRemote(${equipo.id})`);
-      };
-
       const {
         equiposLocalFinal,
-        equiposRemoteFinal,
         stats: newStats,
         detalles
       } = await sincronizarEquipos({
         equiposLocal,
-        equiposRemote,
-        obtenerEquiposLocal: () => obtenerEquiposCompletos(sqliteDB, false),
-        obtenerEquiposRemote: () => obtenerEquiposCompletos(pgClient, true),
+        equiposRemote: [],
+        obtenerEquiposLocal: () => obtenerEquiposCompletos(database.client, false),
+        obtenerEquiposRemote: () => [],
 
         actualizarLocal: actualizarLocalConRetry,
-        actualizarRemote: actualizarRemoteConRetry
+        actualizarRemote: async () => {}
       });
 
-      await manager.updateCounts(equiposLocalFinal.length, equiposRemoteFinal.length);
+      await manager.updateCounts(equiposLocalFinal.length, 0);
       await manager.setMetadata("last_sync", new Date().toISOString());
-      await manager.setMetadata("last_sync_direction", "bidireccional");
+      await manager.setMetadata("last_sync_direction", "local");
       await manager.setMetadata("last_sync_result", "success");
 
-      await manager.logSyncOperation("sync", "bidireccional", newStats, true);
+      await manager.logSyncOperation("sync", "local", newStats, true);
 
       imprimirResumenSync(
         newStats,
         equiposLocalFinal.length,
-        equiposRemoteFinal.length,
+        0,
         detalles
       );
 
@@ -235,23 +157,19 @@ async function sync() {
         success: true,
         stats: newStats,
         localCount: equiposLocalFinal.length,
-        remoteCount: equiposRemoteFinal.length,
-        sincronizado: equiposLocalFinal.length === equiposRemoteFinal.length
+        sincronizado: true
       };
 
     } catch (error) {
       console.error("❌ Error durante la sincronización:", error);
-      
+
       await manager.setMetadata("last_sync_result", "error");
       await manager.setMetadata("last_sync_error", error.message);
-      await manager.logSyncOperation("sync", "bidireccional", {}, false, [error.message]);
-      
+      await manager.logSyncOperation("sync", "local", {}, false, [error.message]);
+
       clearInterval(heartbeat);
       await manager.unlock();
       throw error;
-    } finally {
-      sqliteDB.close();
-      await pgClient.end();
     }
 
   } catch (error) {
