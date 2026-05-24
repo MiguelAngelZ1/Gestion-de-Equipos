@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="manifest" href="/manifest.webmanifest?v=2026.1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#0b1120" />
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Sistema de gestión y control de equipos tecnológicos para instituciones. Control de inventario, mantenimiento y soporte técnico." />
+    <meta name="keywords" content="control de equipos, inventario, gestión de tecnología, mantenimiento, soporte técnico" />
+    <meta name="author" content="IMPERIO" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="http://localhost:4173" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="http://localhost:4173" />
+    <meta property="og:title" content="CONTROL DE EQUIPOS | IMPERIO" />
+    <meta property="og:description" content="Sistema profesional de gestión de inventario, mantenimiento y soporte técnico para instituciones." />
+    <meta property="og:image" content="/favicon.png" />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="http://localhost:4173" />
+    <meta property="twitter:title" content="CONTROL DE EQUIPOS | IMPERIO" />
+    <meta property="twitter:description" content="Sistema profesional de gestión de inventario, mantenimiento y soporte técnico para instituciones." />
+    <meta property="twitter:image" content="/favicon.png" />
+    
+    <!-- PWA & iOS Optimization -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="IMPERIO" />
+    
+    <!-- Preload critical fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <title>CONTROL DE EQUIPOS | IMPERIO</title>
+    <style>
+      :root {
+        --app-bg: #0b1120;
+      }
+      * { box-sizing: border-box; }
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        background-color: var(--app-bg);
+        font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+        overflow: hidden;
+        overscroll-behavior-y: none;
+      }
+      #root { 
+        height: 100%;
+        width: 100%;
+        display: block;
+        position: relative;
+      }
+
+      /* Splash Screen Styles */
+      .splash-screen {
+        position: fixed;
+        inset: 0;
+        background-color: var(--app-bg);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        color: white;
+        pointer-events: none;
+      }
+
+      .splash-logo-container {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 156px;
+        height: 156px;
+        background-color: white;
+        border-radius: 50%;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+      }
+
+      .splash-logo {
+        width: 124px;
+        height: 124px;
+        object-fit: contain;
+        position: relative;
+        z-index: 2;
+      }
+
+      .splash-glow {
+        position: absolute;
+        width: 180px;
+        height: 180px;
+        background: radial-gradient(circle, rgba(79, 70, 229, 0.3) 0%, transparent 70%);
+        border-radius: 50%;
+        opacity: 0;
+        transition: opacity 1s ease-in-out;
+      }
+
+      .premium-active .splash-glow {
+        opacity: 1;
+        animation: glowPulse 2.5s ease-in-out infinite;
+      }
+
+      .splash-footer {
+        position: absolute;
+        bottom: 3.5rem;
+        text-align: center;
+        width: 100%;
+        padding: 0 2rem;
+        opacity: 0;
+        transform: translateY(10px);
+        transition: all 1s ease-out;
+      }
+
+      .premium-active .splash-footer {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .splash-title {
+        font-weight: 800;
+        font-size: 16px;
+        letter-spacing: 0.25em;
+        text-transform: uppercase;
+        color: #ffffff;
+        margin-bottom: 0.6rem;
+      }
+
+      .splash-subtitle {
+        font-weight: 600;
+        font-size: 10px;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: #818cf8;
+      }
+
+      @keyframes glowPulse {
+        0%, 100% { transform: scale(1); opacity: 0.3; }
+        50% { transform: scale(1.4); opacity: 0.6; }
+      }
+
+      .fade-out {
+        opacity: 0 !important;
+        transition: opacity 0.4s ease-out !important;
+      }
+
+      #root:not(:empty) + .splash-screen { display: none; }
+    </style>
+  </head>
+  <body>
+    <!-- 
+      Script de Limpieza Radical de Cache y Service Workers
+      Este script elimina cualquier registro previo que pueda estar causando 
+      que Edge mobile use una pantalla vieja o bloquee el scroll.
+    -->
+    <script>
+      // Registro del Service Worker para Notificaciones PWA
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').then(reg => {
+            // SW registrado
+          }).catch(err => {
+            console.error('Error al registrar SW:', err);
+          });
+        });
+      }
+    </script>
+
+    <div id="root"></div>
+    
+    <div class="splash-screen" id="app-splash">
+      <div class="splash-logo-container">
+        <div class="splash-glow"></div>
+        <img src="/favicon.png" alt="Logotipo Institucional IMPERIO" class="splash-logo">
+      </div>
+      <div class="splash-footer">
+        <div class="splash-title">CONTROL DE EQUIPOS</div>
+        <div class="splash-subtitle">SISTEMA DE GESTIÓN | IMPERIO</div>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.jsx"></script>
+    <script>
+      // Activar efectos premium tras un breve delay sincronizado
+      setTimeout(() => {
+        const splash = document.getElementById('app-splash');
+        if(splash) splash.classList.add('premium-active');
+      }, 100);
+
+      const observer = new MutationObserver((mutations) => {
+        if (document.getElementById('root').children.length > 0) {
+          const splash = document.getElementById('app-splash');
+          if (splash) {
+            setTimeout(() => {
+              splash.classList.add('fade-out');
+              setTimeout(() => {
+                splash.remove();
+              }, 400);
+            }, 1000);
+            observer.disconnect();
+          }
+        }
+      });
+      observer.observe(document.getElementById('root'), { childList: true });
+    </script>
+  </body>
+</html>

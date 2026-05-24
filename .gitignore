@@ -1,0 +1,37 @@
+# Node
+node_modules/
+
+# Env
+.env
+.env.local
+
+# Database
+*.db
+*.db-journal
+
+# Build artifacts
+frontend/dist/
+
+# Credentials
+google-credentials.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Testing
+.playwright-mcp/
+
+# Backups locales
+backups/
+
+# Logs
+*.log
+*_logs.txt
+
+# Archivos locales de ejecución
+iniciar_local.bat

@@ -1,0 +1,33 @@
+# Dependencias
+node_modules/
+
+# Variables de entorno (contienen secretos)
+.env
+
+# Base de datos local
+*.db
+*.db-journal
+
+# Credenciales de Google
+google-credentials.json
+
+# Prisma generado
+/generated/prisma
+
+# Build / dist
+dist/
+
+# Logs
+*.log
+debug_log.txt
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Playwright / Testing
+.playwright-mcp/

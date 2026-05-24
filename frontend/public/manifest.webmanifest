@@ -1,0 +1,30 @@
+{
+  "id": "/imperio-v2026",
+  "name": "CONTROL DE EQUIPOS",
+  "short_name": "IMPERIO",
+  "description": "SISTEMA DE GESTIÓN | IMPERIO",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0b1120",
+  "theme_color": "#0b1120",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/notification-icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "monochrome"
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "ignore": [
+    "*.db",
+    "*.db-journal",
+    "backups/*",
+    "node_modules/*",
+    "frontend/dist/*"
+  ],
+  "ext": "js,mjs,cjs,json"
+}

@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /configuracion/
+
+# Sitemap: http://localhost:4173/sitemap.xml
