@@ -91,9 +91,9 @@ const serveIndexWithNonce = (req, res, next) => {
     }
   }
   const nonced = cachedHtml
-    .replace(/<script\s/g, `<script nonce="${res.locals.nonce}" `)
-    .replace(/<link\s/g, `<link nonce="${res.locals.nonce}" `)
-    .replace(/<style\s/g, `<style nonce="${res.locals.nonce}" `);
+    .replace(/<script(?=[\s>])/g, `<script nonce="${res.locals.nonce}"`)
+    .replace(/<link(?=[\s>])/g, `<link nonce="${res.locals.nonce}"`)
+    .replace(/<style(?=[\s>])/g, `<style nonce="${res.locals.nonce}"`);
   res.send(nonced);
 };
 

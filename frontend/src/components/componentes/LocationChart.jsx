@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
 import { motion } from 'framer-motion';
 import { MapPin } from 'lucide-react';
@@ -18,11 +18,23 @@ const CHART_COLORS = [
 const DEFAULT_CHART_DATA = [];
 
 const LocationChart = ({ chartData = DEFAULT_CHART_DATA, loading = false, total = 0 }) => {
-  const [isMounted, setIsMounted] = useState(false);
+  const containerRef = useRef(null);
+  const [chartHeight, setChartHeight] = useState(0);
 
   useEffect(() => {
-    setIsMounted(true);
-    return () => setIsMounted(false);
+    const el = containerRef.current;
+    if (!el) return;
+
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        setChartHeight(entry.contentRect.height);
+      }
+    });
+
+    observer.observe(el);
+    setChartHeight(el.clientHeight || el.offsetHeight || 250);
+
+    return () => observer.disconnect();
   }, []);
 
   return (
@@ -50,9 +62,9 @@ const LocationChart = ({ chartData = DEFAULT_CHART_DATA, loading = false, total 
         ) : (
           <div className="w-full h-full flex flex-col items-center">
             {/* Gráfico Tipo Gauge (Semi-circular) */}
-            <div className="w-full h-[250px] md:h-[320px] relative mt-0">
-              {isMounted && (
-                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} debounce={1}>
+            <div ref={containerRef} className="w-full h-[250px] md:h-[320px] relative mt-0">
+              {chartHeight > 0 && (
+                <ResponsiveContainer width="100%" height={chartHeight} debounce={1}>
                   <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
                     <defs>
                       {chartData.map((_, index) => (
