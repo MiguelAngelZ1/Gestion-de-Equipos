@@ -112,125 +112,132 @@ class EquiposService {
             throw new Error("Error de validación: El equipo debe poseer obligatoriamente un NNE o un Número de Serie para ser identificado.");
         }
 
-        let finalResponsableId = responsable_id;
+        await db.beginTransaction();
+        try {
+            let finalResponsableId = responsable_id;
 
-        // Gestión del responsable
-        if (nombre && apellido) {
-            const existingResp = await db.get(
-                "SELECT id FROM responsables WHERE nombre = ? AND apellido = ?", 
-                [nombre.trim(), apellido.trim()]
-            );
-
-            let gradoText = '';
-            if (grado_id) {
-                const g = await db.get("SELECT abreviatura FROM grados WHERE id = ?", [parseInt(grado_id, 10)]);
-                if (g) gradoText = g.abreviatura;
-            }
-
-            if (existingResp) {
-                finalResponsableId = existingResp.id;
-                await db.run(
-                    "UPDATE responsables SET grado_id = ?, grado = ? WHERE id = ?",
-                    [grado_id ? parseInt(grado_id, 10) : null, gradoText, finalResponsableId]
+            // Gestión del responsable
+            if (nombre && apellido) {
+                const existingResp = await db.get(
+                    "SELECT id FROM responsables WHERE nombre = ? AND apellido = ?", 
+                    [nombre.trim(), apellido.trim()]
                 );
-            } else {
-                const newResp = await db.run(
-                    "INSERT INTO responsables (nombre, apellido, grado_id, grado) VALUES (?, ?, ?, ?)",
-                    [nombre.trim(), apellido.trim(), grado_id ? parseInt(grado_id, 10) : null, gradoText]
-                );
-                finalResponsableId = newResp.lastID;
-            }
-        }
 
-        // Validación de duplicados (solo si no es '-' o vacío)
-        if (hasNNE && nne.trim() !== '-' && nne.trim() !== '') {
-            const existingNNE = await db.get(
-                "SELECT ine FROM equipos WHERE nne = ? AND id != ? AND is_deleted = false",
-                [nne.trim(), targetId || '']
-            );
-            if (existingNNE) {
-                throw new Error(`Atención: El NNE "${nne}" ya está asignado al equipo con INE ${existingNNE.ine}.`);
-            }
-        }
+                let gradoText = '';
+                if (grado_id) {
+                    const g = await db.get("SELECT abreviatura FROM grados WHERE id = ?", [parseInt(grado_id, 10)]);
+                    if (g) gradoText = g.abreviatura;
+                }
 
-        if (hasSerie && serie.trim() !== '-' && serie.trim() !== '') {
-            const existingSerie = await db.get(
-                "SELECT ine FROM equipos WHERE serie = ? AND id != ? AND is_deleted = false",
-                [serie.trim(), targetId || '']
-            );
-            if (existingSerie) {
-                throw new Error(`Atención: El Número de Serie "${serie}" ya se encuentra registrado.`);
-            }
-        }
-
-        const equipoId = targetId || `eq_${Date.now()}`;
-
-        if (targetId) {
-            const oldEquipo = await db.get("SELECT estado_id, ubicacion_id, responsable_id FROM equipos WHERE id = ?", [targetId]);
-
-            await db.run(
-                `UPDATE equipos SET 
-                    ine = ?, nne = ?, serie = ?, 
-                    categoria_id = ?, estado_id = ?, 
-                    responsable_id = ?, ubicacion_id = ?, 
-                    updated_at = ?
-                 WHERE id = ?`,
-                [
-                    ine, nne || '-', serie || '-', 
-                    parseInt(categoria_id, 10), parseInt(estado_id, 10), 
-                    finalResponsableId ? parseInt(finalResponsableId, 10) : null, 
-                    parseInt(ubicacion_id, 10), new Date().toISOString(), 
-                    targetId
-                ]
-            );
-
-            // Registro de Historial (Simplificado para brevedad, expandible)
-            if (oldEquipo) {
-                const commonData = [targetId, "SISTEMA"];
-                if (oldEquipo.estado_id !== parseInt(estado_id, 10)) {
+                if (existingResp) {
+                    finalResponsableId = existingResp.id;
                     await db.run(
-                        "INSERT INTO historial_personal (equipo_id, responsable, evento, notas) VALUES (?, ?, 'CAMBIO_DE_ESTADO', ?)",
-                        [...commonData, `Cambio de estado`]
+                        "UPDATE responsables SET grado_id = ?, grado = ? WHERE id = ?",
+                        [grado_id ? parseInt(grado_id, 10) : null, gradoText, finalResponsableId]
                     );
+                } else {
+                    const newResp = await db.run(
+                        "INSERT INTO responsables (nombre, apellido, grado_id, grado) VALUES (?, ?, ?, ?)",
+                        [nombre.trim(), apellido.trim(), grado_id ? parseInt(grado_id, 10) : null, gradoText]
+                    );
+                    finalResponsableId = newResp.lastID;
                 }
             }
 
-            // Limpiar especificaciones
-            await db.run("DELETE FROM especificaciones WHERE equipo_id = ?", [targetId]);
-        } else {
-            await db.run(
-                "INSERT INTO equipos (id, ine, nne, serie, categoria_id, estado_id, responsable_id, ubicacion_id, is_deleted) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)",
-                [
-                    equipoId, ine, nne || '-', serie || '-', 
-                    parseInt(categoria_id, 10), parseInt(estado_id, 10), 
-                    finalResponsableId ? parseInt(finalResponsableId, 10) : null, 
-                    parseInt(ubicacion_id, 10)
-                ]
-            );
-            await db.run(
-                "INSERT INTO historial_personal (equipo_id, responsable, evento, notas) VALUES (?, ?, 'ASIGNACION', 'Nueva alta de equipo')",
-                [equipoId, "SISTEMA"]
-            );
-        }
+            // Validación de duplicados (solo si no es '-' o vacío)
+            if (hasNNE && nne.trim() !== '-' && nne.trim() !== '') {
+                const existingNNE = await db.get(
+                    "SELECT ine FROM equipos WHERE nne = ? AND id != ? AND is_deleted = false",
+                    [nne.trim(), targetId || '']
+                );
+                if (existingNNE) {
+                    throw new Error(`Atención: El NNE "${nne}" ya está asignado al equipo con INE ${existingNNE.ine}.`);
+                }
+            }
 
-        // Especificaciones
-        if (especificaciones.length > 0) {
-            const seen = new Set();
-            for (const spec of especificaciones) {
-                if (spec.clave && spec.valor) {
-                    const key = `${spec.clave.trim().toLowerCase()}-${spec.valor.trim().toLowerCase()}`;
-                    if (!seen.has(key)) {
-                        seen.add(key);
+            if (hasSerie && serie.trim() !== '-' && serie.trim() !== '') {
+                const existingSerie = await db.get(
+                    "SELECT ine FROM equipos WHERE serie = ? AND id != ? AND is_deleted = false",
+                    [serie.trim(), targetId || '']
+                );
+                if (existingSerie) {
+                    throw new Error(`Atención: El Número de Serie "${serie}" ya se encuentra registrado.`);
+                }
+            }
+
+            const equipoId = targetId || `eq_${Date.now()}`;
+
+            if (targetId) {
+                const oldEquipo = await db.get("SELECT estado_id, ubicacion_id, responsable_id FROM equipos WHERE id = ?", [targetId]);
+
+                await db.run(
+                    `UPDATE equipos SET 
+                        ine = ?, nne = ?, serie = ?, 
+                        categoria_id = ?, estado_id = ?, 
+                        responsable_id = ?, ubicacion_id = ?, 
+                        updated_at = ?
+                     WHERE id = ?`,
+                    [
+                        ine, nne || '-', serie || '-', 
+                        parseInt(categoria_id, 10), parseInt(estado_id, 10), 
+                        finalResponsableId ? parseInt(finalResponsableId, 10) : null, 
+                        parseInt(ubicacion_id, 10), new Date().toISOString(), 
+                        targetId
+                    ]
+                );
+
+                // Registro de Historial (Simplificado para brevedad, expandible)
+                if (oldEquipo) {
+                    const commonData = [targetId, "SISTEMA"];
+                    if (oldEquipo.estado_id !== parseInt(estado_id, 10)) {
                         await db.run(
-                            "INSERT INTO especificaciones (equipo_id, clave, valor) VALUES (?, ?, ?)",
-                            [equipoId, spec.clave.trim(), spec.valor.trim()]
+                            "INSERT INTO historial_personal (equipo_id, responsable, evento, notas) VALUES (?, ?, 'CAMBIO_DE_ESTADO', ?)",
+                            [...commonData, `Cambio de estado`]
                         );
                     }
                 }
-            }
-        }
 
-        return equipoId;
+                // Limpiar especificaciones
+                await db.run("DELETE FROM especificaciones WHERE equipo_id = ?", [targetId]);
+            } else {
+                await db.run(
+                    "INSERT INTO equipos (id, ine, nne, serie, categoria_id, estado_id, responsable_id, ubicacion_id, is_deleted) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)",
+                    [
+                        equipoId, ine, nne || '-', serie || '-', 
+                        parseInt(categoria_id, 10), parseInt(estado_id, 10), 
+                        finalResponsableId ? parseInt(finalResponsableId, 10) : null, 
+                        parseInt(ubicacion_id, 10)
+                    ]
+                );
+                await db.run(
+                    "INSERT INTO historial_personal (equipo_id, responsable, evento, notas) VALUES (?, ?, 'ASIGNACION', 'Nueva alta de equipo')",
+                    [equipoId, "SISTEMA"]
+                );
+            }
+
+            // Especificaciones
+            if (especificaciones.length > 0) {
+                const seen = new Set();
+                for (const spec of especificaciones) {
+                    if (spec.clave && spec.valor) {
+                        const key = `${spec.clave.trim().toLowerCase()}-${spec.valor.trim().toLowerCase()}`;
+                        if (!seen.has(key)) {
+                            seen.add(key);
+                            await db.run(
+                                "INSERT INTO especificaciones (equipo_id, clave, valor) VALUES (?, ?, ?)",
+                                [equipoId, spec.clave.trim(), spec.valor.trim()]
+                            );
+                        }
+                    }
+                }
+            }
+
+            await db.commit();
+            return equipoId;
+        } catch (error) {
+            await db.rollback();
+            throw error;
+        }
     }
 
     async deleteEquipo(id) {

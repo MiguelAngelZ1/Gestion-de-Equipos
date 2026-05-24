@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require("express");
 const cors = require("cors");
+const cookieParser = require('cookie-parser');
 const db = require("./db/database");
 const path = require("path");
 const rateLimit = require("express-rate-limit");
@@ -86,12 +87,8 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Permitir peticiones sin origen (como apps móviles o curl)
     if (!origin) return callback(null, true);
-
-    // Permitir orígenes en la lista blanca o si no estamos en producción
     const isAllowed = allowedOrigins.includes(origin) || !IS_PROD;
-
     if (isAllowed) {
       callback(null, true);
     } else {
@@ -99,8 +96,10 @@ app.use(cors({
     }
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
 }));
+app.use(cookieParser());
 app.use(express.json({ limit: "10mb" }));
 
 // Rate Limiting para protección (Ajustado para desarrollo/uso intensivo)

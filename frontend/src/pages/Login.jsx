@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Loader2, Lock, User, MailCheck, Eye, EyeOff, KeyRound, Check, ArrowLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { setAuthToken, apiRequest } from '../services/api';
+import { apiRequest, setUserData } from '../services/api';
 import logoImage from '../assets/LogoIMPERIO.webp';
 import { useToast } from '../context/ToastContext';
 
@@ -46,9 +46,8 @@ const Login = () => {
       });
 
       if (data.success) {
-        setAuthToken(data.token);
         if (data.user) {
-          localStorage.setItem("equipos_user_data", JSON.stringify(data.user));
+          setUserData(data.user);
         }
         navigate('/');
       } else {

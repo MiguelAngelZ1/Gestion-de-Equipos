@@ -30,7 +30,7 @@ import {
     ChevronUp
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { API_BASE, apiRequest, getAuthToken } from '../services/api';
+import { API_BASE, apiRequest } from '../services/api';
 import { useToast } from '../context/ToastContext';
 import SearchInput from '../components/common/SearchInput';
 import ConfirmModal from '../components/common/ConfirmModal';
@@ -303,9 +303,8 @@ const IPAM = () => {
 
     const handleExportExcel = async () => {
         try {
-            const token = getAuthToken();
             const response = await fetch(`${API_BASE}/ipam/exportar-excel`, {
-                headers: { 'Authorization': `Bearer ${token}` }
+                credentials: 'include'
             });
             if (response.ok) {
                 const blob = await response.blob();

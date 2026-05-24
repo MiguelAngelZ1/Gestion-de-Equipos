@@ -64,7 +64,9 @@ class SyncManager {
     const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
     const backupPath = path.join(backupDir, `equipos_backup_${timestamp}.db`);
 
-    const dbPath = path.resolve(__dirname, "../../backend/equipos.db");
+    const dbPath = process.env.DB_PATH
+      ? path.resolve(process.env.DB_PATH)
+      : path.resolve(__dirname, "../../backend/prisma/equipos.db");
     fs.copyFileSync(dbPath, backupPath);
 
     await this.setMetadata("last_backup", timestamp);
@@ -128,17 +130,33 @@ class SyncManager {
     }
     this.isLocked = true;
     await this.setMetadata("sync_locked", "true");
+    const expiresAt = String(Date.now() + 5 * 60 * 1000);
+    await this.setMetadata("sync_lock_expires_at", expiresAt);
   }
 
   async unlock() {
     this.isLocked = false;
     await this.setMetadata("sync_locked", "false");
+    await this.setMetadata("sync_lock_expires_at", "0");
   }
 
   async checkLock() {
     const locked = await this.getMetadata("sync_locked");
+    const expiresAt = await this.getMetadata("sync_lock_expires_at");
+    if (expiresAt && parseInt(expiresAt) < Date.now()) {
+      this.isLocked = false;
+      await this.setMetadata("sync_locked", "false");
+      return false;
+    }
     this.isLocked = locked === "true";
     return this.isLocked;
+  }
+
+  async renewLock() {
+    const expiresAt = String(Date.now() + 5 * 60 * 1000);
+    this.isLocked = true;
+    await this.setMetadata("sync_locked", "true");
+    await this.setMetadata("sync_lock_expires_at", expiresAt);
   }
 
   async updateCounts(localCount, remoteCount) {

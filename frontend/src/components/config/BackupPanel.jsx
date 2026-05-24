@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { API_BASE, getAuthToken } from '../../services/api';
+import { API_BASE } from '../../services/api';
 import {
     Download,
     UploadCloud,
@@ -17,11 +17,8 @@ const BackupPanel = () => {
     const handleExportExcel = async () => {
         try {
             setActionLoading(true);
-            const token = getAuthToken();
             const response = await fetch(`${API_BASE}/exportar-excel`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
+                credentials: 'include'
             });
 
             if (response.ok) {
@@ -48,12 +45,9 @@ const BackupPanel = () => {
     const handleCloudBackup = async () => {
         try {
             setActionLoading(true);
-            const token = getAuthToken();
             const response = await fetch(`${API_BASE}/respaldo-drive`, {
                 method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
+                credentials: 'include'
             });
 
             const data = await response.json();
@@ -74,12 +68,9 @@ const BackupPanel = () => {
     const handleManualSync = async () => {
         try {
             setActionLoading(true);
-            const token = getAuthToken();
             const response = await fetch(`${API_BASE}/sync/run`, {
                 method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
+                credentials: 'include'
             });
 
             const data = await response.json();

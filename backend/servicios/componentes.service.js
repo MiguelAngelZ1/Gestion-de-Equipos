@@ -120,62 +120,65 @@ class ComponentesService {
             `${equipo.grado || ''} ${equipo.nombre} ${equipo.apellido.toUpperCase()}`.trim() : 
             'Servicio Técnico';
 
-        // 2. Stock
-        if (repuesto_id) {
-            const repuesto = await db.get("SELECT cantidad FROM componentes_repuestos WHERE id = ?", [parseInt(repuesto_id)]);
-            if (!repuesto || repuesto.cantidad < 1) throw new Error("Stock insuficiente");
+        await db.beginTransaction();
+        try {
+            // 2. Stock
+            if (repuesto_id) {
+                const repuesto = await db.get("SELECT cantidad FROM componentes_repuestos WHERE id = ?", [parseInt(repuesto_id)]);
+                if (!repuesto || repuesto.cantidad < 1) throw new Error("Stock insuficiente");
 
-            await db.run("UPDATE componentes_repuestos SET cantidad = cantidad - 1 WHERE id = ?", [parseInt(repuesto_id)]);
-            await db.run(
-                "INSERT INTO movimientos_stock (repuesto_id, tipo, cantidad, equipo_id, notas) VALUES (?, 'SALIDA', 1, ?, 'Instalación')",
-                [parseInt(repuesto_id), equipo_id]
-            );
-        }
-
-        let specStringValue = serie || 'Instalado';
-        // ... (Lógica de strings para exhibición simplificada aquí para brevedad)
-
-        let newSpecId = target_spec_id;
-
-        if (tipo_instalacion === "REEMPLAZAR") {
-            await db.run("UPDATE especificaciones SET valor = ? WHERE id = ?", [specStringValue, parseInt(target_spec_id)]);
-            await db.run("UPDATE componentes_instalados SET especificacion_id = NULL WHERE especificacion_id = ?", [parseInt(target_spec_id)]);
-        } else {
-            const result = await db.run(
-                "INSERT INTO especificaciones (equipo_id, clave, valor) VALUES (?, ?, ?)",
-                [equipo_id, nombre, specStringValue]
-            );
-            newSpecId = result.lastID;
-        }
-
-        const instalacion = await db.run(
-            "INSERT INTO componentes_instalados (equipo_id, repuesto_id, especificacion_id, nombre, nne, serie) VALUES (?, ?, ?, ?, ?, ?)",
-            [equipo_id, repuesto_id ? parseInt(repuesto_id) : null, newSpecId, nombre, nne, serie]
-        );
-
-        // Historial y Soporte
-        await db.run(
-            "INSERT INTO historial_personal (equipo_id, responsable, evento, notas) VALUES (?, ?, 'INSTALACION_COMPONENTE', ?)",
-            [equipo_id, responsableReal, `Se instaló: ${nombre}`]
-        );
-
-        // Crear Ticket de Soporte si se requiere
-        if (registrar_soporte) {
-            try {
-                const tareaDescripcion = `INSTALACIÓN DE REPUESTO: ${nombre}${nne ? ` (NNE: ${nne})` : ''}${serie ? ` (S/N: ${serie})` : ''}. ${notas_soporte || ''}`.trim();
-                await soporteService.createOrUpdateTareaSoporte({
-                    equipo_id,
-                    tarea_realizada: tareaDescripcion,
-                    tipo_falla: 'Hardware / Cambio de Componente',
-                    costo_estimado: 0
-                });
-            } catch (supportErr) {
-                console.error("⚠️ Error al crear ticket de soporte automático:", supportErr);
-                // No lanzamos error para no romper la instalación del repuesto
+                await db.run("UPDATE componentes_repuestos SET cantidad = cantidad - 1 WHERE id = ?", [parseInt(repuesto_id)]);
+                await db.run(
+                    "INSERT INTO movimientos_stock (repuesto_id, tipo, cantidad, equipo_id, notas) VALUES (?, 'SALIDA', 1, ?, 'Instalación')",
+                    [parseInt(repuesto_id), equipo_id]
+                );
             }
-        }
 
-        return { id: instalacion.lastID };
+            let specStringValue = serie || 'Instalado';
+
+            let newSpecId = target_spec_id;
+
+            if (tipo_instalacion === "REEMPLAZAR") {
+                await db.run("UPDATE especificaciones SET valor = ? WHERE id = ?", [specStringValue, parseInt(target_spec_id)]);
+                await db.run("UPDATE componentes_instalados SET especificacion_id = NULL WHERE especificacion_id = ?", [parseInt(target_spec_id)]);
+            } else {
+                const result = await db.run(
+                    "INSERT INTO especificaciones (equipo_id, clave, valor) VALUES (?, ?, ?)",
+                    [equipo_id, nombre, specStringValue]
+                );
+                newSpecId = result.lastID;
+            }
+
+            const instalacion = await db.run(
+                "INSERT INTO componentes_instalados (equipo_id, repuesto_id, especificacion_id, nombre, nne, serie) VALUES (?, ?, ?, ?, ?, ?)",
+                [equipo_id, repuesto_id ? parseInt(repuesto_id) : null, newSpecId, nombre, nne, serie]
+            );
+
+            await db.run(
+                "INSERT INTO historial_personal (equipo_id, responsable, evento, notas) VALUES (?, ?, 'INSTALACION_COMPONENTE', ?)",
+                [equipo_id, responsableReal, `Se instaló: ${nombre}`]
+            );
+
+            if (registrar_soporte) {
+                try {
+                    const tareaDescripcion = `INSTALACIÓN DE REPUESTO: ${nombre}${nne ? ` (NNE: ${nne})` : ''}${serie ? ` (S/N: ${serie})` : ''}. ${notas_soporte || ''}`.trim();
+                    await soporteService.createOrUpdateTareaSoporte({
+                        equipo_id,
+                        tarea_realizada: tareaDescripcion,
+                        tipo_falla: 'Hardware / Cambio de Componente',
+                        costo_estimado: 0
+                    });
+                } catch (supportErr) {
+                    console.error("⚠️ Error al crear ticket de soporte automático:", supportErr);
+                }
+            }
+
+            await db.commit();
+            return { id: instalacion.lastID };
+        } catch (error) {
+            await db.rollback();
+            throw error;
+        }
     }
 
     async getComponentesInstalados(equipo_id) {

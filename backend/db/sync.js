@@ -125,12 +125,18 @@ async function sync() {
       const equiposLocal = await obtenerEquiposCompletos(sqliteDB, false);
       const equiposRemote = await obtenerEquiposCompletos(pgClient, true);
 
+      const heartbeat = setInterval(async () => {
+        try { await manager.renewLock(); } catch (e) { /* ignore */ }
+      }, 60 * 1000);
+
       const {
         equiposLocalFinal,
         equiposRemoteFinal,
         stats: newStats,
         detalles
       } = await sincronizarEquipos({
+        equiposLocal,
+        equiposRemote,
         obtenerEquiposLocal: () => obtenerEquiposCompletos(sqliteDB, false),
         obtenerEquiposRemote: () => obtenerEquiposCompletos(pgClient, true),
 
@@ -189,6 +195,7 @@ async function sync() {
         detalles
       );
 
+      clearInterval(heartbeat);
       await manager.unlock();
 
       return {
@@ -206,6 +213,7 @@ async function sync() {
       await manager.setMetadata("last_sync_error", error.message);
       await manager.logSyncOperation("sync", "bidireccional", {}, false, [error.message]);
       
+      clearInterval(heartbeat);
       await manager.unlock();
       throw error;
     } finally {

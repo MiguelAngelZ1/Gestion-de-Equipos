@@ -1,5 +1,4 @@
-// Servicio encargado exclusivamente de la lógica de sincronización de equipos
-// NO maneja conexiones ni logs de consola
+const calcularHashEquipo = require("../sincronizacion/calcularHashEquipo");
 
 function hayConflictoReal(local, remote) {
   if (!local || !remote) return false;
@@ -19,7 +18,9 @@ async function sincronizarEquipos({
     obtenerEquiposLocal,
     obtenerEquiposRemote,
     actualizarLocal,
-    actualizarRemote
+    actualizarRemote,
+    equiposLocal: datosEquiposLocal = null,
+    equiposRemote: datosEquiposRemote = null
 }) {
   const stats = {
     creados: 0,
@@ -29,8 +30,11 @@ async function sincronizarEquipos({
   };
   const detalles = [];
 
-  const equiposLocal = await obtenerEquiposLocal();
-  const equiposRemote = await obtenerEquiposRemote();
+  const equiposLocal = datosEquiposLocal || await obtenerEquiposLocal();
+  const equiposRemote = datosEquiposRemote || await obtenerEquiposRemote();
+
+  equiposLocal.forEach(e => e.hash = calcularHashEquipo(e));
+  equiposRemote.forEach(e => e.hash = calcularHashEquipo(e));
 
   const mapLocal = new Map(equiposLocal.map(e => [e.id, e]));
   const mapRemote = new Map(equiposRemote.map(e => [e.id, e]));
@@ -112,8 +116,8 @@ async function sincronizarEquipos({
   return {
     stats,
     detalles,
-    equiposLocalFinal: await obtenerEquiposLocal(),
-    equiposRemoteFinal: await obtenerEquiposRemote()
+    equiposLocalFinal: datosEquiposLocal || await obtenerEquiposLocal(),
+    equiposRemoteFinal: datosEquiposRemote || await obtenerEquiposRemote()
   };
 }
 

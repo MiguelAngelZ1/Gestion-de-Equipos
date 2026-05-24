@@ -10,22 +10,26 @@ if (!JWT_SECRET) {
         console.error("❌ ERROR CRÍTICO: JWT_SECRET no definido en producción. El sistema no es seguro.");
         process.exit(1); // Detener el servidor en producción si no hay secreto
     } else {
-        console.warn("⚠️ ADVERTENCIA: JWT_SECRET no definido. Usando clave de desarrollo (INSEGURO)");
+        console.error("❌ ERROR: JWT_SECRET no definido en desarrollo. El servidor no puede iniciar sin una clave secreta.");
+        process.exit(1);
     }
 }
 
-const SECRET_TO_USE = JWT_SECRET || 'dev-secret-key-change-me';
+const SECRET_TO_USE = JWT_SECRET;
 
 const verificarAutenticacion = (req, res, next) => {
     const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    const token = authHeader && authHeader.startsWith("Bearer ")
+        ? authHeader.split(" ")[1]
+        : req.cookies && req.cookies.token;
+
+    if (!token) {
         return res.status(401).json({ error: "No autorizado. Inicie sesión." });
     }
 
-    const token = authHeader.split(" ")[1];
     try {
         const decodificado = jwt.verify(token, SECRET_TO_USE);
-        req.user = decodificado; // Usar req.user para consistencia
+        req.user = decodificado;
         next();
     } catch (error) {
         return res.status(401).json({ error: "Token inválido o expirado." });

@@ -29,6 +29,12 @@ class Database {
           this.client.run("PRAGMA foreign_keys = ON;", (err) => {
             if (err) console.error("❌ [DB] Error habilitando foreign_keys:", err.message);
           });
+          this.client.run("PRAGMA journal_mode = WAL;", (err) => {
+            if (err) console.error("❌ [DB] Error habilitando WAL:", err.message);
+          });
+          this.client.run("PRAGMA busy_timeout = 5000;", (err) => {
+            if (err) console.error("❌ [DB] Error configurando busy_timeout:", err.message);
+          });
         }
       });
 
@@ -250,6 +256,17 @@ class Database {
         expires DATETIME NOT NULL
       )`);
 
+      await run(`CREATE TABLE IF NOT EXISTS sync_logs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        sync_id TEXT,
+        operation TEXT,
+        tabla TEXT,
+        registro_id INTEGER,
+        detalle TEXT,
+        created_at TEXT DEFAULT (datetime('now')),
+        nivel TEXT DEFAULT 'info'
+      )`);
+
       // Guardar versión actual para futuros arranques rápidos
       await run(`INSERT OR REPLACE INTO sync_metadata (clave, valor) VALUES ('schema_version', '${SCHEMA_VERSION}')`);
       
@@ -325,6 +342,18 @@ class Database {
       changes: result.changes,
       lastID: result.lastID
     };
+  }
+
+  async beginTransaction() {
+    await this.run("BEGIN TRANSACTION");
+  }
+
+  async commit() {
+    await this.run("COMMIT");
+  }
+
+  async rollback() {
+    await this.run("ROLLBACK");
   }
 }
 

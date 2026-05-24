@@ -5,7 +5,7 @@ const crypto = require("crypto");
  * Se usa como mecanismo de verificación cuando los timestamps coinciden.
  */
 function calcularHashEquipo(equipo) {
-  const data = `${equipo.id}|${equipo.ine}|${equipo.nne}|${equipo.serie}|${equipo.tipo}|${equipo.estado}|${equipo.responsable}|${equipo.ubicacion}|${equipo.is_deleted}`;
+  const data = `${equipo.id}|${equipo.ine}|${equipo.nne}|${equipo.serie}|${equipo.nombre}|${equipo.descripcion}|${equipo.categoria_id}|${equipo.estado_id}|${equipo.ubicacion_id}|${equipo.responsable_id}|${equipo.numero_serie}|${equipo.modelo}|${equipo.marca}|${equipo.is_deleted}`;
   return crypto.createHash("md5").update(data).digest("hex");
 }
 

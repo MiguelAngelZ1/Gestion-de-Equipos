@@ -67,53 +67,62 @@ class SoporteService {
             'Servicio Técnico';
 
         let tareaId = id;
-        
-        if (id) {
-            await db.run(
-                `UPDATE soporte_tareas SET 
-                    equipo_id = ?, responsable = ?, tarea_realizada = ?, 
-                    fecha = ?, tipo_falla = ?, costo_estimado = ?, updated_at = ?
-                 WHERE id = ?`,
-                [
-                    equipo_id, responsableReal, tarea_realizada, 
-                    fecha ? (fecha.includes('T') ? fecha : `${fecha}T12:00:00Z`) : new Date().toISOString(),
-                    tipo_falla, costo_estimado || 0, new Date().toISOString(), id
-                ]
-            );
+        let ticket_id = null;
 
-            await db.run(
-                "INSERT INTO historial_personal (equipo_id, responsable, evento, notas) VALUES (?, ?, 'MANTENIMIENTO_ACTUALIZADO', ?)",
-                [equipo_id, responsableReal, `Se actualizó la tarea de soporte ID: ${id}`]
-            );
-        } else {
-            const now = new Date();
-            const year = now.getFullYear();
-            
-            // Generar Ticket ID
-            const countRow = await db.get(
-                "SELECT COUNT(*) as total FROM soporte_tareas WHERE ticket_id LIKE ?",
-                [`SOP-${year}-%`]
-            );
-            const nextNum = (parseInt(countRow.total) + 1).toString().padStart(3, '0');
-            const ticket_id = `SOP-${year}-${nextNum}`;
+        await db.beginTransaction();
+        try {
+            if (id) {
+                await db.run(
+                    `UPDATE soporte_tareas SET 
+                        equipo_id = ?, responsable = ?, tarea_realizada = ?, 
+                        fecha = ?, tipo_falla = ?, costo_estimado = ?, updated_at = ?
+                     WHERE id = ?`,
+                    [
+                        equipo_id, responsableReal, tarea_realizada, 
+                        fecha ? (fecha.includes('T') ? fecha : `${fecha}T12:00:00Z`) : new Date().toISOString(),
+                        tipo_falla, costo_estimado || 0, new Date().toISOString(), id
+                    ]
+                );
 
-            const result = await db.run(
-                `INSERT INTO soporte_tareas (ticket_id, equipo_id, responsable, tarea_realizada, fecha, tipo_falla, costo_estimado, updated_at) 
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-                [
-                    ticket_id, equipo_id, responsableReal, tarea_realizada,
-                    fecha ? (fecha.includes('T') ? fecha : `${fecha}T12:00:00Z`) : now.toISOString(),
-                    tipo_falla || 'Mantenimiento / Hardware', costo_estimado || 0, now.toISOString()
-                ]
-            );
-            tareaId = result.lastID;
+                await db.run(
+                    "INSERT INTO historial_personal (equipo_id, responsable, evento, notas) VALUES (?, ?, 'MANTENIMIENTO_ACTUALIZADO', ?)",
+                    [equipo_id, responsableReal, `Se actualizó la tarea de soporte ID: ${id}`]
+                );
+            } else {
+                const now = new Date();
+                const year = now.getFullYear();
+                
+                const countRow = await db.get(
+                    "SELECT COUNT(*) as total FROM soporte_tareas WHERE ticket_id LIKE ?",
+                    [`SOP-${year}-%`]
+                );
+                const nextNum = (parseInt(countRow.total) + 1).toString().padStart(3, '0');
+                ticket_id = `SOP-${year}-${nextNum}`;
 
-            await db.run(
-                "INSERT INTO historial_personal (equipo_id, responsable, evento, notas) VALUES (?, ?, 'SOPORTE_MANTENIMIENTO', ?)",
-                [equipo_id, responsableReal, `Ticket ${ticket_id}: ${tarea_realizada.substring(0, 50)}`]
-            );
+                const result = await db.run(
+                    `INSERT INTO soporte_tareas (ticket_id, equipo_id, responsable, tarea_realizada, fecha, tipo_falla, costo_estimado, updated_at) 
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+                    [
+                        ticket_id, equipo_id, responsableReal, tarea_realizada,
+                        fecha ? (fecha.includes('T') ? fecha : `${fecha}T12:00:00Z`) : now.toISOString(),
+                        tipo_falla || 'Mantenimiento / Hardware', costo_estimado || 0, now.toISOString()
+                    ]
+                );
+                tareaId = result.lastID;
 
-            // Notificaciones proactivas
+                await db.run(
+                    "INSERT INTO historial_personal (equipo_id, responsable, evento, notas) VALUES (?, ?, 'SOPORTE_MANTENIMIENTO', ?)",
+                    [equipo_id, responsableReal, `Ticket ${ticket_id}: ${tarea_realizada.substring(0, 50)}`]
+                );
+            }
+
+            await db.commit();
+        } catch (error) {
+            await db.rollback();
+            throw error;
+        }
+
+        if (ticket_id) {
             try {
                 const admins = await db.all("SELECT id FROM usuarios WHERE rol = 'ADMIN'");
                 const payload = {
