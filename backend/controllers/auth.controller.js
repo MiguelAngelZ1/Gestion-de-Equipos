@@ -5,8 +5,10 @@ const usuariosService = require('../servicios/usuarios.service');
 const { JWT_SECRET } = require('../middleware/auth.middleware');
 const { sendRecoveryCode } = require('../servicios/email.service');
 
+const refreshTokenService = require('../servicios/refreshToken.service');
+
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
-const IS_PROD = process.env.NODE_ENV === 'production' || !!process.env.RAILWAY_ENVIRONMENT;
+const IS_PROD = process.env.NODE_ENV === 'production';
 
 if (!ADMIN_PASSWORD && IS_PROD) {
     console.error("❌ ERROR CRÍTICO: ADMIN_PASSWORD no definido en producción. El acceso administrativo está deshabilitado por seguridad.");
@@ -15,12 +17,21 @@ if (!ADMIN_PASSWORD && IS_PROD) {
 }
 
 const setTokenCookie = (res, token) => {
-    const IS_PROD = process.env.NODE_ENV === 'production' || !!process.env.RAILWAY_ENVIRONMENT;
     res.cookie('token', token, {
         httpOnly: true,
         secure: IS_PROD,
         sameSite: IS_PROD ? 'strict' : 'lax',
         maxAge: 24 * 60 * 60 * 1000
+    });
+};
+
+const setRefreshTokenCookie = (res, token) => {
+    res.cookie('refreshToken', token, {
+        httpOnly: true,
+        secure: IS_PROD,
+        sameSite: 'strict',
+        path: '/api/auth',
+        maxAge: 7 * 24 * 60 * 60 * 1000
     });
 };
 
@@ -35,8 +46,13 @@ const login = async (req, res, next) => {
             if (match) {
                 const token = jwt.sign({ userId: user.id, rol: user.rol, usuario: user.usuario }, JWT_SECRET, { expiresIn: "24h" });
 
+                const refreshToken = crypto.randomBytes(32).toString('hex');
+                const refreshExpires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+                await refreshTokenService.saveRefreshToken(user.id, refreshToken, refreshExpires);
+
                 await usuariosService.updateLastLogin(user.id);
                 setTokenCookie(res, token);
+                setRefreshTokenCookie(res, refreshToken);
 
                 return res.json({ success: true, user: { id: user.id, usuario: user.usuario, rol: user.rol } });
             }
@@ -99,7 +115,14 @@ const resetPassword = async (req, res, next) => {
 };
 
 const logout = async (req, res) => {
-    res.clearCookie('token', { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict' });
+    try {
+        if (req.user && req.user.userId) {
+            await refreshTokenService.revokeAllUserTokens(req.user.userId);
+        }
+    } catch (e) {
+    }
+    res.clearCookie('token', { httpOnly: true, secure: IS_PROD, sameSite: 'strict' });
+    res.clearCookie('refreshToken', { httpOnly: true, secure: IS_PROD, sameSite: 'strict', path: '/api/auth' });
     res.json({ success: true, message: "Sesión cerrada." });
 };
 
@@ -113,4 +136,38 @@ const me = async (req, res, next) => {
     }
 };
 
-module.exports = { login, forgotPassword, resetPassword, logout, me };
+const refresh = async (req, res) => {
+    const token = req.cookies && req.cookies.refreshToken;
+    if (!token) {
+        res.clearCookie('token', { httpOnly: true, secure: IS_PROD, sameSite: 'strict' });
+        res.clearCookie('refreshToken', { httpOnly: true, secure: IS_PROD, sameSite: 'strict', path: '/api/auth' });
+        return res.status(401).json({ error: "Refresh token no proporcionado" });
+    }
+    try {
+        const stored = await refreshTokenService.findRefreshToken(token);
+        if (!stored || stored.revoked === 1 || new Date() > new Date(stored.expires)) {
+            await refreshTokenService.revokeRefreshToken(token);
+            res.clearCookie('token', { httpOnly: true, secure: IS_PROD, sameSite: 'strict' });
+            res.clearCookie('refreshToken', { httpOnly: true, secure: IS_PROD, sameSite: 'strict', path: '/api/auth' });
+            return res.status(401).json({ error: "Refresh token inválido o expirado" });
+        }
+        await refreshTokenService.revokeRefreshToken(token);
+        const user = await usuariosService.getUsuarioById(stored.user_id);
+        if (!user) {
+            return res.status(401).json({ error: "Usuario no encontrado" });
+        }
+        const newToken = jwt.sign({ userId: user.id, rol: user.rol, usuario: user.usuario }, JWT_SECRET, { expiresIn: "24h" });
+        const newRefreshToken = crypto.randomBytes(32).toString('hex');
+        const newRefreshExpires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+        await refreshTokenService.saveRefreshToken(user.id, newRefreshToken, newRefreshExpires);
+        setTokenCookie(res, newToken);
+        setRefreshTokenCookie(res, newRefreshToken);
+        res.json({ success: true, user: { id: user.id, usuario: user.usuario, rol: user.rol } });
+    } catch (error) {
+        res.clearCookie('token', { httpOnly: true, secure: IS_PROD, sameSite: 'strict' });
+        res.clearCookie('refreshToken', { httpOnly: true, secure: IS_PROD, sameSite: 'strict', path: '/api/auth' });
+        return res.status(401).json({ error: "Error al renovar sesión" });
+    }
+};
+
+module.exports = { login, forgotPassword, resetPassword, logout, me, refresh };

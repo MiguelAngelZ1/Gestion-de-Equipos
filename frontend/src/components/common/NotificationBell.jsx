@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bell, Package, Wrench, Info, CheckCheck, Trash2, MessageSquare, Zap, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { io } from 'socket.io-client';
 import { apiRequest, getUserData } from '../../services/api';
 
 const NotificationBell = () => {
@@ -56,22 +55,26 @@ const NotificationBell = () => {
     useEffect(() => {
         if (!userId) return;
 
-        // Inicializar Socket.io
-        const socket = io(socketURL);
+        let socket = null;
+        let cancelled = false;
 
-        // Unirse a la sala privada del usuario
-        socket.on('connect', () => {
-            socket.emit('join', userId);
-        });
+        import('socket.io-client').then(({ io }) => {
+            if (cancelled) return;
+            socket = io(socketURL);
 
-        // Escuchar nuevas notificaciones
-        socket.on('new_notification', (newNotif) => {
-            setNotifications(prev => [newNotif, ...prev]);
-            setUnreadCount(prev => prev + 1);
+            socket.on('connect', () => {
+                socket.emit('join', userId);
+            });
+
+            socket.on('new_notification', (newNotif) => {
+                setNotifications(prev => [newNotif, ...prev]);
+                setUnreadCount(prev => prev + 1);
+            });
         });
 
         return () => {
-            socket.disconnect();
+            cancelled = true;
+            if (socket) socket.disconnect();
         };
     }, [userId, socketURL]);
 

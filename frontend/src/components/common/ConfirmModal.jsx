@@ -6,6 +6,8 @@ import { AlertTriangle, Loader2 } from 'lucide-react';
 const ConfirmModal = ({ isOpen, title, message, children, onConfirm, onClose, confirmText = "Confirmar", cancelText = "Cancelar", type = "danger", isLoading: manualLoading = false }) => {
   const [internalLoading, setInternalLoading] = React.useState(false);
   const isLoading = manualLoading || internalLoading;
+  const titleRef = React.useRef(null);
+  const titleId = React.useRef(`confirm-modal-title-${Math.random().toString(36).substr(2, 9)}`);
 
   React.useEffect(() => {
     if (isOpen) setInternalLoading(false);
@@ -13,7 +15,7 @@ const ConfirmModal = ({ isOpen, title, message, children, onConfirm, onClose, co
 
   const handleConfirm = async () => {
     if (isLoading) return;
-    
+
     const result = onConfirm();
     if (result instanceof Promise) {
       setInternalLoading(true);
@@ -24,6 +26,31 @@ const ConfirmModal = ({ isOpen, title, message, children, onConfirm, onClose, co
       }
     }
   };
+
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const container = document.getElementById(titleId.current)?.closest('[role="dialog"]');
+    if (!container) return;
+    const focusable = container.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+
+    const handleTab = (e) => {
+      if (e.key === 'Tab') {
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last?.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first?.focus();
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleTab);
+    first?.focus();
+    return () => document.removeEventListener('keydown', handleTab);
+  }, [isOpen]);
 
   if (typeof document === 'undefined') return null;
 
@@ -68,6 +95,9 @@ const ConfirmModal = ({ isOpen, title, message, children, onConfirm, onClose, co
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={!isLoading ? onClose : undefined}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={titleId.current}
           className="fixed inset-0 z-[200] flex items-center justify-center p-6 sm:p-6 bg-black/85 backdrop-blur-md h-[100dvh] pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]"
         >
           <motion.div
@@ -82,7 +112,7 @@ const ConfirmModal = ({ isOpen, title, message, children, onConfirm, onClose, co
               <div className={`${style.bg} p-4 rounded-3xl border ${style.border} mb-5`}>
                  <AlertTriangle className={`w-10 h-10 ${style.icon}`} />
               </div>
-              <h3 className="text-2xl font-black text-white tracking-tight mb-3 font-outfit">{title}</h3>
+              <h3 ref={titleRef} id={titleId.current} className="text-2xl font-black text-white tracking-tight mb-3 font-outfit">{title}</h3>
               <div className="w-full mb-8">
                 {children || (
                   <p className="text-slate-400 text-sm leading-relaxed">

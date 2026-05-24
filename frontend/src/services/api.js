@@ -12,7 +12,7 @@ export const getAuthToken = () => null;
 export const setAuthToken = () => {};
 export const removeAuthToken = () => {
     localStorage.removeItem(USER_DATA_KEY);
-    apiRequest('/logout', { method: 'POST' }).catch(() => {});
+    window.dispatchEvent(new Event("auth:unauthorized"));
 };
 export const isAuthenticated = () => !!localStorage.getItem(USER_DATA_KEY);
 

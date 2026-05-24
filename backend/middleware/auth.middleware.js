@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 // En producción esto DEBE venir de variables de entorno. 
 // No permitimos un fallback inseguro si estamos en Railway/Producción.
 const JWT_SECRET = process.env.JWT_SECRET;
-const IS_PROD = process.env.NODE_ENV === 'production' || !!process.env.RAILWAY_ENVIRONMENT;
+const IS_PROD = process.env.NODE_ENV === 'production';
 
 if (!JWT_SECRET) {
     if (IS_PROD) {

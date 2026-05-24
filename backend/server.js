@@ -97,6 +97,7 @@ const serveIndexWithNonce = (req, res, next) => {
   res.send(nonced);
 };
 
+console.log('🛡️ Helmet cargado');
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
@@ -129,7 +130,12 @@ app.use(cors({
   credentials: true
 }));
 app.use(cookieParser());
-app.use(express.json({ limit: "10mb" }));
+app.use(express.json({ limit: "1mb" }));
+
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  next();
+});
 
 // Rate Limiting para protección (Ajustado para desarrollo/uso intensivo)
 const generalLimiter = rateLimit({
@@ -142,7 +148,7 @@ const generalLimiter = rateLimit({
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 100, // Aumentado
+  max: 10,
   message: { error: "Demasiados intentos de login. Intenta más tarde." },
   standardHeaders: true,
   legacyHeaders: false,
@@ -156,12 +162,12 @@ app.use(express.static(STATIC_PATH));
 app.use('/api', generalLimiter);
 
 // Aplicar rate limit específico para auth/login
-app.use('/api/login', authLimiter);
+app.use('/api/auth/login', authLimiter);
 
 
 const dashboardController = require('./controllers/dashboard.controller');
 // Endpoints REST modulares
-app.use('/api', authRoutes);
+app.use('/api/auth', authRoutes);
 app.get('/api/dashboard/summary', dashboardController.getDashboardSummary);
 app.use('/api/equipos', equiposRoutes);
 app.use('/api/sync', syncRoutes);
@@ -201,6 +207,32 @@ app.get("*", (req, res, next) => {
 
 // Manejo de errores global
 app.use(errorHandler);
+
+process.on('SIGTERM', shutdown);
+process.on('SIGINT', shutdown);
+
+async function shutdown() {
+  console.log('\n🛑 Apagando servidor gracefulmente...');
+  server.close(async () => {
+    console.log('✅ Servidor HTTP cerrado');
+    try {
+      if (db.client) {
+        await new Promise((resolve, reject) => {
+          db.client.close((err) => err ? reject(err) : resolve());
+        });
+        console.log('✅ Conexión DB cerrada');
+      }
+    } catch (e) {
+      console.error('Error cerrando DB:', e.message);
+    }
+    console.log('👋 Servidor detenido.');
+    process.exit(0);
+  });
+  setTimeout(() => {
+    console.error('⏱️ Fuerza de cierre por timeout');
+    process.exit(1);
+  }, 10000);
+}
 
 // Iniciar servidor
 server.listen(PORT, async () => {

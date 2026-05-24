@@ -2,7 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Loader2, Lock, User, MailCheck, Eye, EyeOff, KeyRound, Check, ArrowLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { apiRequest, setUserData } from '../services/api';
+import { useAuth } from '../context/AuthContext';
+import { apiRequest } from '../services/api';
 import logoImage from '../assets/LogoIMPERIO.webp';
 import { useToast } from '../context/ToastContext';
 
@@ -18,8 +19,8 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [newPassword, setNewPassword] = useState('');
+  const { login } = useAuth();
   
-  // Refs para los cuadros de código
   const inputRefs = useRef([]);
 
   // Shake animation trigger
@@ -40,15 +41,9 @@ const Login = () => {
     setError('');
 
     try {
-      const data = await apiRequest('/login', {
-        method: 'POST',
-        body: JSON.stringify({ usuario, password }) 
-      });
+      const data = await login({ usuario, password });
 
       if (data.success) {
-        if (data.user) {
-          setUserData(data.user);
-        }
         navigate('/');
       } else {
         triggerError("Credenciales incorrectas o usuario no encontrado.");
@@ -66,7 +61,7 @@ const Login = () => {
     setLoading(true);
     setError('');
     try {
-      const data = await apiRequest('/forgot-password', {
+      const data = await apiRequest('/auth/forgot-password', {
         method: 'POST',
         body: JSON.stringify({ email })
       });
@@ -87,7 +82,7 @@ const Login = () => {
     if(!codigo || !newPassword) return;
     setLoading(true);
     try {
-      const data = await apiRequest('/reset-password', {
+      const data = await apiRequest('/auth/reset-password', {
         method: 'POST',
         body: JSON.stringify({ email, code: codigo, newPassword })
       });

@@ -256,6 +256,15 @@ class Database {
         expires DATETIME NOT NULL
       )`);
 
+      await run(`CREATE TABLE IF NOT EXISTS refresh_tokens (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        token TEXT NOT NULL UNIQUE,
+        expires DATETIME NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        revoked INTEGER DEFAULT 0
+      )`);
+
       await run(`CREATE TABLE IF NOT EXISTS sync_logs (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         sync_id TEXT,
