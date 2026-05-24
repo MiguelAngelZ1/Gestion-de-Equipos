@@ -92,69 +92,47 @@ class DashboardService {
 
 class HistorialService {
     async getHistorial(query) {
-        // Mantenemos Prisma en HistorialService por ahora, pero extraemos IS_DELETED_VAL localmente
-        const prisma = require('../prismaClient');
-        const IS_DELETED_VAL = prisma.IS_DELETED_VAL;
         const { q } = query;
-        
-        let searchCondition = {
-            equipos: { is_deleted: IS_DELETED_VAL }
-        };
+
+        let sql = `
+            SELECT hp.*, eq.ine, eq.nne, eq.serie,
+                   gc.nombre as equipo_tipo,
+                   r.nombre as resp_nombre, r.apellido as resp_apellido, r.grado as resp_grado
+            FROM historial_personal hp
+            LEFT JOIN equipos eq ON hp.equipo_id = eq.id
+            LEFT JOIN grupos_comodidad gc ON eq.categoria_id = gc.id
+            LEFT JOIN responsables r ON eq.responsable_id = r.id
+            WHERE eq.is_deleted = 0
+        `;
+        const params = [];
 
         if (q && q.trim() !== "") {
-            const searchStr = q.trim();
-            searchCondition = {
-                AND: [
-                    searchCondition,
-                    {
-                        OR: [
-                            { responsable: { contains: searchStr } },
-                            { evento: { contains: searchStr } },
-                            { notas: { contains: searchStr } },
-                            { equipos: { ine: { contains: searchStr } } },
-                            { equipos: { serie: { contains: searchStr } } },
-                            { equipos: { nne: { contains: searchStr } } },
-                            { equipos: { grupos_comodidad: { nombre: { contains: searchStr } } } },
-                            { equipos: { responsables: { apellido: { contains: searchStr } } } },
-                            { equipos: { especificaciones: { some: { 
-                                OR: [
-                                    { clave: { contains: searchStr } },
-                                    { valor: { contains: searchStr } }
-                                ]
-                            } } } }
-                        ]
-                    }
-                ]
-            };
+            const searchStr = `%${q.trim()}%`;
+            sql += ` AND (
+                hp.responsable LIKE ? OR hp.evento LIKE ? OR hp.notas LIKE ?
+                OR eq.ine LIKE ? OR eq.serie LIKE ? OR eq.nne LIKE ?
+                OR gc.nombre LIKE ? OR r.apellido LIKE ?
+                OR EXISTS (SELECT 1 FROM especificaciones esp WHERE esp.equipo_id = eq.id AND (esp.clave LIKE ? OR esp.valor LIKE ?))
+            )`;
+            params.push(searchStr, searchStr, searchStr, searchStr, searchStr, searchStr, searchStr, searchStr, searchStr, searchStr);
         }
 
-        const historial = await prisma.historial_personal.findMany({
-            where: searchCondition,
-            orderBy: { fecha: 'desc' },
-            take: 200,
-            include: {
-                equipos: {
-                    include: {
-                        grupos_comodidad: true,
-                        responsables: true
-                    }
-                }
-            }
-        });
+        sql += " ORDER BY hp.fecha DESC LIMIT 200";
 
-        return historial.map(h => {
-            const r = h.equipos?.responsables;
-            const responsable_actual = r ? 
-                `${r.grado || ''} ${r.nombre} ${r.apellido.toUpperCase()}`.trim() : 
-                'SIN ASIGNAR';
+        const rows = await db.all(sql, params);
+
+        return rows.map(h => {
+            const responsable_actual = h.resp_nombre
+                ? `${h.resp_grado || ''} ${h.resp_nombre} ${h.resp_apellido.toUpperCase()}`.trim()
+                : 'SIN ASIGNAR';
 
             return {
                 ...h,
-                ine: h.equipos?.ine,
-                serie: h.equipos?.serie,
-                nne: h.equipos?.nne,
+                ine: h.ine,
+                serie: h.serie,
+                nne: h.nne,
                 responsable_actual,
-                equipo_tipo: h.equipos?.grupos_comodidad?.nombre
+                equipo_tipo: h.equipo_tipo
             };
         });
     }

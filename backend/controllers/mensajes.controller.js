@@ -1,6 +1,6 @@
 const { mensajeriaService } = require("../servicios/comunicaciones.service");
 const notificationService = require("../servicios/notificationService");
-const prisma = require("../prismaClient");
+const db = require("../db/database");
 
 exports.enviarMensaje = async (req, res, next) => {
     try {
@@ -20,10 +20,7 @@ exports.enviarMensaje = async (req, res, next) => {
 
         // Notificar a todos los administradores
         try {
-            const admins = await prisma.usuarios.findMany({
-                where: { rol: 'ADMIN' },
-                select: { id: true }
-            });
+            const admins = await db.all("SELECT id FROM usuarios WHERE rol = 'ADMIN'");
 
             const payload = {
                 title: `📝 Nuevo mensaje de ${remitente}`,

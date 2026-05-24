@@ -1,12 +1,10 @@
 const path = require("path");
 const fs = require("fs");
-const prisma = require("../prismaClient");
 const { ROLES, ESTADOS_POR_DEFECTO } = require("../config/constants");
 
 class Database {
   constructor() {
     this.client = null;
-    this.prisma = prisma;
     this.connected = false;
   }
 
@@ -16,10 +14,9 @@ class Database {
     try {
       // Usar sqlite3 sin verbose para producción/uso normal para evitar ruido y ligera latencia
       const sqlite3 = require("sqlite3");
-      // Unificamos la BD para que Prisma y database.js usen el mismo archivo
       const dbPath = process.env.DB_PATH 
         ? path.resolve(process.env.DB_PATH) 
-        : path.resolve(__dirname, "../../backend/prisma/equipos.db");
+        : path.resolve(__dirname, "../../backend/equipos.db");
 
       this.client = new sqlite3.Database(dbPath, (err) => {
         if (err) {

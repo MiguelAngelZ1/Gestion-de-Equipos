@@ -7,12 +7,9 @@
     "start": "node server.js",
     "dev": "nodemon server.js",
     "sync": "node db/sync.js",
-    "prisma:generate": "npx prisma generate",
-    "prisma:validate": "npx prisma validate",
     "test": "echo \"No hay tests configurados\" && exit 0"
   },
   "dependencies": {
-    "@prisma/client": "^6.19.2",
     "bcryptjs": "^3.0.3",
     "compression": "^1.8.1",
     "cookie-parser": "^1.4.7",
@@ -42,7 +39,6 @@
   "author": "Tu Nombre",
   "license": "MIT",
   "devDependencies": {
-    "nodemon": "^3.1.14",
-    "prisma": "^6.19.2"
+    "nodemon": "^3.1.14"
   }
 }

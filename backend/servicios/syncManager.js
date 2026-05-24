@@ -66,7 +66,7 @@ class SyncManager {
 
     const dbPath = process.env.DB_PATH
       ? path.resolve(process.env.DB_PATH)
-      : path.resolve(__dirname, "../../backend/prisma/equipos.db");
+      : path.resolve(__dirname, "../../backend/equipos.db");
     fs.copyFileSync(dbPath, backupPath);
 
     await this.setMetadata("last_backup", timestamp);

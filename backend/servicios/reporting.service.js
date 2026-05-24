@@ -1,43 +1,47 @@
-const { IS_DELETED_VAL } = require('../prismaClient');
-const prisma = require('../prismaClient');
+const db = require('../db/database');
 
 class ReportingService {
     async getInventarioCompleto(id = null) {
-        const where = {
-            is_deleted: IS_DELETED_VAL
-        };
+        let sql = `
+            SELECT eq.*, gc.nombre as tipo, e.nombre as estado, e.color_hex as estado_color,
+                   u.nombre as ubicacion,
+                   r.grado as resp_grado, r.nombre as resp_nombre, r.apellido as resp_apellido
+            FROM equipos eq
+            LEFT JOIN grupos_comodidad gc ON eq.categoria_id = gc.id
+            LEFT JOIN estados e ON eq.estado_id = e.id
+            LEFT JOIN ubicaciones u ON eq.ubicacion_id = u.id
+            LEFT JOIN responsables r ON eq.responsable_id = r.id
+            WHERE eq.is_deleted = 0
+        `;
+        const params = [];
 
         if (id && id !== "null" && id !== "undefined") {
-            where.id = id;
+            sql += " AND eq.id = ?";
+            params.push(id);
         }
 
-        const equipos = await prisma.equipos.findMany({
-            where,
-            include: {
-                grupos_comodidad: true,
-                estados: true,
-                ubicaciones: true,
-                responsables: true,
-                especificaciones: true
-            },
-            orderBy: { ine: 'asc' }
-        });
+        sql += " ORDER BY eq.ine ASC";
 
-        return equipos.map(e => {
-            const r = e.responsables;
-            const responsable = r ? 
-                `${r.grado || ''} ${r.nombre} ${r.apellido.toUpperCase()}`.trim() : 
-                'SIN ASIGNAR';
+        const equipos = await db.all(sql, params);
 
-            return {
-                ...e,
-                tipo: e.grupos_comodidad?.nombre,
-                estado: e.estados?.nombre,
-                ubicacion: e.ubicaciones?.nombre,
+        const result = [];
+        for (const eq of equipos) {
+            const especs = await db.all("SELECT * FROM especificaciones WHERE equipo_id = ?", [eq.id]);
+            const responsable = eq.resp_nombre
+                ? `${eq.resp_grado || ''} ${eq.resp_nombre} ${eq.resp_apellido.toUpperCase()}`.trim()
+                : 'SIN ASIGNAR';
+
+            result.push({
+                ...eq,
+                tipo: eq.tipo,
+                estado: eq.estado,
+                ubicacion: eq.ubicacion,
                 responsable,
-                especificaciones: e.especificaciones || []
-            };
-        });
+                especificaciones: especs || []
+            });
+        }
+
+        return result;
     }
 }
 

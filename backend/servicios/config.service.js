@@ -1,5 +1,3 @@
-const { IS_DELETED_VAL } = require('../prismaClient');
-const prisma = require('../prismaClient');
 const db = require('../db/database');
 const fs = require('fs');
 const path = require('path');
@@ -7,70 +5,94 @@ const path = require('path');
 class ConfigService {
     // --- GRUPOS COMODIDAD ---
     async getGruposComodidad() {
-        return await prisma.grupos_comodidad.findMany({ orderBy: { nombre: 'asc' } });
+        return await db.all("SELECT * FROM grupos_comodidad ORDER BY nombre ASC");
     }
     async createGrupoComodidad(nombre) {
-        return await prisma.grupos_comodidad.create({ data: { nombre } });
+        const result = await db.run("INSERT INTO grupos_comodidad (nombre) VALUES (?)", [nombre]);
+        return { id: result.lastID, nombre };
     }
     async updateGrupoComodidad(id, nombre) {
-        return await prisma.grupos_comodidad.update({ where: { id: parseInt(id) }, data: { nombre } });
+        await db.run("UPDATE grupos_comodidad SET nombre = ? WHERE id = ?", [nombre, parseInt(id)]);
+        return { id: parseInt(id), nombre };
     }
     async deleteGrupoComodidad(id) {
-        return await prisma.grupos_comodidad.delete({ where: { id: parseInt(id) } });
+        await db.run("DELETE FROM grupos_comodidad WHERE id = ?", [parseInt(id)]);
+        return { success: true };
     }
     async deleteBulkGruposComodidad(ids) {
-        return await prisma.grupos_comodidad.deleteMany({ where: { id: { in: ids.map(i => parseInt(i)) } } });
+        const placeholders = ids.map(() => '?').join(',');
+        const parsedIds = ids.map(i => parseInt(i));
+        await db.run(`DELETE FROM grupos_comodidad WHERE id IN (${placeholders})`, parsedIds);
+        return { count: parsedIds.length };
     }
 
     // --- GRADOS ---
     async getGrados() {
-        return await prisma.grados.findMany({ orderBy: { id: 'asc' } });
+        return await db.all("SELECT * FROM grados ORDER BY id ASC");
     }
     async createGrado(abreviatura, grado_completo) {
-        return await prisma.grados.create({ data: { abreviatura, grado_completo } });
+        const result = await db.run("INSERT INTO grados (abreviatura, grado_completo) VALUES (?, ?)", [abreviatura, grado_completo]);
+        return { id: result.lastID, abreviatura, grado_completo };
     }
     async updateGrado(id, abreviatura, grado_completo) {
-        return await prisma.grados.update({ where: { id: parseInt(id) }, data: { abreviatura, grado_completo } });
+        await db.run("UPDATE grados SET abreviatura = ?, grado_completo = ? WHERE id = ?", [abreviatura, grado_completo, parseInt(id)]);
+        return { id: parseInt(id), abreviatura, grado_completo };
     }
     async deleteGrado(id) {
-        return await prisma.grados.delete({ where: { id: parseInt(id) } });
+        await db.run("DELETE FROM grados WHERE id = ?", [parseInt(id)]);
+        return { success: true };
     }
     async deleteBulkGrados(ids) {
-        return await prisma.grados.deleteMany({ where: { id: { in: ids.map(i => parseInt(i)) } } });
+        const placeholders = ids.map(() => '?').join(',');
+        const parsedIds = ids.map(i => parseInt(i));
+        await db.run(`DELETE FROM grados WHERE id IN (${placeholders})`, parsedIds);
+        return { count: parsedIds.length };
     }
 
     // --- ESTADOS ---
     async getEstados() {
-        return await prisma.estados.findMany({ orderBy: { nombre: 'asc' } });
+        return await db.all("SELECT * FROM estados ORDER BY nombre ASC");
     }
     async createEstado(nombre, color_hex) {
-        return await prisma.estados.create({ data: { nombre, color_hex } });
+        const result = await db.run("INSERT INTO estados (nombre, color_hex) VALUES (?, ?)", [nombre, color_hex]);
+        return { id: result.lastID, nombre, color_hex };
     }
     async updateEstado(id, nombre, color_hex) {
-        return await prisma.estados.update({ where: { id: parseInt(id) }, data: { nombre, color_hex } });
+        await db.run("UPDATE estados SET nombre = ?, color_hex = ? WHERE id = ?", [nombre, color_hex, parseInt(id)]);
+        return { id: parseInt(id), nombre, color_hex };
     }
     async deleteEstado(id) {
-        return await prisma.estados.delete({ where: { id: parseInt(id) } });
+        await db.run("DELETE FROM estados WHERE id = ?", [parseInt(id)]);
+        return { success: true };
     }
     async deleteBulkEstados(ids) {
-        return await prisma.estados.deleteMany({ where: { id: { in: ids.map(i => parseInt(i)) } } });
+        const placeholders = ids.map(() => '?').join(',');
+        const parsedIds = ids.map(i => parseInt(i));
+        await db.run(`DELETE FROM estados WHERE id IN (${placeholders})`, parsedIds);
+        return { count: parsedIds.length };
     }
 
     // --- UBICACIONES ---
     async getUbicaciones() {
-        return await prisma.ubicaciones.findMany({ orderBy: { nombre: 'asc' } });
+        return await db.all("SELECT * FROM ubicaciones ORDER BY nombre ASC");
     }
     async createUbicacion(nombre) {
-        return await prisma.ubicaciones.create({ data: { nombre, ubicacion: nombre } });
+        const result = await db.run("INSERT INTO ubicaciones (nombre) VALUES (?)", [nombre]);
+        return { id: result.lastID, nombre };
     }
     async updateUbicacion(id, nombre) {
-        return await prisma.ubicaciones.update({ where: { id: parseInt(id) }, data: { nombre, ubicacion: nombre } });
+        await db.run("UPDATE ubicaciones SET nombre = ? WHERE id = ?", [nombre, parseInt(id)]);
+        return { id: parseInt(id), nombre };
     }
     async deleteUbicacion(id) {
-        return await prisma.ubicaciones.delete({ where: { id: parseInt(id) } });
+        await db.run("DELETE FROM ubicaciones WHERE id = ?", [parseInt(id)]);
+        return { success: true };
     }
     async deleteBulkUbicaciones(ids) {
-        return await prisma.ubicaciones.deleteMany({ where: { id: { in: ids.map(i => parseInt(i)) } } });
+        const placeholders = ids.map(() => '?').join(',');
+        const parsedIds = ids.map(i => parseInt(i));
+        await db.run(`DELETE FROM ubicaciones WHERE id IN (${placeholders})`, parsedIds);
+        return { count: parsedIds.length };
     }
 
     // --- MANTENIMIENTO ---
@@ -79,11 +101,10 @@ class ConfigService {
         
         try {
             const dbPaths = [
-              path.resolve(process.cwd(), 'backend/prisma/equipos.db'),
-              path.resolve(process.cwd(), 'prisma/equipos.db'),
               path.resolve(process.cwd(), 'backend/equipos.db'),
-              path.resolve(__dirname, '../prisma/equipos.db'),
-              path.resolve(__dirname, '../../backend/prisma/equipos.db')
+              path.resolve(__dirname, '../../backend/equipos.db'),
+              path.resolve(__dirname, '../equipos.db'),
+              path.resolve(process.cwd(), 'equipos.db')
             ];
             
             for (const p of dbPaths) {
@@ -199,18 +220,11 @@ class ConfigService {
     }
 
     async optimizeDatabase() {
-        // Limpieza de huérfanos (Prisma)
-        await prisma.$transaction([
-            prisma.especificaciones.deleteMany({ where: { NOT: { equipos: { isNot: null } } } }),
-            prisma.historial_personal.deleteMany({ where: { NOT: { equipos: { isNot: null } } } }),
-            prisma.soporte_tareas.deleteMany({ where: { NOT: { equipos: { isNot: null } } } }),
-            prisma.componentes_instalados.deleteMany({ where: { NOT: { equipos: { isNot: null } } } })
-        ]);
-
-        // Optimización física SQLite
-        await prisma.$executeRaw`VACUUM`;
-        await prisma.$executeRaw`ANALYZE`;
-
+        await db.run("DELETE FROM especificaciones WHERE equipo_id NOT IN (SELECT id FROM equipos)");
+        await db.run("DELETE FROM historial_personal WHERE equipo_id NOT IN (SELECT id FROM equipos)");
+        await db.run("DELETE FROM soporte_tareas WHERE equipo_id NOT IN (SELECT id FROM equipos)");
+        await db.run("DELETE FROM componentes_instalados WHERE equipo_id NOT IN (SELECT id FROM equipos)");
+        await db.run("VACUUM");
         return { success: true };
     }
 }

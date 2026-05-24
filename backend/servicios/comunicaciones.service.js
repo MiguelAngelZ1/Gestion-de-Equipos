@@ -1,178 +1,163 @@
-const { TRUE_VAL, FALSE_VAL } = require('../prismaClient');
-const prisma = require('../prismaClient');
+const db = require('../db/database');
 
 class PrestamosService {
     async getPrestamos() {
-        return await prisma.prestamos.findMany({
-            orderBy: { fecha_prestamo: 'desc' },
-            include: {
-                equipos: {
-                    select: {
-                        ine: true,
-                        nne: true,
-                        serie: true
-                    }
-                }
-            }
-        });
+        return await db.all(`
+            SELECT p.*, e.ine, e.nne, e.serie
+            FROM prestamos p
+            LEFT JOIN equipos e ON p.equipo_id = e.id
+            ORDER BY p.fecha_prestamo DESC
+        `);
     }
 
     async crearPrestamo(data) {
         const { equipo_id, solicitante, motivo, fecha_prestamo, fecha_devolucion_estimada, notas } = data;
 
-        return await prisma.$transaction(async (tx) => {
-            const prestamo = await tx.prestamos.create({
-                data: {
+        await db.beginTransaction();
+        try {
+            const result = await db.run(
+                `INSERT INTO prestamos (equipo_id, solicitante, motivo, fecha_prestamo, fecha_devolucion_estimada, notas, estado)
+                 VALUES (?, ?, ?, ?, ?, ?, 'ACTIVO')`,
+                [
                     equipo_id,
                     solicitante,
-                    motivo,
-                    fecha_prestamo: fecha_prestamo ? new Date(fecha_prestamo) : new Date(),
-                    fecha_devolucion_estimada: fecha_devolucion_estimada ? new Date(fecha_devolucion_estimada) : null,
-                    notas,
-                    estado: 'ACTIVO'
-                }
-            });
+                    motivo || null,
+                    fecha_prestamo ? new Date(fecha_prestamo).toISOString() : new Date().toISOString(),
+                    fecha_devolucion_estimada ? new Date(fecha_devolucion_estimada).toISOString() : null,
+                    notas || null
+                ]
+            );
 
-            // Actualizar estado del equipo a PRESTAMO
-            const estadoPrestamo = await tx.estados.findFirst({
-                where: { nombre: { contains: 'prestamo' } }
-            });
-
+            const estadoPrestamo = await db.get("SELECT id FROM estados WHERE LOWER(nombre) LIKE '%prestamo%'");
             if (estadoPrestamo) {
-                await tx.equipos.update({
-                    where: { id: equipo_id },
-                    data: { estado_id: estadoPrestamo.id }
-                });
+                await db.run("UPDATE equipos SET estado_id = ? WHERE id = ?", [estadoPrestamo.id, equipo_id]);
             }
 
-            return prestamo;
-        });
+            await db.commit();
+            return { id: result.lastID, ...data, estado: 'ACTIVO' };
+        } catch (error) {
+            await db.rollback();
+            throw error;
+        }
     }
 
     async devolverEquipo(id, estado_id_final) {
-        return await prisma.$transaction(async (tx) => {
-            const prestamo = await tx.prestamos.findUnique({
-                where: { id: parseInt(id) }
-            });
-
+        await db.beginTransaction();
+        try {
+            const prestamo = await db.get("SELECT * FROM prestamos WHERE id = ?", [parseInt(id)]);
             if (!prestamo) throw new Error('Préstamo no encontrado');
 
-            await tx.prestamos.update({
-                where: { id: parseInt(id) },
-                data: {
-                    estado: 'DEVUELTO',
-                    fecha_devolucion_real: new Date()
-                }
-            });
+            await db.run(
+                "UPDATE prestamos SET estado = 'DEVUELTO', fecha_devolucion_real = ? WHERE id = ?",
+                [new Date().toISOString(), parseInt(id)]
+            );
 
             let targetEstadoId = estado_id_final;
             if (!targetEstadoId) {
-                const estadoBueno = await tx.estados.findFirst({
-                    where: { nombre: { contains: 'servicio' } }
-                });
+                const estadoBueno = await db.get("SELECT id FROM estados WHERE LOWER(nombre) LIKE '%servicio%'");
                 if (estadoBueno) targetEstadoId = estadoBueno.id;
             }
 
             if (targetEstadoId) {
-                await tx.equipos.update({
-                    where: { id: prestamo.equipo_id },
-                    data: { estado_id: targetEstadoId }
-                });
+                await db.run("UPDATE equipos SET estado_id = ? WHERE id = ?", [targetEstadoId, prestamo.equipo_id]);
             }
 
+            await db.commit();
             return { success: true };
-        });
+        } catch (error) {
+            await db.rollback();
+            throw error;
+        }
     }
 
     async devolverBulkEquipos(ids, estado_id_final) {
         if (!Array.isArray(ids) || ids.length === 0) return { count: 0 };
-        return await prisma.$transaction(async (tx) => {
-            const prestamos = await tx.prestamos.findMany({
-                where: { id: { in: ids.map(id => parseInt(id)) }, estado: 'ACTIVO' }
-            });
+        const parsedIds = ids.map(id => parseInt(id));
 
-            if (prestamos.length === 0) return { count: 0 };
+        await db.beginTransaction();
+        try {
+            const placeholders = parsedIds.map(() => '?').join(',');
+            const prestamos = await db.all(
+                `SELECT * FROM prestamos WHERE id IN (${placeholders}) AND estado = 'ACTIVO'`,
+                parsedIds
+            );
 
-            await tx.prestamos.updateMany({
-                where: { id: { in: prestamos.map(p => p.id) } },
-                data: {
-                    estado: 'DEVUELTO',
-                    fecha_devolucion_real: new Date()
-                }
-            });
+            if (prestamos.length === 0) {
+                await db.commit();
+                return { count: 0 };
+            }
+
+            const prestamoIds = prestamos.map(p => p.id);
+            const pPlaceholders = prestamoIds.map(() => '?').join(',');
+            await db.run(
+                `UPDATE prestamos SET estado = 'DEVUELTO', fecha_devolucion_real = ? WHERE id IN (${pPlaceholders})`,
+                [new Date().toISOString(), ...prestamoIds]
+            );
 
             let targetEstadoId = estado_id_final;
             if (!targetEstadoId) {
-                const estadoBueno = await tx.estados.findFirst({
-                    where: { nombre: { contains: 'servicio' } }
-                });
+                const estadoBueno = await db.get("SELECT id FROM estados WHERE LOWER(nombre) LIKE '%servicio%'");
                 if (estadoBueno) targetEstadoId = estadoBueno.id;
             }
 
             if (targetEstadoId) {
-                await tx.equipos.updateMany({
-                    where: { id: { in: prestamos.map(p => p.equipo_id) } },
-                    data: { estado_id: targetEstadoId }
-                });
+                const equipoIds = prestamos.map(p => p.equipo_id);
+                const ePlaceholders = equipoIds.map(() => '?').join(',');
+                await db.run(
+                    `UPDATE equipos SET estado_id = ? WHERE id IN (${ePlaceholders})`,
+                    [targetEstadoId, ...equipoIds]
+                );
             }
 
+            await db.commit();
             return { count: prestamos.length };
-        });
+        } catch (error) {
+            await db.rollback();
+            throw error;
+        }
     }
 
     async deleteBulkPrestamos(ids) {
         if (!Array.isArray(ids) || ids.length === 0) return { count: 0 };
-        const result = await prisma.prestamos.deleteMany({
-            where: { id: { in: ids.map(id => parseInt(id)) } }
-        });
-        return { count: result.count };
+        const parsedIds = ids.map(id => parseInt(id));
+        const placeholders = parsedIds.map(() => '?').join(',');
+        const result = await db.run(`DELETE FROM prestamos WHERE id IN (${placeholders})`, parsedIds);
+        return { count: result.changes };
     }
 
     async limpiarHistorial() {
-        const result = await prisma.prestamos.deleteMany({
-            where: { estado: 'DEVUELTO' }
-        });
-        return { count: result.count };
+        const result = await db.run("DELETE FROM prestamos WHERE estado = 'DEVUELTO'");
+        return { count: result.changes };
     }
 }
 
 class MensajeriaService {
     async enviarMensaje(data) {
         const { usuario_id, remitente, mensaje } = data;
-        return await prisma.mensajes_admin.create({
-            data: {
-                usuario_id,
-                remitente,
-                mensaje
-            }
-        });
+        const result = await db.run(
+            "INSERT INTO mensajes_admin (usuario_id, remitente, mensaje) VALUES (?, ?, ?)",
+            [usuario_id || null, remitente || null, mensaje]
+        );
+        return { id: result.lastID, ...data };
     }
 
     async getMensajes() {
-        return await prisma.mensajes_admin.findMany({
-            orderBy: { fecha: 'desc' },
-            take: 100
-        });
+        return await db.all("SELECT * FROM mensajes_admin ORDER BY fecha DESC LIMIT 100");
     }
 
     async marcarLeido(id) {
-        return await prisma.mensajes_admin.update({
-            where: { id: parseInt(id) },
-            data: { leido: TRUE_VAL }
-        });
+        await db.run("UPDATE mensajes_admin SET leido = 1 WHERE id = ?", [parseInt(id)]);
+        return { success: true };
     }
 
     async marcarTodoLeido() {
-        return await prisma.mensajes_admin.updateMany({
-            where: { leido: FALSE_VAL },
-            data: { leido: TRUE_VAL }
-        });
+        await db.run("UPDATE mensajes_admin SET leido = 1 WHERE leido = 0");
+        return { success: true };
     }
 
     async eliminarLeidos() {
-        return await prisma.mensajes_admin.deleteMany({
-            where: { leido: TRUE_VAL }
-        });
+        const result = await db.run("DELETE FROM mensajes_admin WHERE leido = 1");
+        return { count: result.changes };
     }
 }
 
