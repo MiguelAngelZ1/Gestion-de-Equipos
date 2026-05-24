@@ -267,6 +267,20 @@ class Database {
         nivel TEXT DEFAULT 'info'
       )`);
 
+      // Índices para consultas frecuentes (evitar N+1 y acelerar JOINs)
+      const indexes = [
+        'CREATE INDEX IF NOT EXISTS idx_especificaciones_equipo_id ON especificaciones(equipo_id)',
+        'CREATE INDEX IF NOT EXISTS idx_historial_personal_equipo_id ON historial_personal(equipo_id)',
+        'CREATE INDEX IF NOT EXISTS idx_movimientos_stock_repuesto_id ON movimientos_stock(repuesto_id)',
+        'CREATE INDEX IF NOT EXISTS idx_especificaciones_repuestos_repuesto_id ON especificaciones_repuestos(repuesto_id)',
+        'CREATE INDEX IF NOT EXISTS idx_componentes_instalados_equipo_id ON componentes_instalados(equipo_id)',
+        'CREATE INDEX IF NOT EXISTS idx_soporte_tareas_equipo_id ON soporte_tareas(equipo_id)',
+        'CREATE INDEX IF NOT EXISTS idx_prestamos_equipo_id ON prestamos(equipo_id)',
+      ];
+      for (const idxSql of indexes) {
+        try { await run(idxSql); } catch (e) { /* tabla puede no existir aún */ }
+      }
+
       // Guardar versión actual para futuros arranques rápidos
       await run(`INSERT OR REPLACE INTO sync_metadata (clave, valor) VALUES ('schema_version', '${SCHEMA_VERSION}')`);
       

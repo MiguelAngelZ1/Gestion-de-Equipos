@@ -3,7 +3,7 @@ const os = require('os');
 const path = require('path');
 const fs = require('fs');
 
-const manualSync = async (req, res) => {
+const manualSync = async (req, res, next) => {
     try {
         const dbUrl = process.env.DATABASE_URL || process.env.DATABASE_PUBLIC_URL;
 
@@ -34,55 +34,39 @@ const manualSync = async (req, res) => {
         });
 
     } catch (error) {
-        console.error("❌ [Backup] Error en sincronización manual:", error);
-        res.status(500).json({
-            error: "Error durante la sincronización",
-            message: error.message
-        });
+        next(error);
     }
 };
 
-const getSyncStatus = async (req, res) => {
+const getSyncStatus = async (req, res, next) => {
     try {
         const status = await getStatus();
         res.json(status);
     } catch (error) {
-        console.error("❌ [Backup] Error obteniendo estado de sincronización:", error);
-        res.status(500).json({
-            error: "Error obteniendo estado",
-            message: error.message
-        });
+        next(error);
     }
 };
 
-const getSyncLogs = async (req, res) => {
+const getSyncLogs = async (req, res, next) => {
     try {
         const limit = parseInt(req.query.limit) || 20;
         const logs = await getLogs(limit);
         res.json(logs);
     } catch (error) {
-        console.error("❌ [Backup] Error obteniendo logs de sincronización:", error);
-        res.status(500).json({
-            error: "Error obteniendo logs",
-            message: error.message
-        });
+        next(error);
     }
 };
 
-const getSyncBackups = async (req, res) => {
+const getSyncBackups = async (req, res, next) => {
     try {
         const backups = await getBackups();
         res.json(backups);
     } catch (error) {
-        console.error("❌ [Backup] Error obteniendo backups:", error);
-        res.status(500).json({
-            error: "Error obteniendo backups",
-            message: error.message
-        });
+        next(error);
     }
 };
 
-const downloadBackup = async (req, res) => {
+const downloadBackup = async (req, res, next) => {
     try {
         const { filename } = req.params;
         const backupDir = path.resolve(__dirname, "../../backups");
@@ -97,15 +81,11 @@ const downloadBackup = async (req, res) => {
 
         res.download(filePath, filename);
     } catch (error) {
-        console.error("❌ [Backup] Error descargando backup:", error);
-        res.status(500).json({
-            error: "Error descargando backup",
-            message: error.message
-        });
+        next(error);
     }
 };
 
-const cleanupBackups = async (req, res) => {
+const cleanupBackups = async (req, res, next) => {
     try {
         const backupDir = path.resolve(__dirname, "../../backups");
         
@@ -130,11 +110,7 @@ const cleanupBackups = async (req, res) => {
             message: `${deletedCount} backup(s) eliminado(s)` 
         });
     } catch (error) {
-        console.error("❌ [Backup] Error eliminando backups:", error);
-        res.status(500).json({
-            error: "Error eliminando backups",
-            message: error.message
-        });
+        next(error);
     }
 };
 

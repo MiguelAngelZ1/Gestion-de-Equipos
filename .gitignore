@@ -8,6 +8,8 @@ node_modules/
 # Database
 *.db
 *.db-journal
+*.db-wal
+*.db-shm
 
 # Build artifacts
 frontend/dist/

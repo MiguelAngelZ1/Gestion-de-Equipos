@@ -11,11 +11,7 @@ const runSync = async (req, res, next) => {
             result: result 
         });
     } catch (error) {
-        console.error("❌ [Manual Sync] Error:", error.message);
-        res.status(500).json({ 
-            success: false, 
-            error: "Error durante la sincronización: " + error.message 
-        });
+        next(error);
     }
 };
 

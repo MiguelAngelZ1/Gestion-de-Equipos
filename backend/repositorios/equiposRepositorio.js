@@ -2,52 +2,64 @@
  * Obtiene todos los equipos junto con sus especificaciones.
  * Funciona tanto para SQLite como para PostgreSQL.
  */
-async function obtenerEquiposCompletos(db, esPostgres) {
+async function obtenerEquiposCompletos(db, esPostgres, since = null) {
   let equipos;
 
   if (esPostgres) {
-    const result = await db.query(`SELECT * FROM equipos ORDER BY id`);
+    const query = since
+      ? `SELECT * FROM equipos WHERE updated_at > $1 ORDER BY id`
+      : `SELECT * FROM equipos ORDER BY id`;
+    const params = since ? [since] : [];
+    const result = await db.query(query, params);
     equipos = result.rows;
   } else {
     equipos = await new Promise((resolve, reject) => {
-      db.all(`SELECT * FROM equipos ORDER BY id`, [], (err, rows) => {
+      const query = since
+        ? `SELECT * FROM equipos WHERE updated_at > ? ORDER BY id`
+        : `SELECT * FROM equipos ORDER BY id`;
+      const params = since ? [since] : [];
+      db.all(query, params, (err, rows) => {
         if (err) reject(err);
         else resolve(rows || []);
       });
     });
   }
 
-  const equiposCompletos = [];
+  if (equipos.length === 0) return [];
 
-  for (const equipo of equipos) {
-    let especificaciones;
-
-    if (esPostgres) {
-      const result = await db.query(
-        `SELECT clave, valor FROM especificaciones WHERE equipo_id = $1`,
-        [equipo.id]
+  let allSpecs;
+  if (esPostgres) {
+    const ids = equipos.map(e => e.id);
+    const result = await db.query(
+      `SELECT * FROM especificaciones WHERE equipo_id = ANY($1)`,
+      [ids]
+    );
+    allSpecs = result.rows;
+  } else {
+    const ids = equipos.map(e => e.id);
+    const placeholders = ids.map(() => '?').join(',');
+    allSpecs = await new Promise((resolve, reject) => {
+      db.all(
+        `SELECT * FROM especificaciones WHERE equipo_id IN (${placeholders})`,
+        ids,
+        (err, rows) => {
+          if (err) reject(err);
+          else resolve(rows || []);
+        }
       );
-      especificaciones = result.rows;
-    } else {
-      especificaciones = await new Promise((resolve, reject) => {
-        db.all(
-          `SELECT clave, valor FROM especificaciones WHERE equipo_id = ?`,
-          [equipo.id],
-          (err, rows) => {
-            if (err) reject(err);
-            else resolve(rows || []);
-          }
-        );
-      });
-    }
-
-    equiposCompletos.push({
-      ...equipo,
-      especificaciones: especificaciones || [],
     });
   }
 
-  return equiposCompletos;
+  const specsByEquipo = {};
+  for (const spec of allSpecs) {
+    if (!specsByEquipo[spec.equipo_id]) specsByEquipo[spec.equipo_id] = [];
+    specsByEquipo[spec.equipo_id].push({ clave: spec.clave, valor: spec.valor });
+  }
+
+  return equipos.map(equipo => ({
+    ...equipo,
+    especificaciones: specsByEquipo[equipo.id] || [],
+  }));
 }
 
 module.exports = {

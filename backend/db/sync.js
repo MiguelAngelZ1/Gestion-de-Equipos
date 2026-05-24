@@ -1,14 +1,12 @@
 const sqlite3 = require("sqlite3").verbose();
 const { Client } = require("pg");
 const path = require("path");
-const calcularHashEquipo = require("../sincronizacion/calcularHashEquipo");
 const { obtenerEquiposCompletos } = require("../repositorios/equiposRepositorio");
 const { sincronizarEquipos } = require("../servicios/sincronizacionEquipos");
 const {
   borrarEspecificacionesPorEquipo,
   insertarEspecificaciones
 } = require("../repositorios/especificacionesRepositorio");
-const { crearStatsSync } = require("../servicios/syncStats");
 const { imprimirResumenSync } = require("../servicios/syncLogger");
 const SyncManager = require("../servicios/syncManager");
 const database = require("./database");
@@ -91,6 +89,28 @@ async function upsertEquipo(db, equipo, isPostgreSQL) {
   }
 }
 
+async function withRetry(fn, label, maxRetries = 3) {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await withTimeout(fn(), 30000);
+    } catch (error) {
+      if (attempt === maxRetries) throw error;
+      const delay = Math.min(1000 * Math.pow(2, attempt - 1), 8000);
+      console.warn(`⚠️ [Sync] ${label} falló (intento ${attempt}/${maxRetries}), reintentando en ${delay}ms:`, error.message);
+      await new Promise(r => setTimeout(r, delay));
+    }
+  }
+}
+
+function withTimeout(promise, ms = 30000) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error(`Operación excedió el tiempo límite de ${ms / 1000}s`)), ms)
+    )
+  ]);
+}
+
 async function sync() {
   const manager = await getSyncManager();
 
@@ -107,47 +127,44 @@ async function sync() {
 
     await manager.lock();
 
-    const validation = await manager.validateStructure();
-    if (!validation.valido) {
+    const backup = await manager.createBackup();
+
+    const lastSync = await manager.getMetadata("last_sync");
+
+    console.log(`📅 [Sync] Última sincronización: ${lastSync || 'N/A'}`);
+    if (lastSync) {
+      console.log(`📅 [Sync] Usando sincronización incremental (desde: ${lastSync})`);
     }
 
-    const backup = await manager.createBackup();
-    
     const sqliteDB = new sqlite3.Database(SQLITE_PATH);
     const pgClient = new Client({
       connectionString: DATABASE_URL,
       ssl: { rejectUnauthorized: false }
     });
 
+    let heartbeat = null;
+
     try {
       await pgClient.connect();
 
-      const equiposLocal = await obtenerEquiposCompletos(sqliteDB, false);
-      const equiposRemote = await obtenerEquiposCompletos(pgClient, true);
+      const equiposLocal = await obtenerEquiposCompletos(sqliteDB, false, lastSync);
+      const equiposRemote = await obtenerEquiposCompletos(pgClient, true, lastSync);
 
-      const heartbeat = setInterval(async () => {
+      console.log(`📊 [Sync] Local: ${equiposLocal.length} equipos, Remoto: ${equiposRemote.length} equipos`);
+
+      heartbeat = setInterval(async () => {
         try { await manager.renewLock(); } catch (e) { /* ignore */ }
       }, 60 * 1000);
 
-      const {
-        equiposLocalFinal,
-        equiposRemoteFinal,
-        stats: newStats,
-        detalles
-      } = await sincronizarEquipos({
-        equiposLocal,
-        equiposRemote,
-        obtenerEquiposLocal: () => obtenerEquiposCompletos(sqliteDB, false),
-        obtenerEquiposRemote: () => obtenerEquiposCompletos(pgClient, true),
-
-        actualizarLocal: async (equipo) => {
+      const actualizarLocalConRetry = async (equipo) => {
+        await withRetry(async () => {
           await new Promise((resolve, reject) => {
-            sqliteDB.serialize(async () => {
+            sqliteDB.serialize(() => {
               sqliteDB.run("BEGIN TRANSACTION");
               try {
-                await upsertEquipo(sqliteDB, equipo, false);
-                await borrarEspecificacionesPorEquipo(sqliteDB, false, equipo.id);
-                await insertarEspecificaciones(
+                upsertEquipo(sqliteDB, equipo, false);
+                borrarEspecificacionesPorEquipo(sqliteDB, false, equipo.id);
+                insertarEspecificaciones(
                   sqliteDB,
                   false,
                   equipo.id,
@@ -159,10 +176,11 @@ async function sync() {
               }
             });
           });
-        },
+        }, `actualizarLocal(${equipo.id})`);
+      };
 
-        actualizarRemote: async (equipo) => {
-          // Usar transacción en PostgreSQL
+      const actualizarRemoteConRetry = async (equipo) => {
+        await withRetry(async () => {
           await pgClient.query('BEGIN');
           try {
             await upsertEquipo(pgClient, equipo, true);
@@ -178,7 +196,22 @@ async function sync() {
             await pgClient.query('ROLLBACK');
             throw error;
           }
-        }
+        }, `actualizarRemote(${equipo.id})`);
+      };
+
+      const {
+        equiposLocalFinal,
+        equiposRemoteFinal,
+        stats: newStats,
+        detalles
+      } = await sincronizarEquipos({
+        equiposLocal,
+        equiposRemote,
+        obtenerEquiposLocal: () => obtenerEquiposCompletos(sqliteDB, false),
+        obtenerEquiposRemote: () => obtenerEquiposCompletos(pgClient, true),
+
+        actualizarLocal: actualizarLocalConRetry,
+        actualizarRemote: actualizarRemoteConRetry
       });
 
       await manager.updateCounts(equiposLocalFinal.length, equiposRemoteFinal.length);

@@ -5,6 +5,8 @@ const getBaseURL = () => {
 };
 export const API_BASE = getBaseURL();
 const USER_DATA_KEY = "equipos_user_data";
+const REQUEST_TIMEOUT = 15000;
+const MAX_RETRIES = 2;
 
 export const getAuthToken = () => null;
 export const setAuthToken = () => {};
@@ -17,7 +19,14 @@ export const isAuthenticated = () => !!localStorage.getItem(USER_DATA_KEY);
 export const getUserData = () => JSON.parse(localStorage.getItem(USER_DATA_KEY) || "null");
 export const setUserData = (userData) => localStorage.setItem(USER_DATA_KEY, JSON.stringify(userData));
 
-export async function apiRequest(endpoint, options = {}) {
+export async function apiRequest(endpoint, options = {}, retries = MAX_RETRIES) {
+    if (!navigator.onLine) {
+        throw new Error("Sin conexión a internet. Verifica tu red.");
+    }
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
+
     const headers = {
         "Content-Type": "application/json",
         ...options.headers,
@@ -27,34 +36,53 @@ export async function apiRequest(endpoint, options = {}) {
         options.body = JSON.stringify(options.body);
     }
 
-    let url = `${API_BASE}${endpoint}`;
+    const url = `${API_BASE}${endpoint}`;
 
-    const response = await fetch(url, {
-        headers,
-        credentials: 'include',
-        ...options,
-    });
+    try {
+        const response = await fetch(url, {
+            headers,
+            credentials: 'include',
+            signal: controller.signal,
+            ...options,
+        });
 
-    const isJson = response.headers.get("content-type")?.includes("application/json");
-    const data = isJson ? await response.json() : null;
+        clearTimeout(timeoutId);
 
-    if (!response.ok) {
-        if (response.status === 401) {
-            localStorage.removeItem(USER_DATA_KEY);
-            window.dispatchEvent(new Event("auth:unauthorized"));
-            throw new Error("No autorizado. Inicie sesión nuevamente.");
+        const isJson = response.headers.get("content-type")?.includes("application/json");
+        const data = isJson ? await response.json() : null;
+
+        if (!response.ok) {
+            if (response.status === 401) {
+                localStorage.removeItem(USER_DATA_KEY);
+                window.dispatchEvent(new Event("auth:unauthorized"));
+                throw new Error("No autorizado. Inicie sesión nuevamente.");
+            }
+            if (response.status === 403) {
+                window.dispatchEvent(new Event("auth:forbidden"));
+                throw new Error("Acceso denegado: No tiene los permisos necesarios para realizar esta acción.");
+            }
+            const errorMessage = (data && data.error) ? data.error : `Error ${response.status}: ${response.statusText}`;
+            throw new Error(errorMessage);
         }
-        if (response.status === 403) {
-            window.dispatchEvent(new Event("auth:forbidden"));
-            throw new Error("Acceso denegado: No tiene los permisos necesarios para realizar esta acción.");
+
+        if (!isJson && response.ok) {
+            throw new Error("El servidor devolvió un formato inesperado (HTML). Posiblemente necesite reiniciar el backend.");
         }
-        const errorMessage = (data && data.error) ? data.error : `Error ${response.status}: ${response.statusText}`;
-        throw new Error(errorMessage);
-    }
 
-    if (!isJson && response.ok) {
-        throw new Error("El servidor devolvió un formato inesperado (HTML). Posiblemente necesite reiniciar el backend.");
-    }
+        return data;
+    } catch (error) {
+        clearTimeout(timeoutId);
 
-    return data;
+        if (error.name === 'AbortError') {
+            throw new Error(`La solicitud tardó demasiado (${REQUEST_TIMEOUT / 1000}s). Intenta nuevamente.`);
+        }
+
+        if (retries > 0 && !error.message.includes('No autorizado') && !error.message.includes('Acceso denegado')) {
+            const delay = Math.min(1000 * Math.pow(2, MAX_RETRIES - retries), 4000);
+            await new Promise(r => setTimeout(r, delay));
+            return apiRequest(endpoint, options, retries - 1);
+        }
+
+        throw error;
+    }
 }

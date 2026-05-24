@@ -37,10 +37,19 @@ const app = express();
 const http = require('http');
 const server = http.createServer(app);
 const { Server } = require("socket.io");
+
+// Definir origenes permitidos ANTES de CORS y Socket.IO
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  process.env.LOCAL_FRONTEND_URL || 'http://localhost:5173',
+  'http://127.0.0.1:5173'
+].filter(Boolean);
+
 const io = new Server(server, {
   cors: {
-    origin: "*", // En producción ajustar al dominio específico
-    methods: ["GET", "POST"]
+    origin: IS_PROD ? allowedOrigins : "*",
+    methods: ["GET", "POST"],
+    credentials: true
   }
 });
 
@@ -60,30 +69,50 @@ if (IS_PROD) {
   }
 }
 
-// Configurar trust proxy para express-rate-limit (especialmente en túneles/Cloudflare)
-app.set('trust proxy', 1);
+// Generar nonce CSP por request para scripts inline
+const crypto = require('crypto');
+app.use((req, res, next) => {
+  res.locals.nonce = crypto.randomBytes(16).toString('base64');
+  next();
+});
 
+// Cache del index.html para inyectar nonce en scripts inline
+let cachedHtml = null;
+const serveIndexWithNonce = (req, res, next) => {
+  if (req.method !== 'GET') return next();
+  const isIndexHtml = req.path === '/' || req.path === '/index.html';
+  if (!isIndexHtml) return next();
+  if (!cachedHtml) {
+    try {
+      const fs = require('fs');
+      cachedHtml = fs.readFileSync(path.join(STATIC_PATH, 'index.html'), 'utf-8');
+    } catch (e) {
+      return next();
+    }
+  }
+  const nonced = cachedHtml
+    .replace(/<script\s/g, `<script nonce="${res.locals.nonce}" `)
+    .replace(/<link\s/g, `<link nonce="${res.locals.nonce}" `)
+    .replace(/<style\s/g, `<style nonce="${res.locals.nonce}" `);
+  res.send(nonced);
+};
 
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"], // Permitir inline para splash screen y SW
+      scriptSrc: [
+        "'self'",
+        (req, res) => `'nonce-${res.locals.nonce}'`,
+      ],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
       imgSrc: ["'self'", "data:", "blob:"],
-      connectSrc: ["'self'", "https://*", "wss://*"],
+      connectSrc: ["'self'", ...allowedOrigins.map(o => o.replace(/\/$/, ''))],
     },
   },
 }));
 app.use(compression());
-
-// Configuración de CORS restrictiva
-const allowedOrigins = [
-  process.env.FRONTEND_URL, // URL de producción (ej. Railway)
-  process.env.LOCAL_FRONTEND_URL || 'http://localhost:5173',  // Vite local
-  'http://127.0.0.1:5173'
-].filter(Boolean);
 
 app.use(cors({
   origin: (origin, callback) => {
@@ -120,6 +149,7 @@ const authLimiter = rateLimit({
 });
 
 const STATIC_PATH = process.env.STATIC_PATH || path.join(__dirname, "../frontend/dist");
+app.use(serveIndexWithNonce);
 app.use(express.static(STATIC_PATH));
 
 // Aplicar rate limit general
@@ -156,10 +186,16 @@ app.get("/health", (req, res) => {
   });
 });
 
-// Ruta catch-all para SPA de React
-// Solo después de todas las rutas y la API
+// Ruta catch-all para SPA de React con nonce CSP
 app.get("*", (req, res, next) => {
   if (req.url.startsWith('/api')) return next();
+  if (cachedHtml) {
+    const nonced = cachedHtml
+      .replace(/<script\s/g, `<script nonce="${res.locals.nonce}" `)
+      .replace(/<link\s/g, `<link nonce="${res.locals.nonce}" `)
+      .replace(/<style\s/g, `<style nonce="${res.locals.nonce}" `);
+    return res.send(nonced);
+  }
   res.sendFile(path.join(STATIC_PATH, "index.html"));
 });
 

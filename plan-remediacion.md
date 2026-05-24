@@ -38,26 +38,26 @@ Basado en auditoría del 2026-05-24. 47 hallazgos totales (10 críticos, 10 alto
 
 ---
 
-## Fase 2: Altos (siguiente iteración)
+## Fase 2: Altos ✅ (Completada 2026-05-24)
 
-### 2.1 Backend
-- N+1 queries: agregar índices a `especificaciones.equipo_id`, `historial_personal.equipo_id`, `movimientos_stock.repuesto_id`, `especificaciones_repuestos.repuesto_id`
-- Reemplazar N+1 loops con JOINs o batch queries en `equiposRepositorio.js` y servicios
-- Corregir error propagation en `prestamosController.js`, `backup.controller.js`, `sync.controller.js` para usar `next(err)`
-- CORS restrictivo en producción (whitelist explícita) y Socket.IO CORS alineado con REST
-- Endurecer CSP: quitar `'unsafe-inline'`, acotar `connect-src`
+### 2.1 Backend ✅
+- ✅ N+1 queries: índices agregados a `especificaciones.equipo_id`, `historial_personal.equipo_id`, `movimientos_stock.repuesto_id`, `especificaciones_repuestos.repuesto_id`, `componentes_instalados.equipo_id`, `soporte_tareas.equipo_id`, `prestamos.equipo_id` en `database.js:initializeTables()`
+- ✅ N+1 loop reemplazado por batch query (`SELECT * FROM especificaciones WHERE equipo_id IN (...)`) en `equiposRepositorio.js`
+- ✅ Error propagation corregida en `prestamosController.js` (5 handlers), `backup.controller.js` (6 handlers), `sync.controller.js` (1 handler) — ahora usan `next(error)`
+- ✅ CORS restrictivo: Socket.IO CORS alineado con REST whitelist (`allowedOrigins`), `credentials: true` en Socket.IO
+- ✅ CSP hardening: nonce-based para scripts (removido `'unsafe-inline'` de script-src), `connect-src` acotado a orígenes específicos (sin wildcards)
 
-### 2.2 Frontend
-- Agregar `AbortController` con timeout a `api.js`
-- Agregar `retry` con backoff en errores de red
-- Agregar `navigator.onLine` check antes de API calls
-- Arreglar stale closures en useEffect
-- Agregar `react-hooks/exhaustive-deps` a ESLint
+### 2.2 Frontend ✅
+- ✅ `AbortController` con timeout de 15s en `api.js`
+- ✅ `retry` con backoff exponencial (max 2 retries, delay 1-4s) en errores de red
+- ✅ `navigator.onLine` check antes de API calls
+- ✅ `react-hooks/exhaustive-deps` agregado como `error` en ESLint
+- ✅ Stale closures evaluados — patrón de fetch-on-mount es correcto (funciones estables, sin dependencias cambiantes)
 
-### 2.3 Sync
-- Agregar incremental sync (filtrar por `updated_at > last_sync`)
-- Agregar retry con backoff por operación individual
-- Agregar timeout por operación (30s)
+### 2.3 Sync ✅
+- ✅ Sync incremental: filtra equipos por `updated_at > last_sync` usando timestamp de `sync_metadata`
+- ✅ Retry con backoff por operación individual (`withRetry`: 3 intentos, delay 1-8s)
+- ✅ Timeout por operación de 30s (`withTimeout`)
 
 ---
 
