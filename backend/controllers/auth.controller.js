@@ -84,9 +84,10 @@ const forgotPassword = async (req, res, next) => {
         }
 
         const code = crypto.randomInt(100000, 999999).toString();
+        const codeHash = crypto.createHash('sha256').update(code).digest('hex');
         const expires = new Date(Date.now() + 15 * 60 * 1000);
         
-        await usuariosService.saveRecoveryCode(email, code, expires);
+        await usuariosService.saveRecoveryCode(email, codeHash, expires);
 
         sendRecoveryCode(email, code).catch(err => {
             console.error("❌ Error enviando email de recuperación:", err);
@@ -104,7 +105,18 @@ const resetPassword = async (req, res, next) => {
     try {
         const stored = await usuariosService.getRecoveryCode(email);
 
-        if (!stored || stored.codigo !== code || new Date() > new Date(stored.expires)) {
+        if (!stored || new Date() > new Date(stored.expires)) {
+            return res.status(400).json({ error: "Código inválido o expirado." });
+        }
+
+        const codeHash = crypto.createHash('sha256').update(code).digest('hex');
+        let codeValid = false;
+        try {
+            codeValid = crypto.timingSafeEqual(Buffer.from(stored.codigo), Buffer.from(codeHash));
+        } catch (_) {
+            codeValid = false;
+        }
+        if (!codeValid) {
             return res.status(400).json({ error: "Código inválido o expirado." });
         }
 
@@ -124,6 +136,7 @@ const logout = async (req, res) => {
             await refreshTokenService.revokeAllUserTokens(req.user.userId);
         }
     } catch (e) {
+        console.error("Error en logout:", e);
     }
     res.clearCookie('token', { httpOnly: true, secure: IS_PROD, sameSite: 'strict' });
     res.clearCookie('refreshToken', { httpOnly: true, secure: IS_PROD, sameSite: 'strict', path: '/api/auth' });
