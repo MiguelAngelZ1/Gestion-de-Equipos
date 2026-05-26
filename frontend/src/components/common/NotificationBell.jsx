@@ -74,7 +74,10 @@ const NotificationBell = () => {
 
         return () => {
             cancelled = true;
-            if (socket) socket.disconnect();
+            if (socket) {
+                socket.off('new_notification');
+                socket.disconnect();
+            }
         };
     }, [userId, socketURL]);
 

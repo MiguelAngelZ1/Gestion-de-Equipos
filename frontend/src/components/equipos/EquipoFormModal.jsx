@@ -4,6 +4,16 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Edit2, Plus, Save, X, Trash2, Loader2, Tag, Activity, MapPin, Shield } from 'lucide-react';
 import Select from '../common/Select';
 
+const InputError = ({ message }) => (
+  <motion.p
+    initial={{ opacity: 0, y: -10 }}
+    animate={{ opacity: 1, y: 0 }}
+    className="text-[10px] font-bold text-rose-400 mt-1.5 ml-1 uppercase tracking-wider"
+  >
+    {message}
+  </motion.p>
+);
+
 const EquipoFormModal = ({ isOpen, initialData = {}, onClose, onSave, grados = [], ubicaciones = [], gruposComodidad = [], estados = [] }) => {
   const [formData, setFormData] = useState({
     ine: '',
@@ -115,16 +125,6 @@ const EquipoFormModal = ({ isOpen, initialData = {}, onClose, onSave, grados = [
   };
 
   if (typeof document === 'undefined') return null;
-
-  const InputError = ({ message }) => (
-    <motion.p 
-      initial={{ opacity: 0, y: -10 }} 
-      animate={{ opacity: 1, y: 0 }} 
-      className="text-[10px] font-bold text-rose-400 mt-1.5 ml-1 uppercase tracking-wider"
-    >
-      {message}
-    </motion.p>
-  );
 
   return createPortal(
     <AnimatePresence>

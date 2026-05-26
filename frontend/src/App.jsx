@@ -29,8 +29,28 @@ const MensajeAdmin = lazy(() => import('./pages/MensajeAdmin'));
 const Prestamos = lazy(() => import('./pages/Prestamos'));
 const IPAM = lazy(() => import('./pages/IPAM'));
 
+function ProtectedRoute({ children }) {
+  const { isAuthenticated } = useAuth();
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  return children;
+}
+
+function RoleRoute({ children, roles }) {
+  const { user } = useAuth();
+  const userRole = (user?.rol || ROLES.USER).toUpperCase();
+  if (!roles.includes(userRole)) return <Navigate to="/" replace />;
+  return children;
+}
+
+function IndexRedirect() {
+  const { user } = useAuth();
+  const userRole = (user?.rol || ROLES.USER).toUpperCase();
+  if (userRole === ROLES.ADMIN) return <Dashboard />;
+  return <Navigate to="/equipos" replace />;
+}
+
 function AppContent() {
-  const { user, isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
 
   React.useEffect(() => {
     const handleForbidden = () => {
@@ -41,23 +61,6 @@ function AppContent() {
   }, []);
 
   if (loading) return <PageLoader />;
-
-  const ProtectedRoute = ({ children }) => {
-    if (!isAuthenticated) return <Navigate to="/login" replace />;
-    return children;
-  };
-
-  const RoleRoute = ({ children, roles }) => {
-    const userRole = (user?.rol || ROLES.USER).toUpperCase();
-    if (!roles.includes(userRole)) return <Navigate to="/" replace />;
-    return children;
-  };
-
-  const IndexRedirect = () => {
-    const userRole = (user?.rol || ROLES.USER).toUpperCase();
-    if (userRole === ROLES.ADMIN) return <Dashboard />;
-    return <Navigate to="/equipos" replace />;
-  };
 
   return (
     <Suspense fallback={<PageLoader />}>
