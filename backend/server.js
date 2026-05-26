@@ -100,7 +100,6 @@ const serveIndexWithNonce = (req, res, next) => {
   res.send(injectNonces(cachedHtml, res.locals.nonce));
 };
 
-console.log('🛡️ Helmet cargado');
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
@@ -116,7 +115,25 @@ app.use(helmet({
     },
   },
 }));
-app.use(compression());
+// Serve pre-compressed Brotli files when client supports it
+const MIME_TYPES = { '.js': 'application/javascript', '.css': 'text/css', '.html': 'text/html', '.svg': 'image/svg+xml' };
+app.use((req, res, next) => {
+  const ext = path.extname(req.path);
+  if (req.path.startsWith('/assets/') && MIME_TYPES[ext]) {
+    const acceptEncoding = req.headers['accept-encoding'] || '';
+    if (acceptEncoding.includes('br')) {
+      const brPath = path.join(STATIC_PATH, req.path + '.br');
+      if (fs.existsSync(brPath)) {
+        res.setHeader('Content-Type', MIME_TYPES[ext]);
+        res.setHeader('Content-Encoding', 'br');
+        res.setHeader('Vary', 'Accept-Encoding');
+        return res.sendFile(brPath);
+      }
+    }
+  }
+  next();
+});
+app.use(compression({ level: 6, threshold: 512 }));
 
 app.use(cors({
   origin: (origin, callback) => {
@@ -161,7 +178,15 @@ app.use('/sw.js', (req, res, next) => {
   res.removeHeader('Content-Security-Policy');
   res.sendFile(path.join(STATIC_PATH, 'sw.js'));
 });
-app.use(express.static(STATIC_PATH));
+app.use(express.static(STATIC_PATH, {
+  maxAge: IS_PROD ? '1y' : 0,
+  immutable: true,
+  setHeaders(res, filePath) {
+    if (filePath.endsWith('.html') || filePath.endsWith('.webmanifest')) {
+      res.setHeader('Cache-Control', 'no-cache');
+    }
+  }
+}));
 
 // Aplicar rate limit general
 app.use('/api', generalLimiter);

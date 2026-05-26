@@ -3,17 +3,23 @@ import react from '@vitejs/plugin-react-swc'
 import tailwindcss from '@tailwindcss/vite'
 import viteCompression from 'vite-plugin-compression'
 
-// https://vite.dev/config/
 export default defineConfig({
   plugins: [
     tailwindcss(),
     react(),
     viteCompression({
-      verbose: true,
+      verbose: false,
       disable: false,
       threshold: 1024,
       algorithm: 'gzip',
       ext: '.gz',
+    }),
+    viteCompression({
+      verbose: false,
+      disable: false,
+      threshold: 1024,
+      algorithm: 'brotliCompress',
+      ext: '.br',
     })
   ],
   server: {
@@ -25,12 +31,20 @@ export default defineConfig({
   build: {
     target: 'esnext',
     minify: 'esbuild',
+    cssMinify: 'esbuild',
+    modulePreload: false,
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom'],
-          'vendor-anim': ['framer-motion'],
-          'vendor-charts': ['recharts']
+        chunkFileNames: 'assets/[name]-[hash].js',
+        manualChunks(id) {
+          if (id.includes('node_modules/react-dom')) return 'vendor'
+          if (id.includes('node_modules/react/')) return 'vendor'
+          if (id.includes('node_modules/framer-motion')) return 'vendor-anim'
+          if (id.includes('node_modules/recharts')) return 'vendor-charts'
+          if (id.includes('node_modules/lucide-react')) return 'vendor-icons'
+          if (id.includes('node_modules/react-router')) return 'vendor-router'
+          if (id.includes('node_modules/socket.io-client')) return 'vendor-socket'
+          if (id.includes('node_modules/date-fns')) return 'vendor-date'
         }
       }
     }
