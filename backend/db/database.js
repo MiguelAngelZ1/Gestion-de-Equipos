@@ -56,7 +56,7 @@ class Database {
     // --- SQLite (Local) ---
     try {
       // Versión actual del esquema. Incrementar si se añaden tablas o columnas nuevas.
-      const SCHEMA_VERSION = "5"; 
+      const SCHEMA_VERSION = "6"; 
 
       // Verificar si ya tenemos una versión registrada
       const checkTableSync = await new Promise((res) => {
@@ -137,7 +137,14 @@ class Database {
       await run(`CREATE TABLE IF NOT EXISTS componentes_instalados (id INTEGER PRIMARY KEY AUTOINCREMENT, equipo_id TEXT NOT NULL, nombre TEXT NOT NULL, fecha_instalacion DATETIME DEFAULT CURRENT_TIMESTAMP)`);
       await run(`CREATE TABLE IF NOT EXISTS responsables (id INTEGER PRIMARY KEY AUTOINCREMENT, nombre TEXT NOT NULL, apellido TEXT NOT NULL, activo INTEGER DEFAULT 1)`);
       await run(`CREATE TABLE IF NOT EXISTS ubicaciones (id INTEGER PRIMARY KEY AUTOINCREMENT, nombre TEXT NOT NULL UNIQUE)`);
-      await run(`CREATE TABLE IF NOT EXISTS mensajes_admin (id INTEGER PRIMARY KEY AUTOINCREMENT, mensaje TEXT NOT NULL, fecha DATETIME DEFAULT CURRENT_TIMESTAMP)`);
+      await run(`CREATE TABLE IF NOT EXISTS mensajes_admin (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        usuario_id INTEGER,
+        remitente TEXT,
+        mensaje TEXT NOT NULL,
+        leido INTEGER DEFAULT 0,
+        fecha DATETIME DEFAULT CURRENT_TIMESTAMP
+      )`);
       
       // Tablas de sistema para soporte de notificaciones y sync en local
       await run(`CREATE TABLE IF NOT EXISTS alertas_notificaciones (
@@ -201,6 +208,14 @@ class Database {
         clave TEXT NOT NULL,
         valor TEXT NOT NULL,
         FOREIGN KEY (equipo_id) REFERENCES equipos(id) ON DELETE CASCADE
+      )`);
+
+      await run(`CREATE TABLE IF NOT EXISTS especificaciones_repuestos (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        repuesto_id INTEGER NOT NULL,
+        clave TEXT NOT NULL,
+        valor TEXT NOT NULL,
+        FOREIGN KEY (repuesto_id) REFERENCES componentes_repuestos(id) ON DELETE CASCADE
       )`);
 
       await run(`CREATE TABLE IF NOT EXISTS historial_personal (
@@ -289,7 +304,7 @@ class Database {
       }
 
       // Guardar versión actual para futuros arranques rápidos
-      await run(`INSERT OR REPLACE INTO sync_metadata (clave, valor) VALUES ('schema_version', '${SCHEMA_VERSION}')`);
+      await run("INSERT OR REPLACE INTO sync_metadata (clave, valor) VALUES ('schema_version', ?)", [SCHEMA_VERSION]);
       
       console.log("✅ [DB] Base de datos unificada y lista.");
 
