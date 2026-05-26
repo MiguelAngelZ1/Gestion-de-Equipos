@@ -56,7 +56,7 @@ class Database {
     // --- SQLite (Local) ---
     try {
       // Versión actual del esquema. Incrementar si se añaden tablas o columnas nuevas.
-      const SCHEMA_VERSION = "6"; 
+      const SCHEMA_VERSION = "7"; 
 
       // Verificar si ya tenemos una versión registrada
       const checkTableSync = await new Promise((res) => {
@@ -107,6 +107,7 @@ class Database {
         email TEXT NOT NULL UNIQUE,
         password_hash TEXT NOT NULL,
         rol TEXT DEFAULT 'USER',
+        permisos_json TEXT DEFAULT '[]',
         last_login DATETIME,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -114,6 +115,7 @@ class Database {
 
       const userCols = await tableInfo('usuarios');
       if (!hasCol(userCols, 'rol')) await run(`ALTER TABLE usuarios ADD COLUMN rol TEXT DEFAULT 'USER'`);
+      if (!hasCol(userCols, 'permisos_json')) await run(`ALTER TABLE usuarios ADD COLUMN permisos_json TEXT DEFAULT '[]'`);
 
       await run(`CREATE TABLE IF NOT EXISTS soporte_tareas (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -135,8 +137,11 @@ class Database {
       // Otras tablas necesarias
       await run(`CREATE TABLE IF NOT EXISTS componentes_repuestos (id INTEGER PRIMARY KEY AUTOINCREMENT, nombre TEXT NOT NULL, cantidad INTEGER DEFAULT 0)`);
       await run(`CREATE TABLE IF NOT EXISTS componentes_instalados (id INTEGER PRIMARY KEY AUTOINCREMENT, equipo_id TEXT NOT NULL, nombre TEXT NOT NULL, fecha_instalacion DATETIME DEFAULT CURRENT_TIMESTAMP)`);
-      await run(`CREATE TABLE IF NOT EXISTS responsables (id INTEGER PRIMARY KEY AUTOINCREMENT, nombre TEXT NOT NULL, apellido TEXT NOT NULL, activo INTEGER DEFAULT 1)`);
-      await run(`CREATE TABLE IF NOT EXISTS ubicaciones (id INTEGER PRIMARY KEY AUTOINCREMENT, nombre TEXT NOT NULL UNIQUE)`);
+      await run(`CREATE TABLE IF NOT EXISTS responsables (id INTEGER PRIMARY KEY AUTOINCREMENT, nombre TEXT NOT NULL, apellido TEXT NOT NULL, activo INTEGER DEFAULT 1, grado TEXT, grado_id INTEGER)`);
+      try { await run(`ALTER TABLE responsables ADD COLUMN grado TEXT`); } catch (e) { /* ok */ }
+      try { await run(`ALTER TABLE responsables ADD COLUMN grado_id INTEGER`); } catch (e) { /* ok */ }
+      await run(`CREATE TABLE IF NOT EXISTS ubicaciones (id INTEGER PRIMARY KEY AUTOINCREMENT, nombre TEXT NOT NULL UNIQUE, ubicacion TEXT)`);
+      try { await run(`ALTER TABLE ubicaciones ADD COLUMN ubicacion TEXT`); } catch (e) { /* columna ya existe */ }
       await run(`CREATE TABLE IF NOT EXISTS mensajes_admin (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         usuario_id INTEGER,
