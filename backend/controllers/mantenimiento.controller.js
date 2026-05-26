@@ -14,8 +14,7 @@ const getTrashItems = async (req, res, next) => {
         const items = await configService.getTrashItems();
         res.json(items);
     } catch (err) {
-        console.error("❌ Error en getTrashItems:", err);
-        res.status(500).json({ error: "Error obteniendo elementos de la papelera" });
+        next(err);
     }
 };
 
@@ -24,8 +23,7 @@ const restoreEquipo = async (req, res, next) => {
         await configService.restoreEquipo(req.params.id);
         res.json({ success: true, message: "Equipo restaurado correctamente" });
     } catch (err) {
-        console.error("❌ Error en restoreEquipo:", err);
-        res.status(500).json({ error: "Error al restaurar el equipo" });
+        next(err);
     }
 };
 
@@ -34,8 +32,7 @@ const deleteFromTrash = async (req, res, next) => {
         await configService.deleteFromTrash(req.params.id);
         res.json({ success: true, message: "Equipo eliminado definitivamente" });
     } catch (err) {
-        console.error("❌ Error en deleteFromTrash:", err);
-        res.status(500).json({ error: "Error al eliminar el equipo definitivamente" });
+        next(err);
     }
 };
 
@@ -44,8 +41,7 @@ const purgeTrash = async (req, res, next) => {
         const result = await configService.purgeTrash();
         res.json({ success: true, message: `Se eliminaron ${result.count} equipos definitivamente` });
     } catch (err) {
-        console.error("❌ Error en purgeTrash:", err);
-        res.status(500).json({ error: "Error al vaciar la papelera" });
+        next(err);
     }
 };
 
@@ -57,8 +53,7 @@ const optimizeDatabase = async (req, res, next) => {
             message: `Base de Datos optimizada y datos huérfanos limpiados correctamente.`
         });
     } catch (err) {
-        console.error("❌ Error en optimizeDatabase:", err);
-        res.status(500).json({ error: "Error al optimizar la base de datos" });
+        next(err);
     }
 };
 

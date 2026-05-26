@@ -9,8 +9,8 @@ const {
 } = require('../controllers/equipos.controller');
 const { verificarAutenticacion } = require('../middleware/auth.middleware');
 
-router.get('/', getEquipos);
-router.get('/:id', getEquipoById);
+router.get('/', verificarAutenticacion, getEquipos);
+router.get('/:id', verificarAutenticacion, getEquipoById);
 router.post('/', verificarAutenticacion, createOrUpdateEquipo);
 router.put('/:id', verificarAutenticacion, createOrUpdateEquipo);
 router.delete('/bulk', verificarAutenticacion, deleteBulkEquipos);
