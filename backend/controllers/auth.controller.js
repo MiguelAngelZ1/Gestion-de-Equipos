@@ -38,6 +38,10 @@ const setRefreshTokenCookie = (res, token) => {
 const login = async (req, res, next) => {
     const { usuario, password } = req.body;
 
+    if (!usuario || !password || usuario.trim() === '' || password.trim() === '') {
+        return res.status(400).json({ error: "Usuario y contraseña son requeridos" });
+    }
+
     try {
         const user = await usuariosService.findByUsuarioOrEmail(usuario);
 

@@ -1,6 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const configController = require('../controllers/config.controller');
+const { verificarAutenticacion } = require('../middleware/auth.middleware');
+
+router.use(verificarAutenticacion);
 
 // Grupo Comodidad (antes Categorías)
 router.get('/grupos-comodidad', configController.getGruposComodidad);

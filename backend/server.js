@@ -28,6 +28,7 @@ const notificacionesRoutes = require('./routes/notificaciones.routes');
 const ipamRoutes = require('./routes/ipam.routes');
 const prestamosRoutes = require('./routes/prestamos');
 const errorHandler = require('./middleware/error.middleware');
+const { verificarAutenticacion } = require('./middleware/auth.middleware');
 const { ROLES } = require('./config/constants');
 
 // Servicios
@@ -43,12 +44,13 @@ const { Server } = require("socket.io");
 const allowedOrigins = [
   process.env.FRONTEND_URL,
   process.env.LOCAL_FRONTEND_URL || 'http://localhost:5173',
-  'http://127.0.0.1:5173'
+  'http://127.0.0.1:5173',
+  'http://localhost:3000'
 ].filter(Boolean);
 
 const io = new Server(server, {
   cors: {
-    origin: IS_PROD ? allowedOrigins : "*",
+    origin: allowedOrigins,
     methods: ["GET", "POST"],
     credentials: true
   }
@@ -119,11 +121,10 @@ app.use(compression());
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin) return callback(null, true);
-    const isAllowed = allowedOrigins.includes(origin) || !IS_PROD;
-    if (isAllowed) {
+    if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      callback(new Error('No permitido por CORS'));
+      callback(null, false);
     }
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
@@ -172,7 +173,7 @@ app.use('/api/auth/login', authLimiter);
 const dashboardController = require('./controllers/dashboard.controller');
 // Endpoints REST modulares
 app.use('/api/auth', authRoutes);
-app.get('/api/dashboard/summary', dashboardController.getDashboardSummary);
+app.get('/api/dashboard/summary', verificarAutenticacion, dashboardController.getDashboardSummary);
 app.use('/api/equipos', equiposRoutes);
 app.use('/api/sync', syncRoutes);
 app.use('/api/config', configRoutes);
