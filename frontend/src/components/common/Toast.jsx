@@ -1,5 +1,4 @@
 import React, { useEffect } from 'react';
-import { motion } from 'framer-motion';
 import { CheckCircle2, AlertCircle, Info, X } from 'lucide-react';
 
 const Toast = ({ title, message, type, onClose }) => {
@@ -40,18 +39,11 @@ const Toast = ({ title, message, type, onClose }) => {
   const config = configs[type] || configs.info;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, x: 50, scale: 0.9 }}
-      animate={{ opacity: 1, x: 0, scale: 1 }}
-      exit={{ opacity: 0, x: 20, scale: 0.95, transition: { duration: 0.2 } }}
-      className={`pointer-events-auto w-full bg-[#1e293b]/90 backdrop-blur-xl border ${config.border} rounded-2xl shadow-2xl flex relative overflow-hidden group`}
+    <div
+      className={`pointer-events-auto w-full bg-[#1e293b]/90 backdrop-blur-xl border ${config.border} rounded-2xl shadow-2xl flex relative overflow-hidden group animate-toast-enter`}
     >
-      {/* Barra de progreso de cierre */}
-      <motion.div 
-        initial={{ width: "100%" }}
-        animate={{ width: "0%" }}
-        transition={{ duration: 4.5, ease: "linear" }}
-        className={`absolute bottom-0 left-0 h-0.5 ${config.accent} opacity-50`}
+      <div 
+        className={`absolute bottom-0 left-0 h-0.5 ${config.accent} opacity-50 animate-toast-progress`}
       />
 
       <div className="p-4 flex gap-4 items-start w-full">
@@ -74,9 +66,8 @@ const Toast = ({ title, message, type, onClose }) => {
         </button>
       </div>
 
-      {/* Decorative accent side */}
       <div className={`absolute left-0 top-0 bottom-0 w-1 ${config.accent}`} />
-    </motion.div>
+    </div>
   );
 };
 
