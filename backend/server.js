@@ -7,6 +7,7 @@ const path = require("path");
 const rateLimit = require("express-rate-limit");
 const helmet = require("helmet");
 const compression = require("compression");
+const fs = require("fs");
 
 // Detección de entorno
 const IS_PROD = process.env.NODE_ENV === 'production';
@@ -77,24 +78,24 @@ app.use((req, res, next) => {
 });
 
 // Cache del index.html para inyectar nonce en scripts inline
+const STATIC_PATH = process.env.STATIC_PATH || path.join(__dirname, "../frontend/dist");
 let cachedHtml = null;
+try {
+  cachedHtml = fs.readFileSync(path.join(STATIC_PATH, 'index.html'), 'utf-8');
+} catch (e) {
+  console.warn("⚠️ No se encontró index.html en", STATIC_PATH);
+}
+const injectNonces = (html, nonce) => html
+  .replace(/<script(?=[\s>])/g, `<script nonce="${nonce}"`)
+  .replace(/<link(?=[\s>])/g, `<link nonce="${nonce}"`)
+  .replace(/<style(?=[\s>])/g, `<style nonce="${nonce}"`);
+
 const serveIndexWithNonce = (req, res, next) => {
   if (req.method !== 'GET') return next();
   const isIndexHtml = req.path === '/' || req.path === '/index.html';
   if (!isIndexHtml) return next();
-  if (!cachedHtml) {
-    try {
-      const fs = require('fs');
-      cachedHtml = fs.readFileSync(path.join(STATIC_PATH, 'index.html'), 'utf-8');
-    } catch (e) {
-      return next();
-    }
-  }
-  const nonced = cachedHtml
-    .replace(/<script(?=[\s>])/g, `<script nonce="${res.locals.nonce}"`)
-    .replace(/<link(?=[\s>])/g, `<link nonce="${res.locals.nonce}"`)
-    .replace(/<style(?=[\s>])/g, `<style nonce="${res.locals.nonce}"`);
-  res.send(nonced);
+  if (!cachedHtml) return next();
+  res.send(injectNonces(cachedHtml, res.locals.nonce));
 };
 
 console.log('🛡️ Helmet cargado');
@@ -109,7 +110,7 @@ app.use(helmet({
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
       imgSrc: ["'self'", "data:", "blob:"],
-      connectSrc: ["'self'", ...allowedOrigins.map(o => o.replace(/\/$/, ''))],
+      connectSrc: ["'self'", "https://fonts.gstatic.com", ...allowedOrigins.map(o => o.replace(/\/$/, ''))],
     },
   },
 }));
@@ -154,8 +155,11 @@ const authLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-const STATIC_PATH = process.env.STATIC_PATH || path.join(__dirname, "../frontend/dist");
 app.use(serveIndexWithNonce);
+app.use('/sw.js', (req, res, next) => {
+  res.removeHeader('Content-Security-Policy');
+  res.sendFile(path.join(STATIC_PATH, 'sw.js'));
+});
 app.use(express.static(STATIC_PATH));
 
 // Aplicar rate limit general
@@ -195,14 +199,10 @@ app.get("/health", (req, res) => {
 // Ruta catch-all para SPA de React con nonce CSP
 app.get("*", (req, res, next) => {
   if (req.url.startsWith('/api')) return next();
-  if (cachedHtml) {
-    const nonced = cachedHtml
-      .replace(/<script\s/g, `<script nonce="${res.locals.nonce}" `)
-      .replace(/<link\s/g, `<link nonce="${res.locals.nonce}" `)
-      .replace(/<style\s/g, `<style nonce="${res.locals.nonce}" `);
-    return res.send(nonced);
+  if (!cachedHtml) {
+    try { cachedHtml = fs.readFileSync(path.join(STATIC_PATH, 'index.html'), 'utf-8'); } catch (e) { return res.sendFile(path.join(STATIC_PATH, "index.html")); }
   }
-  res.sendFile(path.join(STATIC_PATH, "index.html"));
+  res.send(injectNonces(cachedHtml, res.locals.nonce));
 });
 
 // Manejo de errores global

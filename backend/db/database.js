@@ -14,9 +14,10 @@ class Database {
     try {
       // Usar sqlite3 sin verbose para producción/uso normal para evitar ruido y ligera latencia
       const sqlite3 = require("sqlite3");
+      // Unificamos la BD para que Prisma y database.js usen el mismo archivo
       const dbPath = process.env.DB_PATH 
         ? path.resolve(process.env.DB_PATH) 
-        : path.resolve(__dirname, "../../backend/equipos.db");
+        : path.resolve(__dirname, "../equipos.db");
 
       this.client = new sqlite3.Database(dbPath, (err) => {
         if (err) {
@@ -55,7 +56,7 @@ class Database {
     // --- SQLite (Local) ---
     try {
       // Versión actual del esquema. Incrementar si se añaden tablas o columnas nuevas.
-      const SCHEMA_VERSION = "4"; 
+      const SCHEMA_VERSION = "5"; 
 
       // Verificar si ya tenemos una versión registrada
       const checkTableSync = await new Promise((res) => {

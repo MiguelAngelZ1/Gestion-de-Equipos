@@ -9,21 +9,20 @@ class ConfigService {
     }
     async createGrupoComodidad(nombre) {
         const result = await db.run("INSERT INTO grupos_comodidad (nombre) VALUES (?)", [nombre]);
-        return { id: result.lastID, nombre };
+        return await db.get("SELECT * FROM grupos_comodidad WHERE id = ?", [result.lastID]);
     }
     async updateGrupoComodidad(id, nombre) {
-        await db.run("UPDATE grupos_comodidad SET nombre = ? WHERE id = ?", [nombre, parseInt(id)]);
-        return { id: parseInt(id), nombre };
+        await db.run("UPDATE grupos_comodidad SET nombre = ? WHERE id = ?", [nombre, id]);
+        return await db.get("SELECT * FROM grupos_comodidad WHERE id = ?", [id]);
     }
     async deleteGrupoComodidad(id) {
-        await db.run("DELETE FROM grupos_comodidad WHERE id = ?", [parseInt(id)]);
+        await db.run("DELETE FROM grupos_comodidad WHERE id = ?", [id]);
         return { success: true };
     }
     async deleteBulkGruposComodidad(ids) {
         const placeholders = ids.map(() => '?').join(',');
-        const parsedIds = ids.map(i => parseInt(i));
-        await db.run(`DELETE FROM grupos_comodidad WHERE id IN (${placeholders})`, parsedIds);
-        return { count: parsedIds.length };
+        await db.run(`DELETE FROM grupos_comodidad WHERE id IN (${placeholders})`, ids);
+        return { success: true };
     }
 
     // --- GRADOS ---
@@ -32,21 +31,20 @@ class ConfigService {
     }
     async createGrado(abreviatura, grado_completo) {
         const result = await db.run("INSERT INTO grados (abreviatura, grado_completo) VALUES (?, ?)", [abreviatura, grado_completo]);
-        return { id: result.lastID, abreviatura, grado_completo };
+        return await db.get("SELECT * FROM grados WHERE id = ?", [result.lastID]);
     }
     async updateGrado(id, abreviatura, grado_completo) {
-        await db.run("UPDATE grados SET abreviatura = ?, grado_completo = ? WHERE id = ?", [abreviatura, grado_completo, parseInt(id)]);
-        return { id: parseInt(id), abreviatura, grado_completo };
+        await db.run("UPDATE grados SET abreviatura = ?, grado_completo = ? WHERE id = ?", [abreviatura, grado_completo, id]);
+        return await db.get("SELECT * FROM grados WHERE id = ?", [id]);
     }
     async deleteGrado(id) {
-        await db.run("DELETE FROM grados WHERE id = ?", [parseInt(id)]);
+        await db.run("DELETE FROM grados WHERE id = ?", [id]);
         return { success: true };
     }
     async deleteBulkGrados(ids) {
         const placeholders = ids.map(() => '?').join(',');
-        const parsedIds = ids.map(i => parseInt(i));
-        await db.run(`DELETE FROM grados WHERE id IN (${placeholders})`, parsedIds);
-        return { count: parsedIds.length };
+        await db.run(`DELETE FROM grados WHERE id IN (${placeholders})`, ids);
+        return { success: true };
     }
 
     // --- ESTADOS ---
@@ -55,21 +53,20 @@ class ConfigService {
     }
     async createEstado(nombre, color_hex) {
         const result = await db.run("INSERT INTO estados (nombre, color_hex) VALUES (?, ?)", [nombre, color_hex]);
-        return { id: result.lastID, nombre, color_hex };
+        return await db.get("SELECT * FROM estados WHERE id = ?", [result.lastID]);
     }
     async updateEstado(id, nombre, color_hex) {
-        await db.run("UPDATE estados SET nombre = ?, color_hex = ? WHERE id = ?", [nombre, color_hex, parseInt(id)]);
-        return { id: parseInt(id), nombre, color_hex };
+        await db.run("UPDATE estados SET nombre = ?, color_hex = ? WHERE id = ?", [nombre, color_hex, id]);
+        return await db.get("SELECT * FROM estados WHERE id = ?", [id]);
     }
     async deleteEstado(id) {
-        await db.run("DELETE FROM estados WHERE id = ?", [parseInt(id)]);
+        await db.run("DELETE FROM estados WHERE id = ?", [id]);
         return { success: true };
     }
     async deleteBulkEstados(ids) {
         const placeholders = ids.map(() => '?').join(',');
-        const parsedIds = ids.map(i => parseInt(i));
-        await db.run(`DELETE FROM estados WHERE id IN (${placeholders})`, parsedIds);
-        return { count: parsedIds.length };
+        await db.run(`DELETE FROM estados WHERE id IN (${placeholders})`, ids);
+        return { success: true };
     }
 
     // --- UBICACIONES ---
@@ -77,22 +74,21 @@ class ConfigService {
         return await db.all("SELECT * FROM ubicaciones ORDER BY nombre ASC");
     }
     async createUbicacion(nombre) {
-        const result = await db.run("INSERT INTO ubicaciones (nombre) VALUES (?)", [nombre]);
-        return { id: result.lastID, nombre };
+        const result = await db.run("INSERT INTO ubicaciones (nombre, ubicacion) VALUES (?, ?)", [nombre, nombre]);
+        return await db.get("SELECT * FROM ubicaciones WHERE id = ?", [result.lastID]);
     }
     async updateUbicacion(id, nombre) {
-        await db.run("UPDATE ubicaciones SET nombre = ? WHERE id = ?", [nombre, parseInt(id)]);
-        return { id: parseInt(id), nombre };
+        await db.run("UPDATE ubicaciones SET nombre = ?, ubicacion = ? WHERE id = ?", [nombre, nombre, id]);
+        return await db.get("SELECT * FROM ubicaciones WHERE id = ?", [id]);
     }
     async deleteUbicacion(id) {
-        await db.run("DELETE FROM ubicaciones WHERE id = ?", [parseInt(id)]);
+        await db.run("DELETE FROM ubicaciones WHERE id = ?", [id]);
         return { success: true };
     }
     async deleteBulkUbicaciones(ids) {
         const placeholders = ids.map(() => '?').join(',');
-        const parsedIds = ids.map(i => parseInt(i));
-        await db.run(`DELETE FROM ubicaciones WHERE id IN (${placeholders})`, parsedIds);
-        return { count: parsedIds.length };
+        await db.run(`DELETE FROM ubicaciones WHERE id IN (${placeholders})`, ids);
+        return { success: true };
     }
 
     // --- MANTENIMIENTO ---
@@ -102,9 +98,11 @@ class ConfigService {
         try {
             const dbPaths = [
               path.resolve(process.cwd(), 'backend/equipos.db'),
-              path.resolve(__dirname, '../../backend/equipos.db'),
-              path.resolve(__dirname, '../equipos.db'),
-              path.resolve(process.cwd(), 'equipos.db')
+              path.resolve(process.cwd(), 'backend/equipos.db'),
+              path.resolve(process.cwd(), 'backend/prisma/equipos.db'),
+              path.resolve(process.cwd(), 'prisma/equipos.db'),
+              path.resolve(__dirname, '../prisma/equipos.db'),
+              path.resolve(__dirname, '../../backend/prisma/equipos.db')
             ];
             
             for (const p of dbPaths) {
@@ -220,11 +218,14 @@ class ConfigService {
     }
 
     async optimizeDatabase() {
-        await db.run("DELETE FROM especificaciones WHERE equipo_id NOT IN (SELECT id FROM equipos)");
-        await db.run("DELETE FROM historial_personal WHERE equipo_id NOT IN (SELECT id FROM equipos)");
-        await db.run("DELETE FROM soporte_tareas WHERE equipo_id NOT IN (SELECT id FROM equipos)");
-        await db.run("DELETE FROM componentes_instalados WHERE equipo_id NOT IN (SELECT id FROM equipos)");
+        await db.run("DELETE FROM especificaciones WHERE equipo_id IS NOT NULL AND equipo_id NOT IN (SELECT id FROM equipos)");
+        await db.run("DELETE FROM historial_personal WHERE equipo_id IS NOT NULL AND equipo_id NOT IN (SELECT id FROM equipos)");
+        await db.run("DELETE FROM soporte_tareas WHERE equipo_id IS NOT NULL AND equipo_id NOT IN (SELECT id FROM equipos)");
+        await db.run("DELETE FROM componentes_instalados WHERE equipo_id IS NOT NULL AND equipo_id NOT IN (SELECT id FROM equipos)");
+
         await db.run("VACUUM");
+        await db.run("ANALYZE");
+
         return { success: true };
     }
 }
