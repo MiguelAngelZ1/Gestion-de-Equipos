@@ -1,4 +1,4 @@
-require('dotenv').config();
+require('dotenv').config({ quiet: true });
 const express = require("express");
 const cors = require("cors");
 const cookieParser = require('cookie-parser');
@@ -49,25 +49,6 @@ if (IS_PROD) {
     console.error("El servidor no puede iniciar sin estas variables configuradas.");
     process.exit(1);
   }
-}
-
-const jwtSecret = process.env.JWT_SECRET;
-if (jwtSecret && jwtSecret.length < 32) {
-    console.warn("ADVERTENCIA: JWT_SECRET es demasiado corto (< 32 caracteres). Usa una clave mas larga en produccion.");
-}
-if (jwtSecret && jwtSecret === 'cambia_esto_por_una_clave_segura_aleatoria') {
-    console.warn("ADVERTENCIA: JWT_SECRET tiene el valor por defecto. Cambialo antes de produccion.");
-}
-if (jwtSecret && jwtSecret === 'imperio_secret_key_2024_secure') {
-    console.warn("ADVERTENCIA: JWT_SECRET es una clave debil y predecible. Cambiala antes de produccion.");
-}
-
-const adminPassword = process.env.ADMIN_PASSWORD;
-if (adminPassword && adminPassword === 'admin123') {
-    console.warn("ADVERTENCIA: ADMIN_PASSWORD es 'admin123' (contrasena debil conocida). Cambiala antes de produccion.");
-}
-if (adminPassword && adminPassword.length < 8) {
-    console.warn("ADVERTENCIA: ADMIN_PASSWORD es demasiado corta (< 8 caracteres). Usa una contrasena mas larga.");
 }
 
 app.use((req, res, next) => {

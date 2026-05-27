@@ -42,7 +42,7 @@ async function shutdown() {
 }
 
 server.listen(PORT, async () => {
-  console.log("Servidor iniciado en puerto: http://localhost:" + PORT);
+  console.log("Servidor iniciado en puerto " + PORT);
 
   try {
     await db.connect();

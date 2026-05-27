@@ -8,7 +8,7 @@ const { imprimirResumenSync } = require("../servicios/syncLogger");
 const SyncManager = require("../servicios/syncManager");
 const database = require("./database");
 
-require("dotenv").config({ path: require("path").resolve(__dirname, "../.env") });
+require("dotenv").config({ path: require("path").resolve(__dirname, "../.env"), quiet: true });
 
 let syncManager;
 
