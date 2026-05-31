@@ -63,6 +63,8 @@ jobs:
       - name: Install dependencies
         if: steps.cache.outputs.cache-hit != 'true'
         run: npm ci
+      - name: TypeScript check
+        run: npm run typecheck
       - name: Run tests
         run: npm test
         env:

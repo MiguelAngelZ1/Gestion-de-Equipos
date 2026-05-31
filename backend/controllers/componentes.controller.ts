@@ -1,6 +1,6 @@
 const logger = require('../utils/logger');
-const componentesService = require('../servicios/componentes.service');
-const notificationService = require('../servicios/notificationService');
+const componentesService = require('../services/componentes.service');
+const notificationService = require('../services/notificationService');
 
 const getComponentes = async (req, res, next) => {
     try {

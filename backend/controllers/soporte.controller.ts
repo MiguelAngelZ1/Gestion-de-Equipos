@@ -1,4 +1,4 @@
-const soporteService = require('../servicios/soporte.service');
+const soporteService = require('../services/soporte.service');
 
 const getTareasSoporte = async (req, res, next) => {
     try {

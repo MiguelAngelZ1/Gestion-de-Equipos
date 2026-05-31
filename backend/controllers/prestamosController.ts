@@ -1,4 +1,4 @@
-const { prestamosService } = require('../servicios/comunicaciones.service');
+const { prestamosService } = require('../services/comunicaciones.service');
 
 const getPrestamos = async (req, res, next) => {
     try {

@@ -1,4 +1,4 @@
-const configService = require('../servicios/config.service');
+const configService = require('../services/config.service');
 
 const getSystemStats = async (req, res, next) => {
     try {

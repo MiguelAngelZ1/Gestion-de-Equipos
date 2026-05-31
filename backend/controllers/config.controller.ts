@@ -1,4 +1,4 @@
-const configService = require("../servicios/config.service");
+const configService = require("../services/config.service");
 
 // --- GRUPO COMODIDAD ---
 exports.getGruposComodidad = async (req, res, next) => {

@@ -1,4 +1,4 @@
-const calcularHashEquipo = require("../sincronizacion/calcularHashEquipo");
+const calcularHashEquipo = require("../sync/calcularHashEquipo");
 
 function hayConflictoReal(local: any, remote: any) {
   if (!local || !remote) return false;

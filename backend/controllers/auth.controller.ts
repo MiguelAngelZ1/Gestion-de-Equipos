@@ -2,11 +2,11 @@ const logger = require('../utils/logger');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const usuariosService = require('../servicios/usuarios.service');
+const usuariosService = require('../services/usuarios.service');
 const { JWT_SECRET } = require('../middleware/auth.middleware');
-const { sendRecoveryCode } = require('../servicios/email.service');
+const { sendRecoveryCode } = require('../services/email.service');
 
-const refreshTokenService = require('../servicios/refreshToken.service');
+const refreshTokenService = require('../services/refreshToken.service');
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 const IS_PROD = process.env.NODE_ENV === 'production';

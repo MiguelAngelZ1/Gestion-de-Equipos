@@ -1,4 +1,4 @@
-const reportingService = require('../servicios/reporting.service');
+const reportingService = require('../services/reporting.service');
 const exceljs = require('exceljs');
 const { google } = require('googleapis');
 const { Readable } = require('stream');

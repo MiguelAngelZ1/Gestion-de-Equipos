@@ -1,7 +1,7 @@
 
 const express = require('express');
 const router = express.Router();
-const notificationService = require('../servicios/notificationService');
+const notificationService = require('../services/notificationService');
 
 // Middleware para verificar token
 const { verificarAutenticacion } = require('../middleware/auth.middleware');

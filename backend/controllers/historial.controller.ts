@@ -1,4 +1,4 @@
-const { historialService } = require("../servicios/analitica.service");
+const { historialService } = require("../services/analitica.service");
 
 const getHistorial = async (req, res, next) => {
     try {

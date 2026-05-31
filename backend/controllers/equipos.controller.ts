@@ -1,4 +1,4 @@
-const equiposService = require('../servicios/equipos.service');
+const equiposService = require('../services/equipos.service');
 
 const getEquipos = async (req, res, next) => {
     try {

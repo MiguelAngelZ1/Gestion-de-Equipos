@@ -1,6 +1,6 @@
 const logger = require("../utils/logger");
-const { mensajeriaService } = require("../servicios/comunicaciones.service");
-const notificationService = require("../servicios/notificationService");
+const { mensajeriaService } = require("../services/comunicaciones.service");
+const notificationService = require("../services/notificationService");
 const db = require("../db/database");
 
 exports.enviarMensaje = async (req, res, next) => {

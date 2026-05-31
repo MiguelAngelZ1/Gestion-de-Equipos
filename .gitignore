@@ -13,6 +13,7 @@ node_modules/
 
 # Build artifacts
 frontend/dist/
+backend/dist/
 
 # Credentials
 google-credentials.json
@@ -37,3 +38,6 @@ backups/
 
 # Archivos locales de ejecución
 iniciar_local.bat
+
+# Windows reserved device name (artifact)
+nul
