@@ -100,8 +100,8 @@ const Componentes = () => {
             setIsFormOpen(false);
             fetchComponentes();
         } catch (error) {
-            console.error("Error guardando componente:", error);
-            showToast("Error", "No se pudo procesar la solicitud del inventario.", "error");
+            console.error("[Componentes] Error guardando componente:", error);
+            showToast("Error", error.message || "No se pudo procesar la solicitud del inventario.", "error");
         }
     };
 

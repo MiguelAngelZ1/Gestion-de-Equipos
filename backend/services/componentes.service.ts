@@ -43,17 +43,6 @@ class ComponentesService {
             if (oldComp) cantidadAnterior = oldComp.cantidad;
         }
 
-        // Validación de duplicados
-        if (nne && nne.trim() !== "" && nne !== "-") {
-            const duplicateNNE = await db.get(
-                "SELECT id, nombre FROM componentes_repuestos WHERE nne = ? AND id != ?", 
-                [nne.trim(), id ? parseInt(id) : -1]
-            );
-            if (duplicateNNE) {
-                throw new Error(`Atención: El repuesto con NNE "${nne}" ya está registrado como "${duplicateNNE.nombre}".`);
-            }
-        }
-
         let compId = id;
         if (id) {
             await db.run(

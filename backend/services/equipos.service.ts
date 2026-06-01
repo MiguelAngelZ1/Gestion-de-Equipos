@@ -161,17 +161,6 @@ class EquiposService {
                 }
             }
 
-            // Validación de duplicados (solo si no es '-' o vacío)
-            if (hasNNE && nne.trim() !== '-' && nne.trim() !== '') {
-                const existingNNE = await db.get(
-                    "SELECT ine FROM equipos WHERE nne = ? AND id != ? AND is_deleted = false",
-                    [nne.trim(), targetId || '']
-                );
-                if (existingNNE) {
-                    throw new Error(`Atención: El NNE "${nne}" ya está asignado al equipo con INE ${existingNNE.ine}.`);
-                }
-            }
-
             if (hasSerie && serie.trim() !== '-' && serie.trim() !== '') {
                 const existingSerie = await db.get(
                     "SELECT ine FROM equipos WHERE serie = ? AND id != ? AND is_deleted = false",

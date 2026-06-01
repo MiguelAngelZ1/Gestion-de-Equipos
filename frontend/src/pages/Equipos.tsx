@@ -436,7 +436,8 @@ const Equipos = () => {
               'success'
             );
           } catch (err) {
-            showToast("Error", "No se pudo guardar el equipo.", "error");
+            console.error("[Equipos] Error guardando equipo:", err);
+            showToast("Error", err.message || "No se pudo guardar el equipo.", "error");
           }
         }} 
         grados={grados} 
