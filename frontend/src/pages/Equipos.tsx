@@ -107,6 +107,23 @@ const Equipos = () => {
 
   const searchDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const fetchConfig = async () => {
+    try {
+      const [ueData, gcData, sData, uData] = await Promise.all([
+        apiRequest('/config/grados').catch(() => []),
+        apiRequest('/config/grupos-comodidad').catch(() => []),
+        apiRequest('/config/estados').catch(() => []),
+        apiRequest('/config/ubicaciones').catch(() => [])
+      ]);
+      setGrados(ueData);
+      setGruposComodidad(gcData);
+      setEstados(sData);
+      setUbicaciones(uData);
+    } catch {
+      // config errors are non-critical
+    }
+  };
+
   const fetchData = async (searchTerm = "", estadoFilter = "TODOS", ubicacionFilter = "TODAS", categoriaFilter = "TODOS", pageNum = 1) => {
     try {
       setLoading(true);
@@ -118,21 +135,11 @@ const Equipos = () => {
       params.set('page', String(pageNum));
       params.set('limit', '50');
       const queryString = params.toString();
-      const [eData, ueData, gcData, sData, uData] = await Promise.all([
-        apiRequest(`/equipos?${queryString}`),
-        apiRequest('/config/grados').catch(() => []),
-        apiRequest('/config/grupos-comodidad').catch(() => []),
-        apiRequest('/config/estados').catch(() => []),
-        apiRequest('/config/ubicaciones').catch(() => [])
-      ]);
+      const eData = await apiRequest(`/equipos?${queryString}`);
       setEquipos(eData?.data || eData || []);
       setTotal(eData?.pagination?.total || 0);
       setTotalPages(eData?.pagination?.totalPages || 0);
       setCurrentPage(eData?.pagination?.page || 1);
-      setGrados(ueData);
-      setGruposComodidad(gcData);
-      setEstados(sData);
-      setUbicaciones(uData);
     } catch (error) {
       showToast("Error", "No se pudieron cargar los datos del inventario.", "error");
     } finally {
@@ -141,7 +148,10 @@ const Equipos = () => {
     }
   };
 
+  useEffect(() => { fetchConfig(); }, []);
+
   useEffect(() => {
+    if (!search && !fetchedOnce.current) return;
     if (searchDebounce.current) clearTimeout(searchDebounce.current);
     searchDebounce.current = setTimeout(() => {
       fetchData(search, filterEstado, filterUbicacion, filterGrupo, 1);
@@ -152,9 +162,9 @@ const Equipos = () => {
   }, [search]);
 
   useEffect(() => {
-    if (fetchedOnce.current) {
-      fetchData(search, filterEstado, filterUbicacion, filterGrupo, 1);
-    }
+    const hasActiveFilters = filterEstado !== "TODOS" || filterUbicacion !== "TODAS" || filterGrupo !== "TODOS";
+    if (!hasActiveFilters && !fetchedOnce.current) return;
+    fetchData(search, filterEstado, filterUbicacion, filterGrupo, 1);
   }, [filterEstado, filterUbicacion, filterGrupo]);
 
   const toggleSelect = (id) => {
