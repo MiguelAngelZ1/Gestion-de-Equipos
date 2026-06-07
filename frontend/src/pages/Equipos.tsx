@@ -191,7 +191,7 @@ const Equipos = () => {
       showToast("Operación Exitosa", `${selectedIds.length} equipos han sido movidos a la papelera.`, "success");
       setSelectedIds([]);
       setIsBulkDeleteOpen(false);
-      fetchData(search);
+      fetchData(search, filterEstado, filterUbicacion, filterGrupo, currentPage);
     } catch (error) {
       showToast("Error", "No se pudieron eliminar los equipos seleccionados.", "error");
     } finally {
@@ -471,7 +471,7 @@ const Equipos = () => {
         equipo={selectedEquipo} 
         estados={estados}
         onClose={() => setSelectedEquipo(null)} 
-        onEquipoUpdated={fetchData}
+        onEquipoUpdated={() => fetchData(search, filterEstado, filterUbicacion, filterGrupo, currentPage)}
       />
 
       <EquipoFormModal 
@@ -486,7 +486,7 @@ const Equipos = () => {
                body: { ...data, id, responsable_id: data.responsable_id || formData.responsable_id } 
             });
             setIsFormOpen(false);
-            fetchData(search);
+            fetchData(search, filterEstado, filterUbicacion, filterGrupo, currentPage);
             showToast(
               id ? 'Equipo Actualizado' : 'Equipo Guardado',
               id 
@@ -523,7 +523,7 @@ const Equipos = () => {
               });
                setIsLoanModalOpen(false);
                setEquipoForLoan(null);
-               fetchData(search);
+               fetchData(search, filterEstado, filterUbicacion, filterGrupo, currentPage);
               showToast("Préstamo Registrado", `El equipo "${equipoForLoan?.ine}" ha sido prestado correctamente.`, "success");
            } catch (error) {
               showToast("Error", "No se pudo registrar el préstamo.", "error");
@@ -542,7 +542,7 @@ const Equipos = () => {
             setEquipos(prev => prev.filter(e => e.id !== equipoToDelete.id));
             setIsDeleteOpen(false);
             setEquipoToDelete(null);
-            fetchData(search);
+            fetchData(search, filterEstado, filterUbicacion, filterGrupo, currentPage);
             showToast("Equipo Eliminado", "El registro ha sido movido a la papelera.", "success");
           } catch (err) {
             showToast("Error", "No se pudo eliminar el equipo.", "error");
