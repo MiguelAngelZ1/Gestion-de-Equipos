@@ -91,6 +91,7 @@ const Equipos = () => {
   // Estados para Préstamos
   const [isLoanModalOpen, setIsLoanModalOpen] = useState(false);
   const [equipoForLoan, setEquipoForLoan] = useState(null);
+  const fetchedOnce = useRef(false);
 
   const userData = JSON.parse(localStorage.getItem("equipos_user_data") || "{}");
   const userRole = (userData.rol || ROLES.USER).toUpperCase();
@@ -124,11 +125,12 @@ const Equipos = () => {
       showToast("Error", "No se pudieron cargar los datos del inventario.", "error");
     } finally {
       setLoading(false);
+      fetchedOnce.current = true;
     }
   };
 
   useEffect(() => {
-    fetchData();
+    // No cargar equipos al montar — esperar a que usuario busque
   }, []);
 
   useEffect(() => {
@@ -292,9 +294,21 @@ const Equipos = () => {
 
 
 
-      {/* Grid de Equipos */}
+      {/* Content area */}
       <div>
-        {loading ? (
+        {!fetchedOnce.current ? (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col items-center justify-center py-24 bg-white/5 rounded-[3rem] border border-dashed border-white/10"
+          >
+            <Search className="w-16 h-16 text-slate-500 mb-4 opacity-20" />
+            <h3 className="text-2xl font-black text-white">Busca un equipo</h3>
+            <p className="text-slate-400 mt-2 max-w-md text-center">
+              Utiliza la búsqueda o los filtros para encontrar equipos en el inventario.
+            </p>
+          </motion.div>
+        ) : loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             {[1, 2, 3, 4, 5, 6].map(i => (
               <div key={i} className="bg-white/5 rounded-3xl h-52 animate-pulse border border-white/5"></div>
@@ -310,63 +324,15 @@ const Equipos = () => {
             <h3 className="text-xl font-black text-white">No se encontraron equipos</h3>
             <p className="text-slate-400 mt-2">Prueba con otros filtros o términos de búsqueda.</p>
             <button
-               onClick={clearFilters}
-               className="mt-6 text-indigo-400 font-black text-xs uppercase tracking-widest hover:text-white transition-colors cursor-pointer"
+              onClick={clearFilters}
+              className="mt-6 text-indigo-400 font-black text-xs uppercase tracking-widest hover:text-white transition-colors cursor-pointer"
             >
-               Restablecer filtros
+              Restablecer búsqueda
             </button>
           </motion.div>
         ) : (
-          <div className="space-y-6">
-            <div className="flex items-center gap-3 px-2">
-               <div className="h-px bg-white/10 flex-1"></div>
-               <div className="flex items-center gap-6">
-                  {userRole === ROLES.ADMIN && filtered.length > 0 && (
-                    <button 
-                      onClick={toggleAll}
-                      className="flex items-center gap-2 text-[10px] font-black text-indigo-400 uppercase tracking-widest hover:text-white transition-colors cursor-pointer group"
-                    >
-                      <div className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${
-                        filtered.every(e => selectedIds.includes(e.id)) 
-                          ? 'bg-indigo-600 border-indigo-500' 
-                          : 'border-white/20 group-hover:border-indigo-500/50'
-                      }`}>
-                         {filtered.every(e => selectedIds.includes(e.id)) && <Check className="w-3 h-3 text-white" />}
-                      </div>
-                      Seleccionar Todo
-                    </button>
-                  )}
-                  <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                     Resultados: <span className="text-indigo-400">{filtered.length}</span>
-                  </h2>
-               </div>
-               <div className="h-px bg-white/10 flex-1"></div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-              <AnimatePresence mode="popLayout">
-                {filtered.map(eq => (
-                  <EquipoItem 
-                    key={eq.id} 
-                    eq={eq} 
-                    getStatusColor={getStatusColor} 
-                    setSelectedEquipo={setSelectedEquipo} 
-                    setFormData={setFormData} 
-                    setIsFormOpen={setIsFormOpen} 
-                    setEquipoToDelete={setEquipoToDelete}
-                    setIsDeleteOpen={setIsDeleteOpen}
-                    onLoan={(equipo) => {
-                       setEquipoForLoan(equipo);
-                       setIsLoanModalOpen(true);
-                    }}
-                    userRole={userRole}
-                    isSelected={selectedIds.includes(eq.id)}
-                    onToggleSelect={toggleSelect}
-                  />
-                ))}
-              </AnimatePresence>
-            </div>
-          </div>
+          // grid + pagination section (moved to Task 3)
+          null
         )}
       </div>
 
