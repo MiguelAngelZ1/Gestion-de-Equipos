@@ -2,7 +2,7 @@ const db = require('../db/database');
 
 class EquiposService {
     async getAllEquipos(query) {
-        const { q, page = 1, limit = 50, offset = 0 } = query;
+        const { q, page = 1, limit = 50, offset = 0, estado, ubicacion, categoria } = query;
 
         const fromClause = `
             FROM equipos e
@@ -35,6 +35,21 @@ class EquiposService {
                 )
             )`;
             for(let i=0; i<12; i++) params.push(search);
+        }
+
+        if (estado && estado.trim() !== "") {
+            whereClause += " AND es.nombre = ?";
+            params.push(estado.trim());
+        }
+
+        if (ubicacion && ubicacion.trim() !== "") {
+            whereClause += " AND u.nombre = ?";
+            params.push(ubicacion.trim());
+        }
+
+        if (categoria && categoria.trim() !== "") {
+            whereClause += " AND gc.nombre = ?";
+            params.push(categoria.trim());
         }
 
         const countResult = await db.get(`SELECT COUNT(*) as total ${fromClause} ${whereClause}`, params);
