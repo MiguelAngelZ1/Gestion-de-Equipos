@@ -1,6 +1,16 @@
 const db = require('../db/database');
 const bcrypt = require('bcryptjs');
 
+const DEFAULT_USER_PERMISOS = [
+    'equipos:ver',
+    'componentes:ver',
+    'soporte:ver',
+    'prestamos:ver',
+    'ipam:ver',
+    'config:ver',
+    'backups:ver'
+];
+
 class UsuariosService {
     async getUsuarios() {
         return await db.all(`
@@ -36,23 +46,26 @@ class UsuariosService {
 
     async createUsuario(data) {
         const { usuario, email, password, rol, permisos_json } = data;
-        
+
         const existing = await this.findByUsuarioOrEmail(usuario);
         if (existing) throw new Error("El usuario o email ya existe");
 
         const password_hash = await bcrypt.hash(password, 12);
-        
+        const targetRol = (rol || 'USER').toUpperCase();
+        const isAdmin = ['ADMIN', 'SUPERADMIN'].includes(targetRol);
+        const permisos = permisos_json !== undefined ? permisos_json : (isAdmin ? [] : DEFAULT_USER_PERMISOS);
+
         const result = await db.run(`
             INSERT INTO usuarios (usuario, email, password_hash, rol, permisos_json) 
             VALUES (?, ?, ?, ?, ?)
         `, [
-            usuario, 
-            email, 
-            password_hash, 
-            rol || 'USER', 
-            JSON.stringify(permisos_json || [])
+            usuario,
+            email,
+            password_hash,
+            targetRol,
+            JSON.stringify(permisos)
         ]);
-        
+
         return { id: result.lastID };
     }
 

@@ -75,7 +75,7 @@ const Configuracion = () => {
   const activeTabData = filteredTabs.find(t => t.id === activeTab) || filteredTabs[0];
 
   return (
-    <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 min-h-[calc(100vh-160px)] p-2 lg:p-0 pb-32 lg:pb-0">
+    <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 min-h-[calc(100vh-160px)] p-2 lg:p-0">
       
       {/* --- SIDEBAR NAVIGATION --- */}
       <motion.aside 
@@ -86,7 +86,7 @@ const Configuracion = () => {
         <div className="absolute -top-24 -left-24 w-64 h-64 bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none" />
         
         <div className="relative z-10 flex flex-col h-full pt-2 lg:pt-4">
-          <nav className="space-y-2 overflow-y-auto max-h-[30vh] lg:max-h-none custom-scrollbar pr-2 pb-2">
+          <nav className="space-y-2 overflow-y-auto max-h-[40vh] sm:max-h-[50vh] lg:max-h-none custom-scrollbar pr-2 pb-2">
             {filteredTabs.map((tab) => {
               const Icon = tab.icon;
               const isSelected = activeTab === tab.id;
@@ -132,7 +132,7 @@ const Configuracion = () => {
         initial={{ scale: 0.98, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ type: "spring", stiffness: 200, damping: 25 }}
-        className="flex-1 flex flex-col bg-slate-900/40 backdrop-blur-xl border border-white/10 rounded-[2.5rem] lg:rounded-[3rem] shadow-2xl relative overflow-hidden min-h-[500px] lg:min-h-0"
+        className="flex-1 flex flex-col bg-slate-900/40 backdrop-blur-xl border border-white/10 rounded-[2.5rem] lg:rounded-[3rem] shadow-2xl relative overflow-hidden min-h-[300px] md:min-h-[500px] lg:min-h-0"
       >
         {/* Glow Header Background */}
         <div className={`absolute top-0 left-0 w-full h-40 bg-gradient-to-b opacity-10 transition-colors duration-700 ${activeTabData.gradient.replace('from-', 'from-').split(' ')[0]}`} />

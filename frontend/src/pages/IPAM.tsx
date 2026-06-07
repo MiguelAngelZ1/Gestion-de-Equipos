@@ -889,7 +889,7 @@ const IPAM = () => {
                             exit={{ opacity: 0, scale: 0.5, y: 20 }}
                             onClick={handleScrollToTop}
                             // bottom-[-2px] subiendo levemente tras pasarnos hacia abajo
-                            className="fixed bottom-[10px] left-[272px] z-99999 flex items-center justify-center cursor-pointer group outline-none"
+                            className="fixed bottom-[10px] left-1/2 -translate-x-1/2 md:left-[272px] md:translate-x-0 z-99999 flex items-center justify-center cursor-pointer group outline-none"
                             title="Volver arriba"
                         >
                             <div className="relative flex items-center justify-center">

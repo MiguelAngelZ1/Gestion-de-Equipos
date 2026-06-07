@@ -317,7 +317,7 @@ const Login = () => {
                 className="space-y-6"
               >
                 <div className="space-y-8">
-                  <div className="flex justify-between gap-2 px-1">
+                  <div className="flex justify-between gap-1 sm:gap-2 px-0.5 sm:px-1">
                     {[0, 1, 2, 3, 4, 5].map((index) => (
                       <input
                         key={index}
@@ -358,9 +358,9 @@ const Login = () => {
                             inputRefs.current[nextIndex]?.focus();
                           }
                         }}
-                        className={`w-12 h-14 text-center text-xl font-black bg-white/5 border rounded-2xl text-white outline-none focus:ring-4 transition-all shadow-inner ${
-                          codigo[index] ? 'border-indigo-500/50 bg-indigo-500/10' : 'border-white/10 focus:ring-indigo-500/20 focus:border-indigo-400 focus:bg-white/10'
-                        }`}
+className={`w-10 sm:w-12 h-12 sm:h-14 text-center text-lg sm:text-xl font-black bg-white/5 border rounded-xl sm:rounded-2xl text-white outline-none focus:ring-4 transition-all shadow-inner ${
+  codigo[index] ? 'border-indigo-500/50 bg-indigo-500/10' : 'border-white/10 focus:ring-indigo-500/20 focus:border-indigo-400 focus:bg-white/10'
+}`}
                       />
                     ))}
                   </div>
