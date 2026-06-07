@@ -35,7 +35,7 @@ const MensajeAdmin = () => {
                 apiRequest('/equipos').catch(() => []),
                 apiRequest('/componentes').catch(() => [])
             ]);
-            setEquipos(equiposData || []);
+            setEquipos(equiposData?.data || equiposData || []);
             setRepuestos(repuestosData || []);
         } catch (error) {
             console.error("Error cargando catálogos:", error);
