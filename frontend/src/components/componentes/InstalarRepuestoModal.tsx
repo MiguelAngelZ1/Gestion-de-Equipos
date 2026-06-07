@@ -24,20 +24,6 @@ const InstalarRepuestoModal = ({ isOpen, onClose, equipo, onInstalled }) => {
     const [instalando, setInstalando] = useState(false);
     const [error, setError] = useState(null);
 
-    // Initial Fetch
-    useEffect(() => {
-        if (isOpen) {
-            setStep(1);
-            setRepuestoSeleccionado(null);
-            setTipoInstalacion("AGREGAR");
-            setTargetSpecId(null);
-            setError(null);
-            
-            fetchRepuestos();
-            fetchEspecificacionesBase();
-        }
-    }, [isOpen]);
-
     const fetchEspecificacionesBase = async () => {
         try {
             const data = await apiRequest(`/componentes/instalados/${equipo.id}`);
@@ -64,6 +50,19 @@ const InstalarRepuestoModal = ({ isOpen, onClose, equipo, onInstalled }) => {
             setLoading(false);
         }
     };
+
+    useEffect(() => {
+        if (isOpen) {
+            setStep(1);
+            setRepuestoSeleccionado(null);
+            setTipoInstalacion("AGREGAR");
+            setTargetSpecId(null);
+            setError(null);
+            
+            fetchRepuestos();
+            fetchEspecificacionesBase();
+        }
+    }, [isOpen]);
 
     const handleInstalar = async () => {
         if (!repuestoSeleccionado) return;

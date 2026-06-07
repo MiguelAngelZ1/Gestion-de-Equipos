@@ -122,7 +122,7 @@ class SyncManager {
 
   async getSyncLogs(limit = 20) {
     return await this.db.all(
-      `SELECT * FROM sync_logs ORDER BY fecha DESC LIMIT ?`,
+      `SELECT * FROM sync_logs ORDER BY created_at DESC LIMIT ?`,
       [limit]
     );
   }

@@ -100,20 +100,6 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative font-sans bg-[#0b1120]">
-      {/* Fondo Premium Oscuro con degradados vibrantes */}
-      
-      <motion.div 
-        animate={{ rotate: 360, scale: [1, 1.2, 1] }}
-        transition={{ duration: 50, repeat: Infinity, ease: "linear" }}
-        className="absolute -top-[20%] -right-[10%] w-[60vw] h-[60vw] rounded-full bg-gradient-to-br from-indigo-900/40 to-blue-900/20 blur-[120px] -z-10 pointer-events-none"
-      />
-      
-      <motion.div 
-        animate={{ rotate: -360, y: [0, 50, 0] }}
-        transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
-        className="absolute -bottom-[20%] -left-[10%] w-[70vw] h-[70vw] rounded-full bg-gradient-to-tr from-violet-900/30 to-fuchsia-900/10 blur-[130px] -z-10 pointer-events-none"
-      />
-
       <motion.div 
         initial={{ opacity: 0, y: 30, filter: 'blur(10px)' }}
         animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}

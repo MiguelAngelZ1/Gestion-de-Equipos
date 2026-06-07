@@ -27,6 +27,7 @@ const notificacionesRoutes = require('./routes/notificaciones.routes');
 const ipamRoutes = require('./routes/ipam.routes');
 const prestamosRoutes = require('./routes/prestamos');
 const { apiLimiter } = require('./utils/rateLimiter');
+const { validateOrigin } = require('./middleware/csrf.middleware');
 const errorHandler = require('./middleware/error.middleware');
 const { verificarAutenticacion } = require('./middleware/auth.middleware');
 const { ROLES } = require('./config/constants');
@@ -145,6 +146,7 @@ app.use(cors({
 
 app.use(cookieParser());
 app.use(express.json({ limit: "1mb" }));
+app.use(validateOrigin);
 
 app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');

@@ -8,12 +8,6 @@ const MovimientosStockModal = ({ isOpen, componente, onClose }) => {
   const [movimientos, setMovimientos] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (isOpen && componente?.id) {
-      fetchMovimientos();
-    }
-  }, [isOpen, componente]);
-
   const fetchMovimientos = async () => {
     try {
       setLoading(true);
@@ -25,6 +19,12 @@ const MovimientosStockModal = ({ isOpen, componente, onClose }) => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (isOpen && componente?.id) {
+      fetchMovimientos();
+    }
+  }, [isOpen, componente]);
 
   if (typeof document === 'undefined') return null;
 

@@ -11,6 +11,8 @@ const refreshTokenService = require('../services/refreshToken.service');
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 const IS_PROD = process.env.NODE_ENV === 'production';
 
+const DUMMY_HASH = bcrypt.hashSync('dummy-placeholder-' + crypto.randomUUID(), 10);
+
 if (!ADMIN_PASSWORD && IS_PROD) {
     logger.error("ADMIN_PASSWORD no definido en producción. El acceso administrativo está deshabilitado por seguridad.");
 } else if (!ADMIN_PASSWORD) {
@@ -45,27 +47,26 @@ const login = async (req, res, next) => {
 
     try {
         const user = await usuariosService.findByUsuarioOrEmail(usuario);
+        const match = await bcrypt.compare(password, user?.password_hash || DUMMY_HASH);
 
-        if (user) {
-            const match = await bcrypt.compare(password, user.password_hash);
-            if (match) {
-                const token = jwt.sign({ userId: user.id, rol: user.rol, usuario: user.usuario }, JWT_SECRET, { expiresIn: "24h" });
+        if (user && match) {
+            const permisos = (() => { try { return JSON.parse(user.permisos_json || '[]'); } catch { return []; } })();
+            const token = jwt.sign({ userId: user.id, rol: user.rol, usuario: user.usuario, permisos }, JWT_SECRET, { expiresIn: "24h" });
 
-                const refreshToken = crypto.randomBytes(32).toString('hex');
-                const refreshExpires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-                await refreshTokenService.saveRefreshToken(user.id, refreshToken, refreshExpires);
+            const refreshToken = crypto.randomBytes(32).toString('hex');
+            const refreshExpires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+            await refreshTokenService.saveRefreshToken(user.id, refreshToken, refreshExpires);
 
-                await usuariosService.updateLastLogin(user.id);
-                setTokenCookie(res, token);
-                setRefreshTokenCookie(res, refreshToken);
+            await usuariosService.updateLastLogin(user.id);
+            setTokenCookie(res, token);
+            setRefreshTokenCookie(res, refreshToken);
 
-                return res.json({ success: true, user: { id: user.id, usuario: user.usuario, rol: user.rol } });
-            }
+            return res.json({ success: true, user: { id: user.id, usuario: user.usuario, rol: user.rol } });
         }
 
         const count = await usuariosService.countUsuarios();
         if (ADMIN_PASSWORD && count === 0 && usuario === 'admin' && password === ADMIN_PASSWORD) {
-            const token = jwt.sign({ userId: 0, rol: "admin", usuario: 'admin' }, JWT_SECRET, { expiresIn: "24h" });
+            const token = jwt.sign({ userId: 0, rol: "admin", usuario: 'admin', permisos: [] }, JWT_SECRET, { expiresIn: "24h" });
             setTokenCookie(res, token);
             return res.json({ success: true, user: { id: 0, usuario: 'admin', rol: 'admin' }, initial: true });
         }
@@ -174,7 +175,8 @@ const refresh = async (req, res) => {
         if (!user) {
             return res.status(401).json({ error: "Usuario no encontrado" });
         }
-        const newToken = jwt.sign({ userId: user.id, rol: user.rol, usuario: user.usuario }, JWT_SECRET, { expiresIn: "24h" });
+        const permisos = (() => { try { return JSON.parse(user.permisos_json || '[]'); } catch { return []; } })();
+        const newToken = jwt.sign({ userId: user.id, rol: user.rol, usuario: user.usuario, permisos }, JWT_SECRET, { expiresIn: "24h" });
         const newRefreshToken = crypto.randomBytes(32).toString('hex');
         const newRefreshExpires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
         await refreshTokenService.saveRefreshToken(user.id, newRefreshToken, newRefreshExpires);

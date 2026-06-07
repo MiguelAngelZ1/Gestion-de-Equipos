@@ -8,14 +8,15 @@ const {
     downloadBackup,
     cleanupBackups
 } = require('../controllers/backup.controller');
-const { verificarAutenticacion } = require('../middleware/auth.middleware');
+const { verificarAutenticacion, verificarAdmin, requirePermission } = require('../middleware/auth.middleware');
+const { PERMISOS } = require('../config/constants');
 const { backupSyncLimiter } = require('../utils/rateLimiter');
 
-router.post('/sync', backupSyncLimiter, verificarAutenticacion, manualSync);
-router.get('/sync/status', verificarAutenticacion, getSyncStatus);
-router.get('/sync/logs', verificarAutenticacion, getSyncLogs);
-router.get('/sync/backups', verificarAutenticacion, getSyncBackups);
-router.get('/sync/backups/:filename', verificarAutenticacion, downloadBackup);
-router.delete('/sync/backups', verificarAutenticacion, cleanupBackups);
+router.post('/sync', backupSyncLimiter, verificarAutenticacion, requirePermission(PERMISOS.BACKUPS.CREAR), manualSync);
+router.get('/sync/status', verificarAutenticacion, requirePermission(PERMISOS.BACKUPS.VER), getSyncStatus);
+router.get('/sync/logs', verificarAutenticacion, requirePermission(PERMISOS.BACKUPS.VER), getSyncLogs);
+router.get('/sync/backups', verificarAutenticacion, requirePermission(PERMISOS.BACKUPS.VER), getSyncBackups);
+router.get('/sync/backups/:filename', verificarAutenticacion, verificarAdmin, requirePermission(PERMISOS.BACKUPS.DESCARGAR), downloadBackup);
+router.delete('/sync/backups', verificarAutenticacion, verificarAdmin, requirePermission(PERMISOS.BACKUPS.ELIMINAR), cleanupBackups);
 
 module.exports = router;

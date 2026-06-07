@@ -3,7 +3,15 @@ const { app, allowedOrigins } = require('./app');
 const db = require('./db/database');
 const http = require('http');
 const { Server } = require("socket.io");
+const jwt = require('jsonwebtoken');
+const { JWT_SECRET } = require('./middleware/auth.middleware');
 const notificationService = require('./services/notificationService');
+
+function getCookieValue(cookieHeader, name) {
+  if (!cookieHeader) return null;
+  const match = cookieHeader.match(new RegExp(`(?:^|;\\s*)${name}=([^;]*)`));
+  return match ? decodeURIComponent(match[1]) : null;
+}
 
 const server = http.createServer(app);
 
@@ -81,10 +89,24 @@ server.on("error", (error) => {
   }
 });
 
+io.use((socket, next) => {
+  const token = socket.handshake.auth.token || getCookieValue(socket.handshake.headers.cookie, 'token');
+  if (!token) {
+    return next(new Error('Autenticación requerida'));
+  }
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    socket.userId = decoded.userId;
+    next();
+  } catch (err) {
+    next(new Error('Token inválido o expirado'));
+  }
+});
+
 io.on('connection', (socket) => {
-  socket.on('join', (userId) => {
-    if (userId) {
-      socket.join(`user_${userId}`);
+  socket.on('join', () => {
+    if (socket.userId) {
+      socket.join(`user_${socket.userId}`);
     }
   });
 

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bell, Package, Wrench, Info, CheckCheck, Trash2, MessageSquare, Zap, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { apiRequest, getUserData } from '../../services/api';
+import { apiRequest, getUserData, getAuthToken } from '../../services/api';
 
 const NotificationBell = () => {
     const [isOpen, setIsOpen] = useState(false);
@@ -60,7 +60,7 @@ const NotificationBell = () => {
 
         import('socket.io-client').then(({ io }) => {
             if (cancelled) return;
-            socket = io(socketURL);
+            socket = io(socketURL, { auth: { token: getAuthToken() } });
 
             socket.on('connect', () => {
                 socket.emit('join', userId);

@@ -50,7 +50,7 @@ const CommonCard = ({
     >
       {selectable && (
         <div 
-          onClick={(e) => { e.stopPropagation(); onSelect && onSelect(); }}
+          onClick={(e) => { e.stopPropagation(); if (onSelect) onSelect(); }}
           className="flex flex-col items-center justify-start shrink-0 pr-2 pt-0.5"
         >
           <div className={`p-1 rounded-lg transition-all ${isSelected ? 'bg-indigo-600 text-white shadow-[0_0_10px_rgba(79,70,229,0.4)]' : 'bg-white/5 text-slate-500 hover:text-indigo-400'}`}>

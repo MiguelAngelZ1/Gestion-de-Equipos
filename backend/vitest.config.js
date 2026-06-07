@@ -11,8 +11,11 @@ export default defineConfig({
     testTimeout: 30000,
     server: {
       deps: {
-        inline: [/backend/]
+        inline: [/backend/],
+        fallbackCJS: true
       }
-    }
+    },
+    clearMocks: true,
+    pool: 'forks'
   },
 });

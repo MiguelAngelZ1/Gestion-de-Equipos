@@ -11,23 +11,11 @@ const ReceiveLoanModal = ({ isOpen, onClose, prestamo, onConfirm }) => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    if (isOpen) {
-      fetchEstados();
-      setSelectedEstadoId(null);
-      setError(null);
-    }
-  }, [isOpen]);
-
   const fetchEstados = async () => {
     setLoading(true);
     try {
       const data = await apiRequest('/config/estados');
-      // Filtramos para no mostrar 'PRESTAMO' como opción de retorno, 
-      // ya que el equipo justamente está saliendo de ese estado.
       setEstados(data.filter(e => !e.nombre.toLowerCase().includes('prestamo')));
-      
-      // Seleccionar por defecto uno que parezca "bueno" o el primero
       const defaultState = data.find(e => e.nombre.toLowerCase().includes('operativo') || e.nombre.toLowerCase().includes('servicio')) || data[0];
       if (defaultState) setSelectedEstadoId(defaultState.id);
     } catch (err) {
@@ -37,6 +25,14 @@ const ReceiveLoanModal = ({ isOpen, onClose, prestamo, onConfirm }) => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchEstados();
+      setSelectedEstadoId(null);
+      setError(null);
+    }
+  }, [isOpen]);
 
   const handleConfirm = async () => {
     if (!selectedEstadoId) {

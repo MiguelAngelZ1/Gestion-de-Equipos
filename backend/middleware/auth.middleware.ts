@@ -1,5 +1,6 @@
 const logger = require('../utils/logger');
 const jwt = require('jsonwebtoken');
+const { ROLES_ADMIN } = require('../config/constants');
 
 // En producción esto DEBE venir de variables de entorno. 
 // No permitimos un fallback inseguro si estamos en Railway/Producción.
@@ -45,4 +46,25 @@ const verificarAdmin = (req, res, next) => {
     }
 };
 
-module.exports = { verificarAutenticacion, verificarAdmin, JWT_SECRET: SECRET_TO_USE };
+const requirePermission = (...permisos) => {
+    return (req, res, next) => {
+        if (!req.user) {
+            return res.status(401).json({ error: "No autorizado. Inicie sesión." });
+        }
+
+        if (ROLES_ADMIN.includes(req.user.rol?.toUpperCase())) {
+            return next();
+        }
+
+        const userPermisos = req.user.permisos || [];
+        const tienePermiso = permisos.some(p => userPermisos.includes(p));
+
+        if (!tienePermiso) {
+            return res.status(403).json({ error: "Acceso denegado. No tiene permisos suficientes." });
+        }
+
+        next();
+    };
+};
+
+module.exports = { verificarAutenticacion, verificarAdmin, requirePermission, JWT_SECRET: SECRET_TO_USE };

@@ -24,10 +24,17 @@ class EquiposService {
                 gc.nombre LIKE ? OR 
                 es.nombre LIKE ? OR 
                 u.nombre LIKE ? OR 
+                u.ubicacion LIKE ? OR
                 r.nombre LIKE ? OR 
-                r.apellido LIKE ?
+                r.apellido LIKE ? OR
+                r.grado LIKE ? OR
+                EXISTS (
+                    SELECT 1 FROM especificaciones esp 
+                    WHERE esp.equipo_id = e.id 
+                    AND (esp.clave LIKE ? OR esp.valor LIKE ?)
+                )
             )`;
-            for(let i=0; i<8; i++) params.push(search);
+            for(let i=0; i<12; i++) params.push(search);
         }
 
         const countResult = await db.get(`SELECT COUNT(*) as total ${fromClause} ${whereClause}`, params);

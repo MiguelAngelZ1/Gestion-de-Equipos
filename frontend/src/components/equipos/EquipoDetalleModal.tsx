@@ -14,12 +14,6 @@ const EquipoDetalleModal = ({ isOpen, equipo, estados, onClose, onEquipoUpdated 
   const userData = JSON.parse(localStorage.getItem("equipos_user_data") || "{}");
   const userRole = (userData.rol || 'USER').toLowerCase();
 
-  useEffect(() => {
-    if (isOpen && equipo && activeTab === 'componentes') {
-      fetchComponentes();
-    }
-  }, [isOpen, equipo, activeTab]);
-
   const fetchComponentes = async () => {
     setLoading(true);
     try {
@@ -31,6 +25,12 @@ const EquipoDetalleModal = ({ isOpen, equipo, estados, onClose, onEquipoUpdated 
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (isOpen && equipo && activeTab === 'componentes') {
+      fetchComponentes();
+    }
+  }, [isOpen, equipo, activeTab]);
 
   if (typeof document === 'undefined') return null;
 

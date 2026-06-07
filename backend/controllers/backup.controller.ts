@@ -69,8 +69,20 @@ const getSyncBackups = async (req, res, next) => {
 const downloadBackup = async (req, res, next) => {
     try {
         const { filename } = req.params;
+        const safeFilename = path.basename(filename);
+        if (safeFilename !== filename) {
+            return res.status(400).json({ error: "Nombre de archivo inválido" });
+        }
+        if (!/^equipos_backup_\d{4}-\d{2}-\d{2}T.*\.db$/.test(safeFilename)) {
+            return res.status(400).json({ error: "Formato de archivo no permitido" });
+        }
+
         const backupDir = path.resolve(__dirname, "../../backups");
-        const filePath = path.join(backupDir, filename);
+        const filePath = path.join(backupDir, safeFilename);
+
+        if (!filePath.startsWith(backupDir + path.sep)) {
+            return res.status(403).json({ error: "Acceso denegado" });
+        }
 
         if (!fs.existsSync(filePath)) {
             return res.status(404).json({
@@ -79,7 +91,7 @@ const downloadBackup = async (req, res, next) => {
             });
         }
 
-        res.download(filePath, filename);
+        res.download(filePath, safeFilename);
     } catch (error) {
         next(error);
     }

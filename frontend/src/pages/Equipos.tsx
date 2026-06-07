@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { apiRequest } from '../services/api';
 import { ROLES } from '../config/constants';
@@ -102,11 +102,14 @@ const Equipos = () => {
     setFilterGrupo("TODOS");
   };
 
-  const fetchData = async () => {
+  const searchDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const fetchData = async (searchTerm = "") => {
     try {
       setLoading(true);
+      const query = searchTerm ? `/equipos?q=${encodeURIComponent(searchTerm)}` : '/equipos';
       const [eData, ueData, gcData, sData, uData] = await Promise.all([
-        apiRequest('/equipos'),
+        apiRequest(query),
         apiRequest('/config/grados').catch(() => []),
         apiRequest('/config/grupos-comodidad').catch(() => []),
         apiRequest('/config/estados').catch(() => []),
@@ -127,6 +130,16 @@ const Equipos = () => {
   useEffect(() => {
     fetchData();
   }, []);
+
+  useEffect(() => {
+    if (searchDebounce.current) clearTimeout(searchDebounce.current);
+    searchDebounce.current = setTimeout(() => {
+      fetchData(search);
+    }, 400);
+    return () => {
+      if (searchDebounce.current) clearTimeout(searchDebounce.current);
+    };
+  }, [search]);
 
   const toggleSelect = (id) => {
     setSelectedIds(prev => 
@@ -157,7 +170,7 @@ const Equipos = () => {
       showToast("Operación Exitosa", `${selectedIds.length} equipos han sido movidos a la papelera.`, "success");
       setSelectedIds([]);
       setIsBulkDeleteOpen(false);
-      fetchData();
+      fetchData(search);
     } catch (error) {
       showToast("Error", "No se pudieron eliminar los equipos seleccionados.", "error");
     } finally {
@@ -427,7 +440,7 @@ const Equipos = () => {
                body: { ...data, id, responsable_id: data.responsable_id || formData.responsable_id } 
             });
             setIsFormOpen(false);
-            fetchData();
+            fetchData(search);
             showToast(
               id ? 'Equipo Actualizado' : 'Equipo Guardado',
               id 
@@ -462,9 +475,9 @@ const Equipos = () => {
                     equipo_id: equipoForLoan.id
                  })
               });
-              setIsLoanModalOpen(false);
-              setEquipoForLoan(null);
-              fetchData();
+               setIsLoanModalOpen(false);
+               setEquipoForLoan(null);
+               fetchData(search);
               showToast("Préstamo Registrado", `El equipo "${equipoForLoan?.ine}" ha sido prestado correctamente.`, "success");
            } catch (error) {
               showToast("Error", "No se pudo registrar el préstamo.", "error");
@@ -483,7 +496,7 @@ const Equipos = () => {
             setEquipos(prev => prev.filter(e => e.id !== equipoToDelete.id));
             setIsDeleteOpen(false);
             setEquipoToDelete(null);
-            fetchData();
+            fetchData(search);
             showToast("Equipo Eliminado", "El registro ha sido movido a la papelera.", "success");
           } catch (err) {
             showToast("Error", "No se pudo eliminar el equipo.", "error");
