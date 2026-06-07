@@ -62,7 +62,7 @@ const EquipoItem = ({ eq, getStatusColor, setSelectedEquipo, setFormData, setIsF
 const Equipos = () => {
   const { showToast } = useToast();
   const [equipos, setEquipos] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
   const [selectedIds, setSelectedIds] = useState([]);
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
@@ -78,6 +78,9 @@ const Equipos = () => {
   const [filterEstado, setFilterEstado] = useState("TODOS");
   const [filterUbicacion, setFilterUbicacion] = useState("TODAS");
   const [filterGrupo, setFilterGrupo] = useState("TODOS");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
   
   const [selectedEquipo, setSelectedEquipo] = useState(null);
 
@@ -105,18 +108,28 @@ const Equipos = () => {
 
   const searchDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const fetchData = async (searchTerm = "") => {
+  const fetchData = async (searchTerm = "", estadoFilter = "TODOS", ubicacionFilter = "TODAS", categoriaFilter = "TODOS", pageNum = 1) => {
     try {
       setLoading(true);
-      const query = searchTerm ? `/equipos?q=${encodeURIComponent(searchTerm)}` : '/equipos';
+      const params = new URLSearchParams();
+      if (searchTerm) params.set('q', searchTerm);
+      if (estadoFilter && estadoFilter !== "TODOS") params.set('estado', estadoFilter);
+      if (ubicacionFilter && ubicacionFilter !== "TODAS") params.set('ubicacion', ubicacionFilter);
+      if (categoriaFilter && categoriaFilter !== "TODOS") params.set('categoria', categoriaFilter);
+      params.set('page', String(pageNum));
+      params.set('limit', '50');
+      const queryString = params.toString();
       const [eData, ueData, gcData, sData, uData] = await Promise.all([
-        apiRequest(query),
+        apiRequest(`/equipos?${queryString}`),
         apiRequest('/config/grados').catch(() => []),
         apiRequest('/config/grupos-comodidad').catch(() => []),
         apiRequest('/config/estados').catch(() => []),
         apiRequest('/config/ubicaciones').catch(() => [])
       ]);
       setEquipos(eData?.data || eData || []);
+      setTotal(eData?.pagination?.total || 0);
+      setTotalPages(eData?.pagination?.totalPages || 0);
+      setCurrentPage(eData?.pagination?.page || 1);
       setGrados(ueData);
       setGruposComodidad(gcData);
       setEstados(sData);
@@ -130,18 +143,20 @@ const Equipos = () => {
   };
 
   useEffect(() => {
-    // No cargar equipos al montar — esperar a que usuario busque
-  }, []);
-
-  useEffect(() => {
     if (searchDebounce.current) clearTimeout(searchDebounce.current);
     searchDebounce.current = setTimeout(() => {
-      fetchData(search);
+      fetchData(search, filterEstado, filterUbicacion, filterGrupo, 1);
     }, 400);
     return () => {
       if (searchDebounce.current) clearTimeout(searchDebounce.current);
     };
   }, [search]);
+
+  useEffect(() => {
+    if (fetchedOnce.current) {
+      fetchData(search, filterEstado, filterUbicacion, filterGrupo, 1);
+    }
+  }, [filterEstado, filterUbicacion, filterGrupo]);
 
   const toggleSelect = (id) => {
     setSelectedIds(prev => 
@@ -193,13 +208,7 @@ const Equipos = () => {
     return 'bg-amber-500/10 text-amber-400 border-amber-500/20';
   };
 
-  const filtered = equipos.filter(eq => {
-    const matchSearch = matchesSearch(eq, search);
-    const matchEstado = filterEstado === "TODOS" || eq.estado === filterEstado;
-    const matchUbicacion = filterUbicacion === "TODAS" || eq.ubicacion === filterUbicacion;
-    const matchGrupo = filterGrupo === "TODOS" || eq.tipo === filterGrupo;
-    return matchSearch && matchEstado && matchUbicacion && matchGrupo;
-  });
+  const filtered = equipos;
 
   return (
     <div className="space-y-6">
@@ -331,8 +340,57 @@ const Equipos = () => {
             </button>
           </motion.div>
         ) : (
-          // grid + pagination section (moved to Task 3)
-          null
+          <div className="space-y-6">
+    <div className="flex items-center gap-3 px-2">
+        <div className="h-px bg-white/10 flex-1"></div>
+        <div className="flex items-center gap-6">
+            {userRole === ROLES.ADMIN && filtered.length > 0 && (
+                <button 
+                    onClick={toggleAll}
+                    className="flex items-center gap-2 text-[10px] font-black text-indigo-400 uppercase tracking-widest hover:text-white transition-colors cursor-pointer group"
+                >
+                    <div className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${
+                        filtered.every(e => selectedIds.includes(e.id)) 
+                            ? 'bg-indigo-600 border-indigo-500' 
+                            : 'border-white/20 group-hover:border-indigo-500/50'
+                    }`}>
+                        {filtered.every(e => selectedIds.includes(e.id)) && <Check className="w-3 h-3 text-white" />}
+                    </div>
+                    Seleccionar Todo
+                </button>
+            )}
+            <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                <span className="text-indigo-400">{total}</span> resultado{total !== 1 ? 's' : ''}
+                {totalPages > 1 && <> &mdash; Pág. <span className="text-indigo-400">{currentPage}</span> de {totalPages}</>}
+            </h2>
+        </div>
+        <div className="h-px bg-white/10 flex-1"></div>
+    </div>
+
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        <AnimatePresence mode="popLayout">
+            {filtered.map(eq => (
+                <EquipoItem 
+                    key={eq.id} 
+                    eq={eq} 
+                    getStatusColor={getStatusColor} 
+                    setSelectedEquipo={setSelectedEquipo} 
+                    setFormData={setFormData} 
+                    setIsFormOpen={setIsFormOpen} 
+                    setEquipoToDelete={setEquipoToDelete}
+                    setIsDeleteOpen={setIsDeleteOpen}
+                    onLoan={(equipo) => {
+                        setEquipoForLoan(equipo);
+                        setIsLoanModalOpen(true);
+                    }}
+                    userRole={userRole}
+                    isSelected={selectedIds.includes(eq.id)}
+                    onToggleSelect={toggleSelect}
+                />
+            ))}
+        </AnimatePresence>
+    </div>
+</div>
         )}
       </div>
 
