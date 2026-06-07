@@ -51,9 +51,9 @@ const CommonCard = ({
       {selectable && (
         <div 
           onClick={(e) => { e.stopPropagation(); if (onSelect) onSelect(); }}
-          className="flex flex-col items-center justify-start shrink-0 pr-2 pt-0.5"
+          className="flex flex-col items-center justify-start shrink-0 pr-2 pt-0.5 min-w-[44px] min-h-[44px]"
         >
-          <div className={`p-1 rounded-lg transition-all ${isSelected ? 'bg-indigo-600 text-white shadow-[0_0_10px_rgba(79,70,229,0.4)]' : 'bg-white/5 text-slate-500 hover:text-indigo-400'}`}>
+          <div className={`p-2.5 rounded-lg transition-all ${isSelected ? 'bg-indigo-600 text-white shadow-[0_0_10px_rgba(79,70,229,0.4)]' : 'bg-white/5 text-slate-500 hover:text-indigo-400'}`}>
             {isSelected ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4" />}
           </div>
         </div>
@@ -116,7 +116,7 @@ const CommonCard = ({
             className={`bg-indigo-600/10 hover:bg-indigo-600/20 text-indigo-300 font-bold ${compact ? 'px-2.5 py-1.5 rounded-lg' : 'px-4 py-2 rounded-xl'} transition-all border border-indigo-500/20 cursor-pointer flex items-center justify-center gap-2 group-hover:bg-indigo-600 group-hover:text-white group-hover:border-transparent active:scale-95`}
           >
             <Eye className={`${compact ? 'w-3 h-3' : 'w-3.5 h-3.5'}`} />
-            <span className={`${compact ? 'text-[8px]' : 'text-[9px]'} uppercase tracking-widest`}>Detalles</span>
+            <span className={`${compact ? 'text-[9px]' : 'text-[10px]'} uppercase tracking-widest`}>Detalles</span>
           </button>
         )}
         

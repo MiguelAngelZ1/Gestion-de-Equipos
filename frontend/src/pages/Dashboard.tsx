@@ -115,7 +115,7 @@ const Dashboard = () => {
   }, [showToast]);
 
   return (
-    <div className="flex flex-col gap-6 md:gap-10 w-full min-h-screen pb-20 overflow-x-hidden">
+    <div className="flex flex-col gap-6 md:gap-10 w-full min-h-screen overflow-x-hidden">
       
       {/* Grid de Estadísticas Principales */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6 shrink-0 px-2 lg:px-0">
@@ -131,7 +131,7 @@ const Dashboard = () => {
         {/* Panel de Alertas Críticas */}
         <motion.div 
           initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8, delay: 0.5 }}
-          className="glass-panel rounded-[3rem] p-6 md:p-8 flex flex-col h-full min-h-[500px] overflow-hidden group"
+          className="glass-panel rounded-[3rem] p-6 md:p-8 flex flex-col h-full min-h-[300px] md:min-h-[500px] overflow-hidden group"
         >
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-5">
@@ -265,7 +265,7 @@ const Dashboard = () => {
 
         {/* Panel de Distribución por Ubicación */}
         <Suspense fallback={
-          <div className="glass-panel rounded-[3rem] p-6 md:p-8 flex flex-col h-full min-h-[500px] justify-center items-center">
+          <div className="glass-panel rounded-[3rem] p-6 md:p-8 flex flex-col h-full min-h-[300px] md:min-h-[500px] justify-center items-center">
             <div className="w-12 h-12 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin" />
             <span className="text-slate-500 font-bold tracking-widest text-[10px] uppercase mt-4">Cargando gráfico...</span>
           </div>

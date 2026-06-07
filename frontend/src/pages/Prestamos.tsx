@@ -195,7 +195,7 @@ const Prestamos = () => {
       </div>
 
       {/* Layout Principal: Dos Columnas */}
-      <div className="flex flex-col lg:grid lg:grid-cols-2 gap-6 lg:gap-10 flex-1 lg:h-[calc(100vh-250px)] min-h-[500px] lg:min-h-0 sm:px-2 lg:overflow-hidden pb-32 lg:pb-0">
+      <div className="flex flex-col lg:grid lg:grid-cols-2 gap-6 lg:gap-10 flex-1 lg:h-[calc(100vh-250px)] min-h-[300px] md:min-h-[500px] lg:min-h-0 sm:px-2 lg:overflow-hidden">
         
         {/* Columna Izquierda: Préstamos Activos */}
         <section className="flex flex-col min-h-[300px] lg:min-h-0 bg-transparent lg:bg-white/[0.02] lg:rounded-[3rem] border-transparent lg:border-white/5 sm:p-4 lg:p-6 lg:backdrop-blur-sm lg:overflow-hidden relative">
@@ -397,7 +397,7 @@ const Prestamos = () => {
             initial={{ y: 100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 100, opacity: 0 }}
-            className="fixed bottom-8 left-1/4 -translate-x-1/2 z-50 w-[40%] max-w-sm"
+            className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 w-[90%] sm:w-[40%] max-w-sm"
           >
             <div className="bg-slate-900/80 backdrop-blur-xl border border-white/10 p-4 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex items-center justify-between gap-4">
                <div className="flex items-center gap-3">
@@ -424,7 +424,7 @@ const Prestamos = () => {
             initial={{ y: 100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 100, opacity: 0 }}
-            className="fixed bottom-8 left-3/4 -translate-x-1/2 z-50 w-[40%] max-w-sm"
+            className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 w-[90%] sm:w-[40%] max-w-sm"
           >
             <div className="bg-slate-900/80 backdrop-blur-xl border border-white/10 p-4 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex items-center justify-between gap-4">
                <div className="flex items-center gap-3">
