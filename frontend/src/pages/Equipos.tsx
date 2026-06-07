@@ -4,7 +4,6 @@ import { apiRequest } from '../services/api';
 import { ROLES } from '../config/constants';
 import { Server, User, MapPin, Tag, Info, Plus, Search, Sliders, X, Filter, Calendar, CheckSquare, Square, Trash2, CheckCircle, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { matchesSearch } from '../utils/search';
 import { useToast } from '../context/ToastContext';
 
 import EquipoDetalleModal from '../components/equipos/EquipoDetalleModal';
@@ -173,6 +172,11 @@ const Equipos = () => {
     } else {
       setSelectedIds(prev => [...new Set([...prev, ...currentFilteredIds])]);
     }
+  };
+
+  const goToPage = (pageNum) => {
+    if (pageNum < 1 || pageNum > totalPages) return;
+    fetchData(search, filterEstado, filterUbicacion, filterGrupo, pageNum);
   };
 
   const handleBulkDelete = async () => {
@@ -363,6 +367,24 @@ const Equipos = () => {
                 <span className="text-indigo-400">{total}</span> resultado{total !== 1 ? 's' : ''}
                 {totalPages > 1 && <> &mdash; Pág. <span className="text-indigo-400">{currentPage}</span> de {totalPages}</>}
             </h2>
+            {totalPages > 1 && (
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => goToPage(currentPage - 1)}
+                        disabled={currentPage <= 1}
+                        className="px-3 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed bg-white/5 hover:bg-white/10 text-slate-300"
+                    >
+                        Anterior
+                    </button>
+                    <button
+                        onClick={() => goToPage(currentPage + 1)}
+                        disabled={currentPage >= totalPages}
+                        className="px-3 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed bg-white/5 hover:bg-white/10 text-slate-300"
+                    >
+                        Siguiente
+                    </button>
+                </div>
+            )}
         </div>
         <div className="h-px bg-white/10 flex-1"></div>
     </div>
