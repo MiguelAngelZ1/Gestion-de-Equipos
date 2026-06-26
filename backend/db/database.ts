@@ -1,4 +1,5 @@
 const path = require("path");
+const dns = require("dns");
 const logger = require("../utils/logger");
 const MigrationRunner = require("./migrations/runner");
 
@@ -62,7 +63,33 @@ class Database {
   async _connectPG(dbUrl: string) {
     try {
       const { Pool } = require("pg");
-      const pool = new Pool({ connectionString: dbUrl, family: 4 });
+      const urlObj = new URL(dbUrl);
+      const hostname = urlObj.hostname;
+      const port = parseInt(urlObj.port || "5432", 10);
+      const user = decodeURIComponent(urlObj.username);
+      const password = decodeURIComponent(urlObj.password);
+      const database = urlObj.pathname?.replace(/^\//, "") || "postgres";
+
+      let host = hostname;
+      try {
+        const { address } = await dns.promises.lookup(hostname, { family: 4 });
+        if (address) {
+          host = address;
+          logger.info({ hostname, resolved: address }, "[DB] Hostname resuelto a IPv4");
+        }
+      } catch (lookupErr) {
+        logger.warn({ err: lookupErr, hostname }, "[DB] No se pudo resolver IPv4, usando hostname original");
+      }
+
+      const pool = new Pool({
+        host,
+        port,
+        user,
+        password,
+        database,
+        ssl: { rejectUnauthorized: false },
+        family: 4,
+      });
       await pool.query("SELECT 1");
       this.client = { pool };
       this.connected = true;
