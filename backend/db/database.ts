@@ -60,6 +60,17 @@ class Database {
     }
   }
 
+  async _resolveIPv4(hostname: string): Promise<string | null> {
+    for (const resolver of [
+      async () => { const r = new dns.Resolver(); r.setServers(['8.8.8.8', '1.1.1.1']); const a = await r.resolve4(hostname); if (a?.length) { logger.info({ hostname, resolved: a[0], method: "google-dns" }, "[DB] IPv4"); return a[0]; } return null; },
+      async () => { const a = await dns.promises.resolve4(hostname); if (a?.length) { logger.info({ hostname, resolved: a[0], method: "resolve4" }, "[DB] IPv4"); return a[0]; } return null; },
+      async () => { const { address } = await dns.promises.lookup(hostname, { family: 4 }); if (address) { logger.info({ hostname, resolved: address, method: "lookup" }, "[DB] IPv4"); return address; } return null; },
+    ]) {
+      try { return await resolver(); } catch { continue; }
+    }
+    return null;
+  }
+
   async _connectPG(dbUrl: string) {
     try {
       const { Pool } = require("pg");
@@ -70,26 +81,14 @@ class Database {
       const password = decodeURIComponent(urlObj.password);
       const database = urlObj.pathname?.replace(/^\//, "") || "postgres";
 
-      let host = hostname;
-      try {
-        const { address } = await dns.promises.lookup(hostname, { family: 4 });
-        if (address) {
-          host = address;
-          logger.info({ hostname, resolved: address }, "[DB] Hostname resuelto a IPv4");
-        }
-      } catch (lookupErr) {
-        logger.warn({ err: lookupErr, hostname }, "[DB] No se pudo resolver IPv4, usando hostname original");
+      const ipv4 = await this._resolveIPv4(hostname);
+      const host = ipv4 || hostname;
+
+      if (!ipv4) {
+        logger.warn({ hostname }, "[DB] No se pudo resolver IPv4, intentando conexion directa");
       }
 
-      const pool = new Pool({
-        host,
-        port,
-        user,
-        password,
-        database,
-        ssl: { rejectUnauthorized: false },
-        family: 4,
-      });
+      const pool = new Pool({ host, port, user, password, database, ssl: { rejectUnauthorized: false }, family: 4 });
       await pool.query("SELECT 1");
       this.client = { pool };
       this.connected = true;

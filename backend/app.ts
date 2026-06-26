@@ -190,9 +190,10 @@ app.use('/api', exportRoutes);
 app.get("/health", (req, res) => {
   const dbEngine = process.env.DATABASE_URL ? "PostgreSQL (Supabase)" : "SQLite (Local)";
   res.json({
-    status: "ok",
+    status: db.connected ? "ok" : "degraded",
     timestamp: new Date().toISOString(),
     database: dbEngine,
+    db_connected: db.connected,
     uptime: process.uptime(),
   });
 });
