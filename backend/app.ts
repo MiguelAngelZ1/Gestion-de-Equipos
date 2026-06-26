@@ -188,10 +188,12 @@ app.use('/api/ipam', ipamRoutes);
 app.use('/api', exportRoutes);
 
 app.get("/health", (req, res) => {
+  const dbEngine = process.env.DATABASE_URL ? "PostgreSQL (Supabase)" : "SQLite (Local)";
   res.json({
     status: "ok",
     timestamp: new Date().toISOString(),
-    database: "SQLite (Local)",
+    database: dbEngine,
+    uptime: process.uptime(),
   });
 });
 
