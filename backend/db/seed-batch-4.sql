@@ -1,0 +1,18 @@
+BEGIN;
+INSERT INTO refresh_tokens (id, user_id, token, expires, created_at, revoked) VALUES (7, 1, '3198d712ef1488f558614117ac84f7c16d92435b6d078033739681078cd28bb3', '2026-06-02T22:48:04.008Z', '2026-05-26 22:48:04', 0) ON CONFLICT DO NOTHING;
+INSERT INTO refresh_tokens (id, user_id, token, expires, created_at, revoked) VALUES (8, 1, 'ec7eaed90008ae11e4d69563baa5307b72c3060dddfcdab4e1ef4f34a0985a82', '2026-06-02T23:05:04.142Z', '2026-05-26 23:05:04', 0) ON CONFLICT DO NOTHING;
+INSERT INTO refresh_tokens (id, user_id, token, expires, created_at, revoked) VALUES (9, 1, '5cbd402a495fa4d039c542a7f467c754b355bbbd82a0dfcbcd3271fd215c7ee6', '2026-06-03T00:00:18.473Z', '2026-05-27 00:00:18', 0) ON CONFLICT DO NOTHING;
+INSERT INTO refresh_tokens (id, user_id, token, expires, created_at, revoked) VALUES (10, 1, '4c33b97c99a1fa24d961f2dfac42c1a35265c11f1f235024147e102a065dc595', '2026-06-07T22:08:02.497Z', '2026-05-31 22:08:02', 0) ON CONFLICT DO NOTHING;
+INSERT INTO refresh_tokens (id, user_id, token, expires, created_at, revoked) VALUES (11, 1, '2f1f93948a935e41d176e41cab123476b16a6684982e098dc71b674613779d52', '2026-06-07T22:46:10.205Z', '2026-05-31 22:46:10', 0) ON CONFLICT DO NOTHING;
+INSERT INTO refresh_tokens (id, user_id, token, expires, created_at, revoked) VALUES (12, 1, '447602f8a15e8a4f68b89c4ec80de4286408e182d06f738681a46df014f2aea2', '2026-06-07T22:46:39.798Z', '2026-05-31 22:46:39', 0) ON CONFLICT DO NOTHING;
+INSERT INTO refresh_tokens (id, user_id, token, expires, created_at, revoked) VALUES (13, 1, '8f174d3d183d4963c8a0f396589d0010c6849dfc1f5d8c2148f5fd755dc9f9dd', '2026-06-07T22:52:40.283Z', '2026-05-31 22:52:40', 0) ON CONFLICT DO NOTHING;
+INSERT INTO refresh_tokens (id, user_id, token, expires, created_at, revoked) VALUES (14, 1, '1e99be73ba12579f50020a9ed39a6ebcc528d137df468c6bbf9afa4307c6d10d', '2026-06-07T22:58:06.278Z', '2026-05-31 22:58:06', 0) ON CONFLICT DO NOTHING;
+INSERT INTO refresh_tokens (id, user_id, token, expires, created_at, revoked) VALUES (15, 1, 'f6951aefe9d6319a9031913fa646967236d8540c4220d8c2ed1b673f1f03b806', '2026-06-14T14:16:56.601Z', '2026-06-07 14:16:56', 0) ON CONFLICT DO NOTHING;
+INSERT INTO refresh_tokens (id, user_id, token, expires, created_at, revoked) VALUES (16, 2, 'dcdf5abd25451f34394e145cee0fa05a97165ef0e50f66b5b2f40be6c7fb090e', '2026-06-14T16:03:27.210Z', '2026-06-07 16:03:27', 0) ON CONFLICT DO NOTHING;
+INSERT INTO refresh_tokens (id, user_id, token, expires, created_at, revoked) VALUES (17, 2, '2328fb7321859f2c673ad085cedb69e499d4df0d101c541aba4364dae87abde4', '2026-06-14T16:14:36.851Z', '2026-06-07 16:14:36', 0) ON CONFLICT DO NOTHING;
+INSERT INTO refresh_tokens (id, user_id, token, expires, created_at, revoked) VALUES (18, 1, '54e823ad3fcfc2fe7c415dac80b2d04e31b0442e03d8b761f3fde947b35dc294', '2026-06-14T16:14:59.061Z', '2026-06-07 16:14:59', 0) ON CONFLICT DO NOTHING;
+INSERT INTO refresh_tokens (id, user_id, token, expires, created_at, revoked) VALUES (19, 2, '9f11217f701ff0517de3f76f8da737730041ad34a01f6cac1f5450c28fde0c47', '2026-06-14T17:17:22.661Z', '2026-06-07 17:17:22', 0) ON CONFLICT DO NOTHING;
+INSERT INTO refresh_tokens (id, user_id, token, expires, created_at, revoked) VALUES (20, 1, 'b66bb1b5c8c15828c7f09ef99ac77ae0e0f873dbdc90040348806ea7f316ea1d', '2026-06-14T17:22:34.575Z', '2026-06-07 17:22:34', 0) ON CONFLICT DO NOTHING;
+INSERT INTO refresh_tokens (id, user_id, token, expires, created_at, revoked) VALUES (21, 1, 'ec3ec6700699c143d7882f1c4328be3f8e37b177f8797e5274a5aaf8eaa9c1d8', '2026-06-17T18:53:11.387Z', '2026-06-10 18:53:11', 0) ON CONFLICT DO NOTHING;
+COMMIT;
+COMMIT;

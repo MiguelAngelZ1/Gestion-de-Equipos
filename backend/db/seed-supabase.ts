@@ -21,13 +21,10 @@ async function seed() {
     const d = new sqlite3.Database(sqlitePath, (err) => err ? reject(err) : resolve(d));
   });
 
-  // Connect to Supabase (PG)
-  const { Pool } = require('pg');
-  const pgPool = new Pool({ connectionString: dbUrl });
-
-  async function pgQuery(text, params = []) {
-    return pgPool.query(text, params);
-  }
+  // Connect to Supabase (PG) — single client, not pool, to avoid overwhelming free tier
+  const { Client } = require('pg');
+  const pgClient = new Client({ connectionString: dbUrl });
+  await pgClient.connect();
 
   async function transferTable(table) {
     const rows = await new Promise((resolve, reject) => {
@@ -40,17 +37,15 @@ async function seed() {
 
     const columns = Object.keys(rows[0]);
     const placeholders = columns.map((_, i) => `$${i + 1}`).join(', ');
-    const inserts = [];
 
     for (const row of rows) {
       const values = columns.map(c => row[c]);
-      inserts.push(pgQuery(
+      await pgClient.query(
         `INSERT INTO ${table} (${columns.join(', ')}) VALUES (${placeholders}) ON CONFLICT DO NOTHING`,
         values
-      ));
+      );
     }
 
-    await Promise.all(inserts);
     logger.info({ table, count: rows.length }, `[Seed] Transferida`);
   }
 
@@ -73,7 +68,7 @@ async function seed() {
   }
 
   sqDb.close();
-  await pgPool.end();
+  await pgClient.end();
   logger.info("[Seed] Transferencia completada");
 }
 

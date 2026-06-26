@@ -76,19 +76,14 @@ class Database {
       const { Pool } = require("pg");
       const urlObj = new URL(dbUrl);
       const hostname = urlObj.hostname;
-      const port = parseInt(urlObj.port || "5432", 10);
-      const user = decodeURIComponent(urlObj.username);
-      const password = decodeURIComponent(urlObj.password);
-      const database = urlObj.pathname?.replace(/^\//, "") || "postgres";
 
       const ipv4 = await this._resolveIPv4(hostname);
-      const host = ipv4 || hostname;
-
       if (!ipv4) {
         logger.warn({ hostname }, "[DB] No se pudo resolver IPv4, intentando conexion directa");
       }
 
-      const pool = new Pool({ host, port, user, password, database, ssl: { rejectUnauthorized: false }, family: 4 });
+      const effectiveUrl = ipv4 ? dbUrl.replace(hostname, ipv4) : dbUrl;
+      const pool = new Pool({ connectionString: effectiveUrl, ssl: { rejectUnauthorized: false } });
       await pool.query("SELECT 1");
       this.client = { pool };
       this.connected = true;
