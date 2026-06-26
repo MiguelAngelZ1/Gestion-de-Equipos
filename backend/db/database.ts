@@ -82,7 +82,10 @@ class Database {
         logger.warn({ hostname }, "[DB] No se pudo resolver IPv4, intentando conexion directa");
       }
 
-      const effectiveUrl = ipv4 ? dbUrl.replace(hostname, ipv4) : dbUrl;
+      let effectiveUrl = ipv4 ? dbUrl.replace(hostname, ipv4) : dbUrl;
+      const u = new URL(effectiveUrl);
+      u.searchParams.delete('sslmode');
+      effectiveUrl = u.toString();
       const pool = new Pool({ connectionString: effectiveUrl, ssl: { rejectUnauthorized: false } });
       await pool.query("SELECT 1");
       this.client = { pool };
