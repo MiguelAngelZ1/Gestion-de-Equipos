@@ -6,6 +6,7 @@ const { Server } = require("socket.io");
 const jwt = require('jsonwebtoken');
 const { JWT_SECRET } = require('./middleware/auth.middleware');
 const notificationService = require('./services/notificationService');
+const { initBot, stopBot } = require('./telegram-bot/index');
 
 function getCookieValue(cookieHeader, name) {
   if (!cookieHeader) return null;
@@ -45,6 +46,7 @@ process.on('SIGINT', shutdown);
 
 async function shutdown() {
   logger.info('Apagando servidor gracefulmente...');
+  stopBot();
   server.close(async () => {
     try {
       if (db.client) {
@@ -77,6 +79,8 @@ server.listen(PORT, async () => {
     notificationService.checkDelayedRepairs();
     notificationService.checkLowStock();
   }, notificationInterval);
+
+  initBot();
 });
 
 server.on("error", (error) => {
