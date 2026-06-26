@@ -5,7 +5,7 @@ async function countByUbicacion(searchTerm) {
     SELECT u.nombre, COUNT(e.id) as total
     FROM equipos e
     JOIN ubicaciones u ON e.ubicacion_id = u.id
-    WHERE e.is_deleted = 0 AND u.nombre LIKE ?
+    WHERE e.is_deleted = 0 AND u.nombre ILIKE ?
     GROUP BY u.id
     ORDER BY total DESC
   `, [`%${searchTerm}%`]);
@@ -16,7 +16,7 @@ async function countByEstado(searchTerm) {
     SELECT es.nombre, COUNT(e.id) as total
     FROM equipos e
     JOIN estados es ON e.estado_id = es.id
-    WHERE e.is_deleted = 0 AND es.nombre LIKE ?
+    WHERE e.is_deleted = 0 AND es.nombre ILIKE ?
     GROUP BY es.id
     ORDER BY total DESC
   `, [`%${searchTerm}%`]);
@@ -27,7 +27,7 @@ async function countByResponsable(searchTerm) {
     SELECT r.nombre, r.apellido, r.grado, COUNT(e.id) as total
     FROM equipos e
     JOIN responsables r ON e.responsable_id = r.id
-    WHERE e.is_deleted = 0 AND (r.nombre LIKE ? OR r.apellido LIKE ?)
+    WHERE e.is_deleted = 0 AND (r.nombre ILIKE ? OR r.apellido ILIKE ?)
     GROUP BY r.id
     ORDER BY total DESC
   `, [`%${searchTerm}%`, `%${searchTerm}%`]);
@@ -64,7 +64,7 @@ async function findEquipo(term) {
     LEFT JOIN ubicaciones u ON e.ubicacion_id = u.id
     LEFT JOIN responsables r ON e.responsable_id = r.id
     LEFT JOIN estados es ON e.estado_id = es.id
-    WHERE e.is_deleted = 0 AND e.ine LIKE ?
+    WHERE e.is_deleted = 0 AND e.ine ILIKE ?
     LIMIT 1
   `, [`%${searchTerm}%`]);
 
@@ -89,7 +89,7 @@ async function findEquipo(term) {
 async function getEspecificaciones(equipoId, claveFilter = null) {
   if (claveFilter) {
     return db.all(
-      'SELECT clave, valor FROM especificaciones WHERE equipo_id = ? AND (clave = ? OR clave LIKE ?) ORDER BY id ASC',
+      'SELECT clave, valor FROM especificaciones WHERE equipo_id = ? AND (clave = ? OR clave ILIKE ?) ORDER BY id ASC',
       [equipoId, claveFilter, `%${claveFilter}%`]
     );
   }
@@ -105,7 +105,7 @@ async function getEquiposByUbicacion(ubicacionNombre) {
     FROM equipos e
     JOIN ubicaciones u ON e.ubicacion_id = u.id
     LEFT JOIN estados es ON e.estado_id = es.id
-    WHERE e.is_deleted = 0 AND u.nombre LIKE ?
+    WHERE e.is_deleted = 0 AND u.nombre ILIKE ?
     ORDER BY e.ine ASC
   `, [`%${ubicacionNombre}%`]);
 }
@@ -116,7 +116,7 @@ async function getEquiposByEstado(estadoNombre) {
     FROM equipos e
     JOIN estados es ON e.estado_id = es.id
     LEFT JOIN ubicaciones u ON e.ubicacion_id = u.id
-    WHERE e.is_deleted = 0 AND es.nombre LIKE ?
+    WHERE e.is_deleted = 0 AND es.nombre ILIKE ?
     ORDER BY e.ine ASC
   `, [`%${estadoNombre}%`]);
 }
@@ -127,7 +127,7 @@ async function getEquiposByResponsable(searchTerm) {
     FROM equipos e
     JOIN responsables r ON e.responsable_id = r.id
     LEFT JOIN ubicaciones u ON e.ubicacion_id = u.id
-    WHERE e.is_deleted = 0 AND (r.nombre LIKE ? OR r.apellido LIKE ?)
+    WHERE e.is_deleted = 0 AND (r.nombre ILIKE ? OR r.apellido ILIKE ?)
     ORDER BY e.ine ASC
   `, [`%${searchTerm}%`, `%${searchTerm}%`]);
 }
@@ -144,11 +144,11 @@ async function searchAll(term) {
     LEFT JOIN estados es ON e.estado_id = es.id
     WHERE e.is_deleted = 0
       AND (
-        e.ine LIKE ? OR e.nne LIKE ? OR e.serie LIKE ?
-        OR u.nombre LIKE ? OR r.nombre LIKE ? OR r.apellido LIKE ? OR r.grado LIKE ?
+        e.ine ILIKE ? OR e.nne ILIKE ? OR e.serie ILIKE ?
+        OR u.nombre ILIKE ? OR r.nombre ILIKE ? OR r.apellido ILIKE ? OR r.grado ILIKE ?
         OR EXISTS (
           SELECT 1 FROM especificaciones esp
-          WHERE esp.equipo_id = e.id AND (esp.clave LIKE ? OR esp.valor LIKE ?)
+          WHERE esp.equipo_id = e.id AND (esp.clave ILIKE ? OR esp.valor ILIKE ?)
         )
       )
     ORDER BY e.ine ASC
@@ -164,8 +164,8 @@ async function searchByIP(ip) {
     JOIN especificaciones esp ON esp.equipo_id = e.id
     LEFT JOIN ubicaciones u ON e.ubicacion_id = u.id
     WHERE e.is_deleted = 0
-      AND (esp.clave IN ('IP', 'ip', 'DIRECCION IP', 'DIRECCIÓN IP') OR esp.clave LIKE '%ip%')
-      AND esp.valor LIKE ?
+      AND (esp.clave IN ('IP', 'ip', 'DIRECCION IP', 'DIRECCIÓN IP') OR esp.clave ILIKE '%ip%')
+      AND esp.valor ILIKE ?
     ORDER BY e.ine ASC
     LIMIT 5
   `, [`%${ip}%`]);

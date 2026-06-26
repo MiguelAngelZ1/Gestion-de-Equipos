@@ -16,12 +16,17 @@ class Database {
   async connect() {
     if (this.connected) return;
     if (this.connecting) return this.connecting;
-
     this.connecting = this._doConnect();
     return this.connecting;
   }
 
   async _doConnect() {
+    const dbUrl = process.env.DATABASE_URL;
+    if (dbUrl) return this._connectPG(dbUrl);
+    return this._connectSQLite();
+  }
+
+  async _connectSQLite() {
     try {
       const sqlite3 = require("sqlite3");
       const dbPath = process.env.DB_PATH
@@ -31,7 +36,7 @@ class Database {
       await new Promise<void>((resolve, reject) => {
         this.client = new sqlite3.Database(dbPath, (err) => {
           if (err) {
-            logger.error({ err: err.message }, "[DB] Error abriendo base de datos");
+            logger.error({ err: err.message }, "[DB] Error abriendo SQLite");
             reject(err);
             return;
           }
@@ -49,7 +54,23 @@ class Database {
     } catch (error) {
       this.connected = false;
       this.connecting = null;
-      logger.error({ err: error }, "[DB] Error durante la conexión");
+      logger.error({ err: error }, "[DB] Error SQLite");
+      throw error;
+    }
+  }
+
+  async _connectPG(dbUrl: string) {
+    try {
+      const { Pool } = require("pg");
+      const pool = new Pool({ connectionString: dbUrl });
+      await pool.query("SELECT 1");
+      this.client = { pool };
+      this.connected = true;
+      logger.info("[DB] Conectado a PostgreSQL (Supabase)");
+    } catch (error) {
+      this.connected = false;
+      this.connecting = null;
+      logger.error({ err: error }, "[DB] Error PostgreSQL");
       throw error;
     }
   }
@@ -64,9 +85,16 @@ class Database {
     }
   }
 
-  // Método para consultas (Exclusivo SQLite)
   async query(sql: string, params: any[] = []): Promise<{ rows: any[]; changes: number; lastID?: number }> {
     if (!this.connected) await this.connect();
+
+    if (this.client.pool) {
+      let pgSql = sql;
+      let idx = 0;
+      pgSql = pgSql.replace(/\?/g, () => `$${++idx}`);
+      const result = await this.client.pool.query(pgSql, params);
+      return { rows: result.rows, changes: result.rowCount || 0, lastID: undefined };
+    }
 
     return new Promise((resolve, reject) => {
       const isQuery = sql.trim().toUpperCase().startsWith("SELECT") ||
@@ -78,7 +106,6 @@ class Database {
           else resolve({ rows, changes: 0 });
         });
       } else {
-        // eslint-disable-next-line @typescript-eslint/no-this-alias
         const self = this;
         this.client.run(sql, params, async function (this: any, err) {
           if (err) {
@@ -86,11 +113,10 @@ class Database {
             reject(err);
           } else {
             let lid = this.lastID;
-            // Fallback si lastID es 0 o undefined en una operación INSERT
             if (!lid && sql.trim().toUpperCase().startsWith("INSERT")) {
               try {
                 const row: any = await new Promise((res) => {
-                  self.client.get("SELECT last_insert_rowid() as id", (err: any, row: any) => res(row));
+                  self.client.get("SELECT last_insert_rowid() as id", (err, row) => res(row));
                 });
                 if (row) lid = row.id;
               } catch (e) {
