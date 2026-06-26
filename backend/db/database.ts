@@ -62,7 +62,7 @@ class Database {
   async _connectPG(dbUrl: string) {
     try {
       const { Pool } = require("pg");
-      const pool = new Pool({ connectionString: dbUrl });
+      const pool = new Pool({ connectionString: dbUrl, family: 4 });
       await pool.query("SELECT 1");
       this.client = { pool };
       this.connected = true;
