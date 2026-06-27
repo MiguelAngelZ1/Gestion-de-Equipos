@@ -28,9 +28,14 @@ function promptWithBack(text) {
   return text + '\n\n0️⃣ 🔙 Volver';
 }
 
+function normalizeButtonInput(text) {
+  return text.replace(/️⃣.*$/, '').trim();
+}
+
 async function handleMessage(ctx) {
   const chatId = ctx.chat.id;
-  const text = (ctx.message.text || '').trim();
+  const raw = (ctx.message.text || '').trim();
+  const text = normalizeButtonInput(raw);
 
   if (!isAllowed(chatId)) {
     return ctx.reply('⛔ No tenés permiso para usar este bot.');
