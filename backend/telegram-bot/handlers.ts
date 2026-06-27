@@ -49,6 +49,37 @@ const listadosKeyboard = Markup.keyboard([
 
 const backKeyboard = Markup.keyboard([['0️⃣ 🔙 Volver']]).resize();
 
+const resultKeyboard = Markup.keyboard([
+  ['1️⃣ Seguir consultando', '2️⃣ Salir'],
+]).resize();
+
+async function createEstadoKeyboard() {
+  const estados = await q.listEstados();
+  const keys = estados.map(e => q.ESTADO_DESC[e.nombre] || e.nombre);
+  const rows = [];
+  for (let i = 0; i < keys.length; i += 2) rows.push(keys.slice(i, i + 2));
+  rows.push(['0️⃣ 🔙 Volver']);
+  return Markup.keyboard(rows).resize();
+}
+
+async function createUbicacionKeyboard() {
+  const ubicaciones = await q.listUbicaciones();
+  const keys = ubicaciones.map(u => u.nombre);
+  const rows = [];
+  for (let i = 0; i < keys.length; i += 2) rows.push(keys.slice(i, i + 2));
+  rows.push(['0️⃣ 🔙 Volver']);
+  return Markup.keyboard(rows).resize();
+}
+
+async function createResponsableKeyboard() {
+  const responsables = await q.listResponsables();
+  const keys = responsables.map(r => `${r.grado ? r.grado + ' ' : ''}${r.nombre} ${r.apellido}`);
+  const rows = [];
+  for (let i = 0; i < keys.length; i += 2) rows.push(keys.slice(i, i + 2));
+  rows.push(['0️⃣ 🔙 Volver']);
+  return Markup.keyboard(rows).resize();
+}
+
 function isAllowed(chatId) {
   const allowed = process.env.TELEGRAM_ALLOWED_USERS;
   if (!allowed) return true;
@@ -111,7 +142,7 @@ async function handleMessage(ctx) {
       resetSession(chatId);
       return ctx.reply('¡Hasta luego! Mandame un mensaje cuando me necesites.', backKeyboard);
     }
-    return ctx.reply('Respondé con 1 para seguir consultando o 2 para salir.');
+    return ctx.reply('Respondé con 1 para seguir consultando o 2 para salir.', resultKeyboard);
   }
 }
 
@@ -177,7 +208,7 @@ async function handleCantidadSubMenu(ctx, chatId, text) {
       setState(chatId, STATES.RESULT);
       return ctx.reply(
         `📊 *Total de equipos activos:* ${total}\n\n1️⃣ Seguir consultando\n2️⃣ Salir`,
-        { parse_mode: 'Markdown' }
+        { parse_mode: 'Markdown', ...resultKeyboard }
       );
     } catch (err) {
       logger.error({ err }, '[TelegramBot] getTotalEquipos error');
@@ -187,35 +218,29 @@ async function handleCantidadSubMenu(ctx, chatId, text) {
 
   if (text === '1') {
     setState(chatId, STATES.AWAITING_INPUT, { awaitingType: 'cantidad_ubicacion' });
-    return ctx.reply(promptWithBack('📍 Decime el nombre de la ubicación:'), backKeyboard);
+    const kb = await createUbicacionKeyboard();
+    return ctx.reply(
+      '📍 Decime el nombre de la ubicación:\n\n' + ubicacionesList(await q.listUbicaciones()),
+      { parse_mode: 'Markdown', ...kb }
+    );
   }
 
   if (text === '2') {
     setState(chatId, STATES.AWAITING_INPUT, { awaitingType: 'cantidad_estado' });
-    try {
-      const estados = await q.listEstados();
-      return ctx.reply(
-        promptWithBack('📌 Decime el estado:\n\n' + estadosList(estados)),
-        { parse_mode: 'Markdown', ...backKeyboard }
-      );
-    } catch (err) {
-      logger.error({ err }, '[TelegramBot] listEstados error');
-    }
-    return ctx.reply(promptWithBack('📌 Decime el estado:'), backKeyboard);
+    const kb = await createEstadoKeyboard();
+    return ctx.reply(
+      '📌 Decime el estado:\n\n' + estadosList(await q.listEstados()),
+      { parse_mode: 'Markdown', ...kb }
+    );
   }
 
   if (text === '3') {
     setState(chatId, STATES.AWAITING_INPUT, { awaitingType: 'cantidad_responsable' });
-    try {
-      const responsables = await q.listResponsables();
-      return ctx.reply(
-        promptWithBack('👤 Decime el nombre o apellido del responsable:\n\n' + responsablesList(responsables)),
-        { parse_mode: 'Markdown', ...backKeyboard }
-      );
-    } catch (err) {
-      logger.error({ err }, '[TelegramBot] listResponsables error');
-    }
-    return ctx.reply(promptWithBack('👤 Decime el nombre o apellido del responsable:'), backKeyboard);
+    const kb = await createResponsableKeyboard();
+    return ctx.reply(
+      '👤 Decime el nombre o apellido del responsable:\n\n' + responsablesList(await q.listResponsables()),
+      { parse_mode: 'Markdown', ...kb }
+    );
   }
 
   return ctx.reply('❌ Opción no válida. Elegí 1-4 o 0 para volver.');
@@ -283,7 +308,7 @@ async function handleListadosSubMenu(ctx, chatId, text) {
       setState(chatId, STATES.RESULT);
       return ctx.reply(
         `📍 *Ubicaciones (${lines.length}):*\n${lines.join('\n')}\n\n1️⃣ Seguir consultando\n2️⃣ Salir`,
-        { parse_mode: 'Markdown' }
+        { parse_mode: 'Markdown', ...resultKeyboard }
       );
     } catch (err) {
       logger.error({ err }, '[TelegramBot] listUbicaciones error');
@@ -300,7 +325,7 @@ async function handleListadosSubMenu(ctx, chatId, text) {
       setState(chatId, STATES.RESULT);
       return ctx.reply(
         `👤 *Responsables (${lines.length}):*\n${lines.join('\n')}\n\n1️⃣ Seguir consultando\n2️⃣ Salir`,
-        { parse_mode: 'Markdown' }
+        { parse_mode: 'Markdown', ...resultKeyboard }
       );
     } catch (err) {
       logger.error({ err }, '[TelegramBot] listResponsables error');
@@ -310,44 +335,29 @@ async function handleListadosSubMenu(ctx, chatId, text) {
 
   if (text === '1') {
     setState(chatId, STATES.AWAITING_INPUT, { awaitingType: 'listado_ubicacion' });
-    try {
-      const ubicaciones = await q.listUbicaciones();
-      return ctx.reply(
-        promptWithBack('📍 Decime el nombre de la ubicación:\n\n' + ubicacionesList(ubicaciones)),
-        { parse_mode: 'Markdown', ...backKeyboard }
-      );
-      } catch (err) {
-        logger.error({ err }, '[TelegramBot] listUbicaciones error');
-      }
-    return ctx.reply(promptWithBack('📍 Decime el nombre de la ubicación:'), backKeyboard);
+    const kb = await createUbicacionKeyboard();
+    return ctx.reply(
+      '📍 Decime el nombre de la ubicación:\n\n' + ubicacionesList(await q.listUbicaciones()),
+      { parse_mode: 'Markdown', ...kb }
+    );
   }
 
   if (text === '2') {
     setState(chatId, STATES.AWAITING_INPUT, { awaitingType: 'listado_responsable' });
-    try {
-      const responsables = await q.listResponsables();
-      return ctx.reply(
-        promptWithBack('👤 Decime el nombre o apellido del responsable:\n\n' + responsablesList(responsables)),
-        { parse_mode: 'Markdown', ...backKeyboard }
-      );
-    } catch (err) {
-      logger.error({ err }, '[TelegramBot] listResponsables error');
-    }
-    return ctx.reply(promptWithBack('👤 Decime el nombre o apellido del responsable:'), backKeyboard);
+    const kb = await createResponsableKeyboard();
+    return ctx.reply(
+      '👤 Decime el nombre o apellido del responsable:\n\n' + responsablesList(await q.listResponsables()),
+      { parse_mode: 'Markdown', ...kb }
+    );
   }
 
   if (text === '3') {
     setState(chatId, STATES.AWAITING_INPUT, { awaitingType: 'listado_estado' });
-    try {
-      const estados = await q.listEstados();
-      return ctx.reply(
-        promptWithBack('📌 Decime el estado:\n\n' + estadosList(estados)),
-        { parse_mode: 'Markdown', ...backKeyboard }
-      );
-    } catch (err) {
-      logger.error({ err }, '[TelegramBot] listEstados error');
-    }
-    return ctx.reply(promptWithBack('📌 Decime el estado:'), backKeyboard);
+    const kb = await createEstadoKeyboard();
+    return ctx.reply(
+      '📌 Decime el estado:\n\n' + estadosList(await q.listEstados()),
+      { parse_mode: 'Markdown', ...kb }
+    );
   }
 
   return ctx.reply('❌ Opción no válida. Elegí 1-5 o 0 para volver.');
@@ -364,32 +374,41 @@ async function handleAwaitingInput(ctx, chatId, text, session) {
   try {
     if (awaitingType === 'cantidad_ubicacion') {
       const rows = await q.countByUbicacion(text);
-      if (rows.length === 0) return ctx.reply(promptWithBack('📍 No encontré ubicaciones con ese nombre.'), backKeyboard);
+      if (rows.length === 0) return ctx.reply(
+        '📍 No encontré ubicaciones con ese nombre.\n\n' + ubicacionesList(await q.listUbicaciones()),
+        { parse_mode: 'Markdown', ...await createUbicacionKeyboard() }
+      );
       const lines = rows.map(r => `📍 *${r.nombre}:* ${r.total} equipos`);
       setState(chatId, STATES.RESULT);
-      return ctx.reply(`${lines.join('\n')}\n\n1️⃣ Seguir consultando\n2️⃣ Salir`, { parse_mode: 'Markdown' });
+      return ctx.reply(`${lines.join('\n')}\n\n1️⃣ Seguir consultando\n2️⃣ Salir`, { parse_mode: 'Markdown', ...resultKeyboard });
     }
 
     if (awaitingType === 'cantidad_estado') {
       const rows = await q.countByEstado(text);
-      if (rows.length === 0) return ctx.reply(promptWithBack('📌 No encontré equipos con ese estado.\n\nEstados disponibles:\n' + q.estadosConDescripcion()), { parse_mode: 'Markdown', ...backKeyboard });
+      if (rows.length === 0) return ctx.reply(
+        '📌 No encontré equipos con ese estado.\n\nEstados disponibles:\n' + q.estadosConDescripcion(),
+        { parse_mode: 'Markdown', ...await createEstadoKeyboard() }
+      );
       const lines = rows.map(r => {
         const desc = q.ESTADO_DESC[r.nombre];
         const nombre = desc ? `${r.nombre} (${desc})` : r.nombre;
         return `📌 *${nombre}:* ${r.total} equipos`;
       });
       setState(chatId, STATES.RESULT);
-      return ctx.reply(`${lines.join('\n')}\n\n1️⃣ Seguir consultando\n2️⃣ Salir`, { parse_mode: 'Markdown' });
+      return ctx.reply(`${lines.join('\n')}\n\n1️⃣ Seguir consultando\n2️⃣ Salir`, { parse_mode: 'Markdown', ...resultKeyboard });
     }
 
     if (awaitingType === 'cantidad_responsable') {
       const rows = await q.countByResponsable(text);
-      if (rows.length === 0) return ctx.reply(promptWithBack('👤 No encontré responsables con ese nombre.'), backKeyboard);
+      if (rows.length === 0) return ctx.reply(
+        '👤 No encontré responsables con ese nombre.\n\n' + responsablesList(await q.listResponsables()),
+        { parse_mode: 'Markdown', ...await createResponsableKeyboard() }
+      );
       const lines = rows.map(r =>
         `👤 *${r.grado ? r.grado + ' ' : ''}${r.nombre} ${r.apellido}:* ${r.total} equipos`
       );
       setState(chatId, STATES.RESULT);
-      return ctx.reply(`${lines.join('\n')}\n\n1️⃣ Seguir consultando\n2️⃣ Salir`, { parse_mode: 'Markdown' });
+      return ctx.reply(`${lines.join('\n')}\n\n1️⃣ Seguir consultando\n2️⃣ Salir`, { parse_mode: 'Markdown', ...resultKeyboard });
     }
 
     if (awaitingType === 'credencial') {
@@ -410,7 +429,7 @@ async function handleAwaitingInput(ctx, chatId, text, session) {
             ? credenciales.map(s => `*${s.clave}:* ${s.valor}`).join('\n')
             : 'No tiene credenciales registradas.');
         setState(chatId, STATES.RESULT);
-        return ctx.reply(`${card}\n\n1️⃣ Seguir consultando\n2️⃣ Salir`, { parse_mode: 'Markdown' });
+        return ctx.reply(`${card}\n\n1️⃣ Seguir consultando\n2️⃣ Salir`, { parse_mode: 'Markdown', ...resultKeyboard });
       }
 
       const filtered = specs.filter(s => s.clave === credencialTipo);
@@ -420,7 +439,7 @@ async function handleAwaitingInput(ctx, chatId, text, session) {
 
       const card = `🔐 *${equipo.ine}* — ${equipo.ubicacion_nombre || '?'}\n\n*${credencialTipo}:* ${filtered[0].valor}`;
       setState(chatId, STATES.RESULT);
-      return ctx.reply(`${card}\n\n1️⃣ Seguir consultando\n2️⃣ Salir`, { parse_mode: 'Markdown' });
+      return ctx.reply(`${card}\n\n1️⃣ Seguir consultando\n2️⃣ Salir`, { parse_mode: 'Markdown', ...resultKeyboard });
     }
 
     if (awaitingType === 'info_completa') {
@@ -430,7 +449,7 @@ async function handleAwaitingInput(ctx, chatId, text, session) {
       const specs = await q.getEspecificaciones(equipo.id);
       const card = formatEquipoCard(equipo, specs);
       setState(chatId, STATES.RESULT);
-      return ctx.reply(`${card}\n\n1️⃣ Seguir consultando\n2️⃣ Salir`, { parse_mode: 'Markdown' });
+      return ctx.reply(`${card}\n\n1️⃣ Seguir consultando\n2️⃣ Salir`, { parse_mode: 'Markdown', ...resultKeyboard });
     }
 
     if (awaitingType === 'buscar_ip') {
@@ -442,7 +461,7 @@ async function handleAwaitingInput(ctx, chatId, text, session) {
       setState(chatId, STATES.RESULT);
       return ctx.reply(
         `🌐 *Equipos con IP ${text} (${unique.length}):*\n${unique.join('\n')}\n\n1️⃣ Seguir consultando\n2️⃣ Salir`,
-        { parse_mode: 'Markdown' }
+        { parse_mode: 'Markdown', ...resultKeyboard }
       );
     }
 
@@ -461,7 +480,7 @@ async function handleAwaitingInput(ctx, chatId, text, session) {
       const card = `🌐 *${equipo.ine}* — ${equipo.ubicacion_nombre || '?'}\n\n` +
         redSpecs.map(s => `*${s.clave}:* ${s.valor}`).join('\n');
       setState(chatId, STATES.RESULT);
-      return ctx.reply(`${card}\n\n1️⃣ Seguir consultando\n2️⃣ Salir`, { parse_mode: 'Markdown' });
+      return ctx.reply(`${card}\n\n1️⃣ Seguir consultando\n2️⃣ Salir`, { parse_mode: 'Markdown', ...resultKeyboard });
     }
 
     if (awaitingType === 'hardware') {
@@ -479,7 +498,7 @@ async function handleAwaitingInput(ctx, chatId, text, session) {
         const card = `🖥️ *${equipo.ine}* — ${equipo.ubicacion_nombre || '?'}\n\n` +
           hwSpecs.map(s => `*${s.clave}:* ${s.valor}`).join('\n');
         setState(chatId, STATES.RESULT);
-        return ctx.reply(`${card}\n\n1️⃣ Seguir consultando\n2️⃣ Salir`, { parse_mode: 'Markdown' });
+        return ctx.reply(`${card}\n\n1️⃣ Seguir consultando\n2️⃣ Salir`, { parse_mode: 'Markdown', ...resultKeyboard });
       }
 
       const filtered = specs.filter(s => s.clave === hardwareClave);
@@ -490,44 +509,50 @@ async function handleAwaitingInput(ctx, chatId, text, session) {
       setState(chatId, STATES.RESULT);
       return ctx.reply(
         `🖥️ *${equipo.ine}* — ${equipo.ubicacion_nombre || '?'}\n\n*${hardwareClave}:* ${filtered[0].valor}\n\n1️⃣ Seguir consultando\n2️⃣ Salir`,
-        { parse_mode: 'Markdown' }
+        { parse_mode: 'Markdown', ...resultKeyboard }
       );
     }
 
     if (awaitingType === 'listado_ubicacion') {
       const equipos = await q.getEquiposByUbicacion(text);
-      if (equipos.length === 0) return ctx.reply(promptWithBack('📍 No encontré equipos en esa ubicación.'), backKeyboard);
+      if (equipos.length === 0) return ctx.reply(
+        '📍 No encontré equipos en esa ubicación.\n\n' + ubicacionesList(await q.listUbicaciones()),
+        { parse_mode: 'Markdown', ...await createUbicacionKeyboard() }
+      );
       const lines = equipos.map(e => `💻 ${e.ine} — ${e.estado || '?'}`);
       setState(chatId, STATES.RESULT);
       return ctx.reply(
         `📍 *Equipos en "${text}" (${equipos.length}):*\n${lines.join('\n')}\n\n1️⃣ Seguir consultando\n2️⃣ Salir`,
-        { parse_mode: 'Markdown' }
+        { parse_mode: 'Markdown', ...resultKeyboard }
       );
     }
 
     if (awaitingType === 'listado_responsable') {
       const equipos = await q.getEquiposByResponsable(text);
-      if (equipos.length === 0) return ctx.reply(promptWithBack('👤 No encontré equipos de ese responsable.'), backKeyboard);
+      if (equipos.length === 0) return ctx.reply(
+        '👤 No encontré equipos de ese responsable.\n\n' + responsablesList(await q.listResponsables()),
+        { parse_mode: 'Markdown', ...await createResponsableKeyboard() }
+      );
       const lines = equipos.map(e => `💻 ${e.ine} — ${e.ubicacion || '?'}`);
       setState(chatId, STATES.RESULT);
       return ctx.reply(
         `👤 *Equipos de "${text}" (${equipos.length}):*\n${lines.join('\n')}\n\n1️⃣ Seguir consultando\n2️⃣ Salir`,
-        { parse_mode: 'Markdown' }
+        { parse_mode: 'Markdown', ...resultKeyboard }
       );
     }
 
     if (awaitingType === 'listado_estado') {
       const equipos = await q.getEquiposByEstado(text);
       if (equipos.length === 0) return ctx.reply(
-        promptWithBack('📌 No encontré equipos con ese estado.\n\nEstados disponibles:\n' + q.estadosConDescripcion()),
-        { parse_mode: 'Markdown', ...backKeyboard }
+        '📌 No encontré equipos con ese estado.\n\nEstados disponibles:\n' + q.estadosConDescripcion(),
+        { parse_mode: 'Markdown', ...await createEstadoKeyboard() }
       );
       const desc = q.ESTADO_DESC[equipos[0].estado] || equipos[0].estado;
       const lines = equipos.map(e => `💻 ${e.ine} — ${e.ubicacion || '?'}`);
       setState(chatId, STATES.RESULT);
       return ctx.reply(
         `📌 *Equipos en estado "${desc}" (${equipos.length}):*\n${lines.join('\n')}\n\n1️⃣ Seguir consultando\n2️⃣ Salir`,
-        { parse_mode: 'Markdown' }
+        { parse_mode: 'Markdown', ...resultKeyboard }
       );
     }
 
@@ -540,7 +565,7 @@ async function handleAwaitingInput(ctx, chatId, text, session) {
       setState(chatId, STATES.RESULT);
       return ctx.reply(
         `🔍 *Resultados para "${text}" (${results.length}):*\n${lines.join('\n')}\n\n1️⃣ Seguir consultando\n2️⃣ Salir`,
-        { parse_mode: 'Markdown' }
+        { parse_mode: 'Markdown', ...resultKeyboard }
       );
     }
 
