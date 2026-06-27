@@ -36,7 +36,7 @@ async function countByUbicacion(searchTerm) {
     SELECT u.nombre, COUNT(e.id) as total
     FROM equipos e
     JOIN ubicaciones u ON e.ubicacion_id = u.id
-    WHERE e.is_deleted = 0 AND u.nombre ILIKE ?
+    WHERE e.is_deleted = 0 AND LOWER(u.nombre) LIKE LOWER(?)
     GROUP BY u.id
     ORDER BY total DESC
   `, [`%${searchTerm}%`]);
@@ -48,7 +48,7 @@ async function countByEstado(searchTerm) {
     SELECT es.nombre, COUNT(e.id) as total
     FROM equipos e
     JOIN estados es ON e.estado_id = es.id
-    WHERE e.is_deleted = 0 AND (es.nombre ILIKE ? OR es.nombre ILIKE ?)
+    WHERE e.is_deleted = 0 AND (LOWER(es.nombre) LIKE LOWER(?) OR LOWER(es.nombre) LIKE LOWER(?))
     GROUP BY es.id
     ORDER BY total DESC
   `, [`%${searchTerm}%`, `%${code}%`]);
@@ -59,7 +59,7 @@ async function countByResponsable(searchTerm) {
     SELECT r.nombre, r.apellido, r.grado, COUNT(e.id) as total
     FROM equipos e
     JOIN responsables r ON e.responsable_id = r.id
-    WHERE e.is_deleted = 0 AND (r.nombre ILIKE ? OR r.apellido ILIKE ?)
+    WHERE e.is_deleted = 0 AND (LOWER(r.nombre) LIKE LOWER(?) OR LOWER(r.apellido) LIKE LOWER(?))
     GROUP BY r.id
     ORDER BY total DESC
   `, [`%${searchTerm}%`, `%${searchTerm}%`]);
@@ -96,7 +96,7 @@ async function findEquipo(term) {
     LEFT JOIN ubicaciones u ON e.ubicacion_id = u.id
     LEFT JOIN responsables r ON e.responsable_id = r.id
     LEFT JOIN estados es ON e.estado_id = es.id
-    WHERE e.is_deleted = 0 AND e.ine ILIKE ?
+    WHERE e.is_deleted = 0 AND LOWER(e.ine) LIKE LOWER(?)
     LIMIT 1
   `, [`%${searchTerm}%`]);
 
@@ -121,7 +121,7 @@ async function findEquipo(term) {
 async function getEspecificaciones(equipoId, claveFilter = null) {
   if (claveFilter) {
     return db.all(
-      'SELECT clave, valor FROM especificaciones WHERE equipo_id = ? AND (clave = ? OR clave ILIKE ?) ORDER BY id ASC',
+      'SELECT clave, valor FROM especificaciones WHERE equipo_id = ? AND (clave = ? OR LOWER(clave) LIKE LOWER(?)) ORDER BY id ASC',
       [equipoId, claveFilter, `%${claveFilter}%`]
     );
   }
@@ -137,7 +137,7 @@ async function getEquiposByUbicacion(ubicacionNombre) {
     FROM equipos e
     JOIN ubicaciones u ON e.ubicacion_id = u.id
     LEFT JOIN estados es ON e.estado_id = es.id
-    WHERE e.is_deleted = 0 AND u.nombre ILIKE ?
+    WHERE e.is_deleted = 0 AND LOWER(u.nombre) LIKE LOWER(?)
     ORDER BY e.ine ASC
   `, [`%${ubicacionNombre}%`]);
 }
@@ -149,7 +149,7 @@ async function getEquiposByEstado(estadoNombre) {
     FROM equipos e
     JOIN estados es ON e.estado_id = es.id
     LEFT JOIN ubicaciones u ON e.ubicacion_id = u.id
-    WHERE e.is_deleted = 0 AND (es.nombre ILIKE ? OR es.nombre ILIKE ?)
+    WHERE e.is_deleted = 0 AND (LOWER(es.nombre) LIKE LOWER(?) OR LOWER(es.nombre) LIKE LOWER(?))
     ORDER BY e.ine ASC
   `, [`%${estadoNombre}%`, `%${code}%`]);
 }
@@ -160,7 +160,7 @@ async function getEquiposByResponsable(searchTerm) {
     FROM equipos e
     JOIN responsables r ON e.responsable_id = r.id
     LEFT JOIN ubicaciones u ON e.ubicacion_id = u.id
-    WHERE e.is_deleted = 0 AND (r.nombre ILIKE ? OR r.apellido ILIKE ?)
+    WHERE e.is_deleted = 0 AND (LOWER(r.nombre) LIKE LOWER(?) OR LOWER(r.apellido) LIKE LOWER(?))
     ORDER BY e.ine ASC
   `, [`%${searchTerm}%`, `%${searchTerm}%`]);
 }
@@ -177,11 +177,11 @@ async function searchAll(term) {
     LEFT JOIN estados es ON e.estado_id = es.id
     WHERE e.is_deleted = 0
       AND (
-        e.ine ILIKE ? OR e.nne ILIKE ? OR e.serie ILIKE ?
-        OR u.nombre ILIKE ? OR r.nombre ILIKE ? OR r.apellido ILIKE ? OR r.grado ILIKE ?
+        LOWER(e.ine) LIKE LOWER(?) OR LOWER(e.nne) LIKE LOWER(?) OR LOWER(e.serie) LIKE LOWER(?)
+        OR LOWER(u.nombre) LIKE LOWER(?) OR LOWER(r.nombre) LIKE LOWER(?) OR LOWER(r.apellido) LIKE LOWER(?) OR LOWER(r.grado) LIKE LOWER(?)
         OR EXISTS (
           SELECT 1 FROM especificaciones esp
-          WHERE esp.equipo_id = e.id AND (esp.clave ILIKE ? OR esp.valor ILIKE ?)
+          WHERE esp.equipo_id = e.id AND (LOWER(esp.clave) LIKE LOWER(?) OR LOWER(esp.valor) LIKE LOWER(?))
         )
       )
     ORDER BY e.ine ASC
@@ -197,8 +197,8 @@ async function searchByIP(ip) {
     JOIN especificaciones esp ON esp.equipo_id = e.id
     LEFT JOIN ubicaciones u ON e.ubicacion_id = u.id
     WHERE e.is_deleted = 0
-      AND (esp.clave IN ('IP', 'ip', 'DIRECCION IP', 'DIRECCIÓN IP') OR esp.clave ILIKE '%ip%')
-      AND esp.valor ILIKE ?
+      AND (esp.clave IN ('IP', 'ip', 'DIRECCION IP', 'DIRECCIÓN IP') OR LOWER(esp.clave) LIKE LOWER('%ip%'))
+      AND LOWER(esp.valor) LIKE LOWER(?)
     ORDER BY e.ine ASC
     LIMIT 5
   `, [`%${ip}%`]);

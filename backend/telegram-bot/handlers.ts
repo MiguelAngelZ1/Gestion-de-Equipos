@@ -8,7 +8,6 @@ const {
 } = require('./menus');
 const q = require('./queries');
 
-const MAX_MSG = 4000;
 
 const mainKeyboard = Markup.keyboard([
   ['1️⃣ Cantidad', '2️⃣ Contraseñas', '3️⃣ Red'],
@@ -26,7 +25,7 @@ const contrasenasKeyboard = Markup.keyboard([
   ['1️⃣ PASS ADMIN', '2️⃣ PASS ESTANDAR'],
   ['3️⃣ PASS BIOS', '4️⃣ PASS RUSTDESK'],
   ['5️⃣ CUENTA ADMIN', '6️⃣ CUENTA ESTANDAR'],
-  ['7️⃣ Todas', '0️⃣ 🔙 Volver'],
+  ['7️⃣ Todas las credenciales', '0️⃣ 🔙 Volver'],
 ]).resize();
 
 const redKeyboard = Markup.keyboard([
@@ -134,7 +133,7 @@ async function handleMessage(ctx) {
   }
 
   if (session.state === STATES.RESULT) {
-    if (text === '1') {
+    if (text === '1' || text === '0') {
       setState(chatId, STATES.MAIN_MENU);
       return ctx.reply(mainMenu(), { parse_mode: 'Markdown', ...mainKeyboard });
     }
@@ -220,7 +219,7 @@ async function handleCantidadSubMenu(ctx, chatId, text) {
     setState(chatId, STATES.AWAITING_INPUT, { awaitingType: 'cantidad_ubicacion' });
     const kb = await createUbicacionKeyboard();
     return ctx.reply(
-      '📍 Decime el nombre de la ubicación:\n\n' + ubicacionesList(await q.listUbicaciones()),
+      promptWithBack('📍 Decime el nombre de la ubicación:\n\n' + ubicacionesList(await q.listUbicaciones())),
       { parse_mode: 'Markdown', ...kb }
     );
   }
@@ -229,7 +228,7 @@ async function handleCantidadSubMenu(ctx, chatId, text) {
     setState(chatId, STATES.AWAITING_INPUT, { awaitingType: 'cantidad_estado' });
     const kb = await createEstadoKeyboard();
     return ctx.reply(
-      '📌 Decime el estado:\n\n' + estadosList(await q.listEstados()),
+      promptWithBack('📌 Decime el estado:\n\n' + estadosList(await q.listEstados())),
       { parse_mode: 'Markdown', ...kb }
     );
   }
@@ -238,7 +237,7 @@ async function handleCantidadSubMenu(ctx, chatId, text) {
     setState(chatId, STATES.AWAITING_INPUT, { awaitingType: 'cantidad_responsable' });
     const kb = await createResponsableKeyboard();
     return ctx.reply(
-      '👤 Decime el nombre o apellido del responsable:\n\n' + responsablesList(await q.listResponsables()),
+      promptWithBack('👤 Decime el nombre o apellido del responsable:\n\n' + responsablesList(await q.listResponsables())),
       { parse_mode: 'Markdown', ...kb }
     );
   }
@@ -281,7 +280,7 @@ async function handleRedSubMenu(ctx, chatId, text) {
   if (!opt) return ctx.reply('❌ Opción no válida. Elegí 1-4 o 0 para volver.');
 
   setState(chatId, STATES.AWAITING_INPUT, { awaitingType: opt.type });
-  return ctx.reply(promptWithBack(opt.prompt), backKeyboard);
+  return ctx.reply(promptWithBack(opt.prompt), { parse_mode: 'Markdown', ...backKeyboard });
 }
 
 async function handleHardwareSubMenu(ctx, chatId, text) {
@@ -337,7 +336,7 @@ async function handleListadosSubMenu(ctx, chatId, text) {
     setState(chatId, STATES.AWAITING_INPUT, { awaitingType: 'listado_ubicacion' });
     const kb = await createUbicacionKeyboard();
     return ctx.reply(
-      '📍 Decime el nombre de la ubicación:\n\n' + ubicacionesList(await q.listUbicaciones()),
+      promptWithBack('📍 Decime el nombre de la ubicación:\n\n' + ubicacionesList(await q.listUbicaciones())),
       { parse_mode: 'Markdown', ...kb }
     );
   }
@@ -346,7 +345,7 @@ async function handleListadosSubMenu(ctx, chatId, text) {
     setState(chatId, STATES.AWAITING_INPUT, { awaitingType: 'listado_responsable' });
     const kb = await createResponsableKeyboard();
     return ctx.reply(
-      '👤 Decime el nombre o apellido del responsable:\n\n' + responsablesList(await q.listResponsables()),
+      promptWithBack('👤 Decime el nombre o apellido del responsable:\n\n' + responsablesList(await q.listResponsables())),
       { parse_mode: 'Markdown', ...kb }
     );
   }
@@ -355,7 +354,7 @@ async function handleListadosSubMenu(ctx, chatId, text) {
     setState(chatId, STATES.AWAITING_INPUT, { awaitingType: 'listado_estado' });
     const kb = await createEstadoKeyboard();
     return ctx.reply(
-      '📌 Decime el estado:\n\n' + estadosList(await q.listEstados()),
+      promptWithBack('📌 Decime el estado:\n\n' + estadosList(await q.listEstados())),
       { parse_mode: 'Markdown', ...kb }
     );
   }
@@ -375,7 +374,7 @@ async function handleAwaitingInput(ctx, chatId, text, session) {
     if (awaitingType === 'cantidad_ubicacion') {
       const rows = await q.countByUbicacion(text);
       if (rows.length === 0) return ctx.reply(
-        '📍 No encontré ubicaciones con ese nombre.\n\n' + ubicacionesList(await q.listUbicaciones()),
+        promptWithBack('📍 No encontré ubicaciones con ese nombre.\n\n' + ubicacionesList(await q.listUbicaciones())),
         { parse_mode: 'Markdown', ...await createUbicacionKeyboard() }
       );
       const lines = rows.map(r => `📍 *${r.nombre}:* ${r.total} equipos`);
@@ -386,7 +385,7 @@ async function handleAwaitingInput(ctx, chatId, text, session) {
     if (awaitingType === 'cantidad_estado') {
       const rows = await q.countByEstado(text);
       if (rows.length === 0) return ctx.reply(
-        '📌 No encontré equipos con ese estado.\n\nEstados disponibles:\n' + q.estadosConDescripcion(),
+        promptWithBack('📌 No encontré equipos con ese estado.\n\n' + estadosList(await q.listEstados())),
         { parse_mode: 'Markdown', ...await createEstadoKeyboard() }
       );
       const lines = rows.map(r => {
@@ -401,7 +400,7 @@ async function handleAwaitingInput(ctx, chatId, text, session) {
     if (awaitingType === 'cantidad_responsable') {
       const rows = await q.countByResponsable(text);
       if (rows.length === 0) return ctx.reply(
-        '👤 No encontré responsables con ese nombre.\n\n' + responsablesList(await q.listResponsables()),
+        promptWithBack('👤 No encontré responsables con ese nombre.\n\n' + responsablesList(await q.listResponsables())),
         { parse_mode: 'Markdown', ...await createResponsableKeyboard() }
       );
       const lines = rows.map(r =>
@@ -434,7 +433,8 @@ async function handleAwaitingInput(ctx, chatId, text, session) {
 
       const filtered = specs.filter(s => s.clave === credencialTipo);
       if (filtered.length === 0) {
-        return ctx.reply(`❌ El equipo *${equipo.ine}* no tiene *${credencialTipo}* registrado.`, { parse_mode: 'Markdown' });
+        setState(chatId, STATES.RESULT);
+      return ctx.reply(`❌ El equipo *${equipo.ine}* no tiene *${credencialTipo}* registrado.\n\n1️⃣ Seguir consultando\n2️⃣ Salir`, { parse_mode: 'Markdown', ...resultKeyboard });
       }
 
       const card = `🔐 *${equipo.ine}* — ${equipo.ubicacion_nombre || '?'}\n\n*${credencialTipo}:* ${filtered[0].valor}`;
@@ -474,7 +474,8 @@ async function handleAwaitingInput(ctx, chatId, text, session) {
       const redSpecs = specs.filter(s => redKeys.includes(s.clave));
 
       if (redSpecs.length === 0) {
-        return ctx.reply(`🌐 El equipo *${equipo.ine}* no tiene datos de red registrados.`, { parse_mode: 'Markdown' });
+        setState(chatId, STATES.RESULT);
+        return ctx.reply(`🌐 El equipo *${equipo.ine}* no tiene datos de red registrados.\n\n1️⃣ Seguir consultando\n2️⃣ Salir`, { parse_mode: 'Markdown', ...resultKeyboard });
       }
 
       const card = `🌐 *${equipo.ine}* — ${equipo.ubicacion_nombre || '?'}\n\n` +
@@ -493,7 +494,8 @@ async function handleAwaitingInput(ctx, chatId, text, session) {
         const hwKeys = ['PROCESADOR', 'RAM', 'DISCO', 'SO', 'ENTRADAS DE VIDEO'];
         const hwSpecs = specs.filter(s => hwKeys.includes(s.clave));
         if (hwSpecs.length === 0) {
-          return ctx.reply(`🖥️ El equipo *${equipo.ine}* no tiene hardware registrado.`, { parse_mode: 'Markdown' });
+          setState(chatId, STATES.RESULT);
+          return ctx.reply(`🖥️ El equipo *${equipo.ine}* no tiene hardware registrado.\n\n1️⃣ Seguir consultando\n2️⃣ Salir`, { parse_mode: 'Markdown', ...resultKeyboard });
         }
         const card = `🖥️ *${equipo.ine}* — ${equipo.ubicacion_nombre || '?'}\n\n` +
           hwSpecs.map(s => `*${s.clave}:* ${s.valor}`).join('\n');
@@ -503,7 +505,8 @@ async function handleAwaitingInput(ctx, chatId, text, session) {
 
       const filtered = specs.filter(s => s.clave === hardwareClave);
       if (filtered.length === 0) {
-        return ctx.reply(`🖥️ El equipo *${equipo.ine}* no tiene *${hardwareClave}* registrado.`, { parse_mode: 'Markdown' });
+        setState(chatId, STATES.RESULT);
+        return ctx.reply(`🖥️ El equipo *${equipo.ine}* no tiene *${hardwareClave}* registrado.\n\n1️⃣ Seguir consultando\n2️⃣ Salir`, { parse_mode: 'Markdown', ...resultKeyboard });
       }
 
       setState(chatId, STATES.RESULT);
@@ -516,7 +519,7 @@ async function handleAwaitingInput(ctx, chatId, text, session) {
     if (awaitingType === 'listado_ubicacion') {
       const equipos = await q.getEquiposByUbicacion(text);
       if (equipos.length === 0) return ctx.reply(
-        '📍 No encontré equipos en esa ubicación.\n\n' + ubicacionesList(await q.listUbicaciones()),
+        promptWithBack('📍 No encontré equipos en esa ubicación.\n\n' + ubicacionesList(await q.listUbicaciones())),
         { parse_mode: 'Markdown', ...await createUbicacionKeyboard() }
       );
       const lines = equipos.map(e => `💻 ${e.ine} — ${e.estado || '?'}`);
@@ -530,7 +533,7 @@ async function handleAwaitingInput(ctx, chatId, text, session) {
     if (awaitingType === 'listado_responsable') {
       const equipos = await q.getEquiposByResponsable(text);
       if (equipos.length === 0) return ctx.reply(
-        '👤 No encontré equipos de ese responsable.\n\n' + responsablesList(await q.listResponsables()),
+        promptWithBack('👤 No encontré equipos de ese responsable.\n\n' + responsablesList(await q.listResponsables())),
         { parse_mode: 'Markdown', ...await createResponsableKeyboard() }
       );
       const lines = equipos.map(e => `💻 ${e.ine} — ${e.ubicacion || '?'}`);
@@ -544,7 +547,7 @@ async function handleAwaitingInput(ctx, chatId, text, session) {
     if (awaitingType === 'listado_estado') {
       const equipos = await q.getEquiposByEstado(text);
       if (equipos.length === 0) return ctx.reply(
-        '📌 No encontré equipos con ese estado.\n\nEstados disponibles:\n' + q.estadosConDescripcion(),
+        promptWithBack('📌 No encontré equipos con ese estado.\n\n' + estadosList(await q.listEstados())),
         { parse_mode: 'Markdown', ...await createEstadoKeyboard() }
       );
       const desc = q.ESTADO_DESC[equipos[0].estado] || equipos[0].estado;
