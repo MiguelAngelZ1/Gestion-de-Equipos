@@ -1,5 +1,36 @@
 const db = require('../db/database');
 
+const ESTADO_DESC = {
+  'E/S': 'En servicio',
+  'F/S': 'Fuera de servicio',
+  'MANT': 'Mantenimiento',
+  'PRESTAMO': 'Préstamo',
+};
+
+const ESTADO_SYNONYMS = {
+  'en servicio': 'E/S',
+  'servicio': 'E/S',
+  'operativo': 'E/S',
+  'funcionando': 'E/S',
+  'es': 'E/S',
+  'e/s': 'E/S',
+  'fuera de servicio': 'F/S',
+  'fuera servicio': 'F/S',
+  'fs': 'F/S',
+  'f/s': 'F/S',
+  'roto': 'F/S',
+  'averiado': 'F/S',
+  'baja': 'F/S',
+  'mantenimiento': 'MANT',
+  'mant': 'MANT',
+  'reparacion': 'MANT',
+  'reparación': 'MANT',
+  'en reparacion': 'MANT',
+  'prestamo': 'PRESTAMO',
+  'préstamo': 'PRESTAMO',
+  'prestado': 'PRESTAMO',
+};
+
 async function countByUbicacion(searchTerm) {
   return db.all(`
     SELECT u.nombre, COUNT(e.id) as total
@@ -12,14 +43,15 @@ async function countByUbicacion(searchTerm) {
 }
 
 async function countByEstado(searchTerm) {
+  const code = resolverEstado(searchTerm);
   return db.all(`
     SELECT es.nombre, COUNT(e.id) as total
     FROM equipos e
     JOIN estados es ON e.estado_id = es.id
-    WHERE e.is_deleted = 0 AND es.nombre ILIKE ?
+    WHERE e.is_deleted = 0 AND (es.nombre ILIKE ? OR es.nombre ILIKE ?)
     GROUP BY es.id
     ORDER BY total DESC
-  `, [`%${searchTerm}%`]);
+  `, [`%${searchTerm}%`, `%${code}%`]);
 }
 
 async function countByResponsable(searchTerm) {
@@ -111,14 +143,15 @@ async function getEquiposByUbicacion(ubicacionNombre) {
 }
 
 async function getEquiposByEstado(estadoNombre) {
+  const code = resolverEstado(estadoNombre);
   return db.all(`
     SELECT e.ine, e.nne, e.serie, u.nombre as ubicacion
     FROM equipos e
     JOIN estados es ON e.estado_id = es.id
     LEFT JOIN ubicaciones u ON e.ubicacion_id = u.id
-    WHERE e.is_deleted = 0 AND es.nombre ILIKE ?
+    WHERE e.is_deleted = 0 AND (es.nombre ILIKE ? OR es.nombre ILIKE ?)
     ORDER BY e.ine ASC
-  `, [`%${estadoNombre}%`]);
+  `, [`%${estadoNombre}%`, `%${code}%`]);
 }
 
 async function getEquiposByResponsable(searchTerm) {
@@ -180,7 +213,16 @@ async function listResponsables() {
 }
 
 async function listEstados() {
-  return db.all("SELECT id, nombre FROM estados WHERE activo = 1 OR activo IS NULL ORDER BY nombre ASC");
+  return db.all("SELECT id, nombre FROM estados ORDER BY nombre ASC");
+}
+
+function resolverEstado(term) {
+  const lower = term.toLowerCase().trim();
+  return ESTADO_SYNONYMS[lower] || term;
+}
+
+function estadosConDescripcion() {
+  return Object.entries(ESTADO_DESC).map(([codigo, desc]) => `${codigo} (${desc})`).join('\n');
 }
 
 module.exports = {
@@ -189,4 +231,5 @@ module.exports = {
   getEquiposByUbicacion, getEquiposByEstado, getEquiposByResponsable,
   searchAll, searchByIP,
   listUbicaciones, listResponsables, listEstados,
+  estadosConDescripcion, ESTADO_DESC,
 };

@@ -1,3 +1,5 @@
+const q = require('./queries');
+
 function mainMenu() {
   return (
     '🤖 *Bot de Consulta de Equipos*\n\n' +
@@ -21,7 +23,7 @@ function subMenuCantidad() {
     '2️⃣  Por estado\n' +
     '3️⃣  Por responsable\n' +
     '4️⃣  Total general\n' +
-    '0️⃣  🔙 Volver al menú principal'
+    '0️⃣  🔙 Volver'
   );
 }
 
@@ -35,7 +37,7 @@ function subMenuContrasenas() {
     '5️⃣  CUENTA ADMIN\n' +
     '6️⃣  CUENTA ESTANDAR\n' +
     '7️⃣  Todas las credenciales\n' +
-    '0️⃣  🔙 Volver al menú principal'
+    '0️⃣  🔙 Volver'
   );
 }
 
@@ -46,7 +48,7 @@ function subMenuRed() {
     '2️⃣  Buscar equipo por IP\n' +
     '3️⃣  MAC de un equipo\n' +
     '4️⃣  Todos los datos de red\n' +
-    '0️⃣  🔙 Volver al menú principal'
+    '0️⃣  🔙 Volver'
   );
 }
 
@@ -58,7 +60,7 @@ function subMenuHardware() {
     '3️⃣  Disco\n' +
     '4️⃣  Sistema operativo\n' +
     '5️⃣  Todo el hardware\n' +
-    '0️⃣  🔙 Volver al menú principal'
+    '0️⃣  🔙 Volver'
   );
 }
 
@@ -70,7 +72,7 @@ function subMenuListados() {
     '3️⃣  Equipos por estado\n' +
     '4️⃣  Todas las ubicaciones\n' +
     '5️⃣  Todos los responsables\n' +
-    '0️⃣  🔙 Volver al menú principal'
+    '0️⃣  🔙 Volver'
   );
 }
 
@@ -79,17 +81,18 @@ function helpText() {
     '🤖 *Ayuda - Bot de Equipos*\n\n' +
     'Este bot te permite consultar la base de datos de equipos ' +
     'desde Telegram.\n\n' +
-    'Simplemente escribí "hola", "ey", "menú" o cualquier ' +
-    'mensaje para empezar.\n\n' +
-    'Navegá por los menúes eligiendo el número de la opción.\n' +
-    'En cualquier momento podés escribir:\n' +
-    '  • "menú" — volver al menú principal\n' +
-    '  • "salir" — terminar la conversación\n\n' +
+    'Escribí cualquier mensaje para empezar o usá los botones.\n' +
+    'En cualquier momento:\n' +
+    '  • *Menú* — volver al menú principal\n' +
+    '  • *Salir* — terminar la conversación\n' +
+    '  • *0* — volver al menú desde cualquier submenú\n\n' +
     'Los datos se consultan en vivo desde la base de datos.'
   );
 }
 
 function formatEquipoCard(equipo, specs) {
+  const desc = q.ESTADO_DESC[equipo.estado];
+  const estadoStr = desc ? `${equipo.estado} (${desc})` : (equipo.estado || 'N/A');
   const lines = [
     `💻 *${equipo.ine}*`,
     ``,
@@ -98,7 +101,7 @@ function formatEquipoCard(equipo, specs) {
   const responsable = [equipo.responsable_grado, equipo.responsable_nombre, equipo.responsable_apellido]
     .filter(Boolean).join(' ');
   lines.push(`👤 *Responsable:* ${responsable || 'Sin asignar'}`);
-  lines.push(`📌 *Estado:* ${equipo.estado || 'N/A'}`);
+  lines.push(`📌 *Estado:* ${estadoStr}`);
 
   if (equipo.nne && equipo.nne !== '-') lines.push(`🔖 *NNE:* ${equipo.nne}`);
   if (equipo.serie && equipo.serie !== '-') lines.push(`🔖 *Serie:* ${equipo.serie}`);
@@ -106,34 +109,32 @@ function formatEquipoCard(equipo, specs) {
   if (specs && specs.length > 0) {
     lines.push(``, `📋 *Especificaciones:*`);
     for (const spec of specs) {
-      const val = spec.valor;
-      lines.push(`  • *${spec.clave}:* ${val}`);
+      lines.push(`  • *${spec.clave}:* ${spec.valor}`);
     }
   }
 
   return lines.join('\n');
 }
 
-function formatEquipoCompact(equipo) {
-  return `💻 ${equipo.ine} — ${equipo.ubicacion || '?'} (${equipo.estado || '?'})`;
-}
-
 function ubicacionesList(ubicaciones) {
-  return '📍 *Ubicaciones:* ' + ubicaciones.map(u => u.nombre).join(', ');
+  return '📍 *Ubicaciones:*\n' + ubicaciones.map(u => `  • ${u.nombre}`).join('\n');
 }
 
 function estadosList(estados) {
-  return '📌 *Estados:* ' + estados.map(e => e.nombre).join(', ');
+  return '📌 *Estados disponibles:*\n' + estados.map(e => {
+    const desc = q.ESTADO_DESC[e.nombre];
+    return desc ? `  • ${e.nombre} (${desc})` : `  • ${e.nombre}`;
+  }).join('\n');
 }
 
 function responsablesList(responsables) {
-  return '👤 *Responsables:* ' + responsables.map(r =>
-    (r.grado ? r.grado + ' ' : '') + r.nombre + ' ' + r.apellido
-  ).join(', ');
+  return '👤 *Responsables:*\n' + responsables.map(r =>
+    `  • ${r.grado ? r.grado + ' ' : ''}${r.nombre} ${r.apellido}`
+  ).join('\n');
 }
 
 module.exports = {
   mainMenu, subMenuCantidad, subMenuContrasenas, subMenuRed, subMenuHardware,
-  subMenuListados, helpText, formatEquipoCard, formatEquipoCompact,
+  subMenuListados, helpText, formatEquipoCard,
   ubicacionesList, estadosList, responsablesList,
 };
