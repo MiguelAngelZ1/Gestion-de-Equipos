@@ -70,8 +70,6 @@ function subMenuListados() {
     '1️⃣  Equipos en una ubicación\n' +
     '2️⃣  Equipos de un responsable\n' +
     '3️⃣  Equipos por estado\n' +
-    '4️⃣  Todas las ubicaciones\n' +
-    '5️⃣  Todos los responsables\n' +
     '0️⃣  🔙 Volver'
   );
 }

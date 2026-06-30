@@ -42,11 +42,14 @@ const hardwareKeyboard = Markup.keyboard([
 
 const listadosKeyboard = Markup.keyboard([
   ['1️⃣ Por ubicación', '2️⃣ Por responsable'],
-  ['3️⃣ Por estado', '4️⃣ Todas ubicaciones'],
-  ['5️⃣ Todos responsables', '0️⃣ 🔙 Volver'],
+  ['3️⃣ Por estado', '0️⃣ 🔙 Volver'],
 ]).resize();
 
 const backKeyboard = Markup.keyboard([['0️⃣ 🔙 Volver']]).resize();
+
+const verMasKeyboard = Markup.keyboard([
+  ['1️⃣ Ver más', '2️⃣ Salir'],
+]).resize();
 
 const resultKeyboard = Markup.keyboard([
   ['1️⃣ Seguir consultando', '2️⃣ Salir'],
@@ -79,10 +82,19 @@ async function createResponsableKeyboard() {
   return Markup.keyboard(rows).resize();
 }
 
-function isAllowed(chatId) {
+async function isAllowed(chatId) {
   const allowed = process.env.TELEGRAM_ALLOWED_USERS;
-  if (!allowed) return true;
-  return allowed.split(',').map(s => s.trim()).includes(String(chatId));
+  const allowedChats = allowed
+    ? allowed.split(',').map(s => s.trim()).filter(Boolean)
+    : [];
+
+  if (allowedChats.includes(String(chatId))) return true;
+
+  try {
+    return await q.isTelegramAuthorized(chatId);
+  } catch {
+    return false;
+  }
 }
 
 function promptWithBack(text) {
@@ -93,16 +105,66 @@ function normalizeButtonInput(text) {
   return text.replace(/️⃣.*$/, '').trim();
 }
 
+function normalizeKey(text) {
+  if (!text || typeof text !== 'string') return '';
+  return text.trim().replace(/\s+/g, ' ').toUpperCase();
+}
+
+function formatPagedText(title, lines) {
+  return `${title}\n\n${lines.join('\n')}`;
+}
+
+function getPageLines(lines, page, pageSize = 10) {
+  const start = (page - 1) * pageSize;
+  return lines.slice(start, start + pageSize);
+}
+
+async function handlePagedNext(ctx, chatId, session) {
+  const pagedLines = session.pagedLines || [];
+  const pagedTitle = session.pagedTitle || '';
+  const currentPage = session.pagedPage || 1;
+  const nextPage = currentPage + 1;
+  const nextLines = getPageLines(pagedLines, nextPage);
+
+  if (nextLines.length === 0) {
+    setState(chatId, STATES.RESULT);
+    return ctx.reply('No hay más resultados.\n\n1️⃣ Seguir consultando\n2️⃣ Salir', { parse_mode: 'Markdown', ...resultKeyboard });
+  }
+
+  const hasMore = pagedLines.length > nextPage * 10;
+  if (hasMore) {
+    setState(chatId, STATES.RESULT, { pagedLines, pagedTitle, pagedPage: nextPage });
+    return ctx.reply(formatPagedText(pagedTitle, nextLines), { parse_mode: 'Markdown', ...verMasKeyboard });
+  }
+
+  setState(chatId, STATES.RESULT);
+  return ctx.reply(`${formatPagedText(pagedTitle, nextLines)}\n\n1️⃣ Seguir consultando\n2️⃣ Salir`, { parse_mode: 'Markdown', ...resultKeyboard });
+}
+
 async function handleMessage(ctx) {
   const chatId = ctx.chat.id;
   const raw = (ctx.message.text || '').trim();
   const text = normalizeButtonInput(raw);
 
-  if (!isAllowed(chatId)) {
+  const authorized = await isAllowed(chatId);
+  const session = getSession(chatId);
+
+  if (!authorized) {
+    if (session.awaitingType === 'invite_password') {
+      return handleAwaitingInput(ctx, chatId, text, session);
+    }
+
+    if (process.env.TELEGRAM_INVITE_PASSWORD) {
+      setState(chatId, STATES.AWAITING_INPUT, { awaitingType: 'invite_password', inviteAttempts: session.inviteAttempts || 0 });
+      return ctx.reply(
+        promptWithBack('🔐 No estás autorizado. Ingresá la clave de invitación para continuar:'),
+        { ...backKeyboard }
+      );
+    }
+
     return ctx.reply('⛔ No tenés permiso para usar este bot.');
   }
 
-  const session = getSession(chatId);
   const lower = text.toLowerCase();
 
   if (['menu', 'menú', 'volver', 'atras', 'atrás'].includes(lower)) {
@@ -133,6 +195,9 @@ async function handleMessage(ctx) {
   }
 
   if (session.state === STATES.RESULT) {
+    if (text === '1' && session.pagedLines && session.pagedPage) {
+      return handlePagedNext(ctx, chatId, session);
+    }
     if (text === '1' || text === '0') {
       setState(chatId, STATES.MAIN_MENU);
       return ctx.reply(mainMenu(), { parse_mode: 'Markdown', ...mainKeyboard });
@@ -219,7 +284,7 @@ async function handleCantidadSubMenu(ctx, chatId, text) {
     setState(chatId, STATES.AWAITING_INPUT, { awaitingType: 'cantidad_ubicacion' });
     const kb = await createUbicacionKeyboard();
     return ctx.reply(
-      promptWithBack('📍 Decime el nombre de la ubicación:\n\n' + ubicacionesList(await q.listUbicaciones())),
+      promptWithBack('📍 Decime el nombre de la ubicación:'),
       { parse_mode: 'Markdown', ...kb }
     );
   }
@@ -237,7 +302,7 @@ async function handleCantidadSubMenu(ctx, chatId, text) {
     setState(chatId, STATES.AWAITING_INPUT, { awaitingType: 'cantidad_responsable' });
     const kb = await createResponsableKeyboard();
     return ctx.reply(
-      promptWithBack('👤 Decime el nombre o apellido del responsable:\n\n' + responsablesList(await q.listResponsables())),
+      promptWithBack('👤 Decime el nombre o apellido del responsable:'),
       { parse_mode: 'Markdown', ...kb }
     );
   }
@@ -300,43 +365,11 @@ async function handleHardwareSubMenu(ctx, chatId, text) {
 }
 
 async function handleListadosSubMenu(ctx, chatId, text) {
-  if (text === '4') {
-    try {
-      const ubicaciones = await q.listUbicaciones();
-      const lines = ubicaciones.map((u, i) => `${i + 1}. ${u.nombre}`);
-      setState(chatId, STATES.RESULT);
-      return ctx.reply(
-        `📍 *Ubicaciones (${lines.length}):*\n${lines.join('\n')}\n\n1️⃣ Seguir consultando\n2️⃣ Salir`,
-        { parse_mode: 'Markdown', ...resultKeyboard }
-      );
-    } catch (err) {
-      logger.error({ err }, '[TelegramBot] listUbicaciones error');
-      return ctx.reply('❌ Error al consultar.');
-    }
-  }
-
-  if (text === '5') {
-    try {
-      const responsables = await q.listResponsables();
-      const lines = responsables.map((r, i) =>
-        `${i + 1}. ${r.grado ? r.grado + ' ' : ''}${r.nombre} ${r.apellido}`
-      );
-      setState(chatId, STATES.RESULT);
-      return ctx.reply(
-        `👤 *Responsables (${lines.length}):*\n${lines.join('\n')}\n\n1️⃣ Seguir consultando\n2️⃣ Salir`,
-        { parse_mode: 'Markdown', ...resultKeyboard }
-      );
-    } catch (err) {
-      logger.error({ err }, '[TelegramBot] listResponsables error');
-      return ctx.reply('❌ Error al consultar.');
-    }
-  }
-
   if (text === '1') {
     setState(chatId, STATES.AWAITING_INPUT, { awaitingType: 'listado_ubicacion' });
     const kb = await createUbicacionKeyboard();
     return ctx.reply(
-      promptWithBack('📍 Decime el nombre de la ubicación:\n\n' + ubicacionesList(await q.listUbicaciones())),
+      promptWithBack('📍 Decime el nombre de la ubicación:'),
       { parse_mode: 'Markdown', ...kb }
     );
   }
@@ -345,7 +378,7 @@ async function handleListadosSubMenu(ctx, chatId, text) {
     setState(chatId, STATES.AWAITING_INPUT, { awaitingType: 'listado_responsable' });
     const kb = await createResponsableKeyboard();
     return ctx.reply(
-      promptWithBack('👤 Decime el nombre o apellido del responsable:\n\n' + responsablesList(await q.listResponsables())),
+      promptWithBack('👤 Decime el nombre o apellido del responsable:'),
       { parse_mode: 'Markdown', ...kb }
     );
   }
@@ -354,27 +387,52 @@ async function handleListadosSubMenu(ctx, chatId, text) {
     setState(chatId, STATES.AWAITING_INPUT, { awaitingType: 'listado_estado' });
     const kb = await createEstadoKeyboard();
     return ctx.reply(
-      promptWithBack('📌 Decime el estado:\n\n' + estadosList(await q.listEstados())),
+      promptWithBack('📌 Decime el estado:'),
       { parse_mode: 'Markdown', ...kb }
     );
   }
 
-  return ctx.reply('❌ Opción no válida. Elegí 1-5 o 0 para volver.');
+  return ctx.reply('❌ Opción no válida. Elegí 1-3 o 0 para volver.');
 }
 
 async function handleAwaitingInput(ctx, chatId, text, session) {
   const { awaitingType, credencialTipo, hardwareClave } = session;
 
-  if (text === '0') {
+  if (text === '0' && awaitingType !== 'invite_password') {
     setState(chatId, STATES.MAIN_MENU);
     return ctx.reply(mainMenu(), { parse_mode: 'Markdown', ...mainKeyboard });
   }
 
   try {
+    if (awaitingType === 'invite_password') {
+      const expected = process.env.TELEGRAM_INVITE_PASSWORD || '';
+      const attempts = (session.inviteAttempts || 0) + 1;
+
+      if (text === expected) {
+        await q.addTelegramAuthorizedChat(chatId, ctx.from?.id);
+        setState(chatId, STATES.MAIN_MENU);
+        return ctx.reply('✅ Autorizado correctamente. Bienvenido al bot.', { parse_mode: 'Markdown', ...mainKeyboard });
+      }
+
+      if (attempts >= 15) {
+        resetSession(chatId);
+        return ctx.reply('⛔ Demasiados intentos. Volvé a iniciar cuando tengas la clave correcta.', backKeyboard);
+      }
+
+      setState(chatId, STATES.AWAITING_INPUT, {
+        awaitingType: 'invite_password',
+        inviteAttempts: attempts,
+      });
+      return ctx.reply(
+        `🔐 Clave incorrecta. Tenés ${15 - attempts} intentos restantes.`,
+        { parse_mode: 'Markdown', ...backKeyboard }
+      );
+    }
+
     if (awaitingType === 'cantidad_ubicacion') {
       const rows = await q.countByUbicacion(text);
       if (rows.length === 0) return ctx.reply(
-        promptWithBack('📍 No encontré ubicaciones con ese nombre.\n\n' + ubicacionesList(await q.listUbicaciones())),
+        promptWithBack('📍 No encontré ubicaciones con ese nombre.'),
         { parse_mode: 'Markdown', ...await createUbicacionKeyboard() }
       );
       const lines = rows.map(r => `📍 *${r.nombre}:* ${r.total} equipos`);
@@ -400,7 +458,7 @@ async function handleAwaitingInput(ctx, chatId, text, session) {
     if (awaitingType === 'cantidad_responsable') {
       const rows = await q.countByResponsable(text);
       if (rows.length === 0) return ctx.reply(
-        promptWithBack('👤 No encontré responsables con ese nombre.\n\n' + responsablesList(await q.listResponsables())),
+        promptWithBack('👤 No encontré responsables con ese nombre.'),
         { parse_mode: 'Markdown', ...await createResponsableKeyboard() }
       );
       const lines = rows.map(r =>
@@ -415,14 +473,15 @@ async function handleAwaitingInput(ctx, chatId, text, session) {
       if (!equipo) return ctx.reply(promptWithBack('❌ No encontré ningún equipo con ese identificador.'), backKeyboard);
 
       const specs = await q.getEspecificaciones(equipo.id);
+      const normalizedTarget = normalizeKey(credencialTipo);
 
       if (credencialTipo === 'TODAS') {
-        const credenciales = specs.filter(s =>
-          s.clave.includes('CUENTA') || s.clave.includes('PASS') ||
-          s.clave.includes('CONTRASEÑA') || s.clave.includes('CLAVE') ||
-          s.clave.includes('RUSTDESK') || s.clave.includes('BIOS') ||
-          s.clave.includes('USUARIO') || s.clave.includes('PASSWORD')
-        );
+        const credenciales = specs.filter((s) => {
+          const key = normalizeKey(s.clave);
+          return [
+            'CUENTA', 'PASS', 'CONTRASEÑA', 'CLAVE', 'RUSTDESK', 'BIOS', 'USUARIO', 'PASSWORD'
+          ].some(fragment => key.includes(fragment));
+        });
         const card = `🔐 *${equipo.ine}*\n📍 ${equipo.ubicacion_nombre || '?'}\n\n` +
           (credenciales.length > 0
             ? credenciales.map(s => `*${s.clave}:* ${s.valor}`).join('\n')
@@ -431,10 +490,10 @@ async function handleAwaitingInput(ctx, chatId, text, session) {
         return ctx.reply(`${card}\n\n1️⃣ Seguir consultando\n2️⃣ Salir`, { parse_mode: 'Markdown', ...resultKeyboard });
       }
 
-      const filtered = specs.filter(s => s.clave === credencialTipo);
+      const filtered = specs.filter((s) => normalizeKey(s.clave) === normalizedTarget);
       if (filtered.length === 0) {
         setState(chatId, STATES.RESULT);
-      return ctx.reply(`❌ El equipo *${equipo.ine}* no tiene *${credencialTipo}* registrado.\n\n1️⃣ Seguir consultando\n2️⃣ Salir`, { parse_mode: 'Markdown', ...resultKeyboard });
+        return ctx.reply(`❌ El equipo *${equipo.ine}* no tiene *${credencialTipo}* registrado.\n\n1️⃣ Seguir consultando\n2️⃣ Salir`, { parse_mode: 'Markdown', ...resultKeyboard });
       }
 
       const card = `🔐 *${equipo.ine}* — ${equipo.ubicacion_nombre || '?'}\n\n*${credencialTipo}:* ${filtered[0].valor}`;
@@ -443,7 +502,19 @@ async function handleAwaitingInput(ctx, chatId, text, session) {
     }
 
     if (awaitingType === 'info_completa') {
-      const equipo = await q.findEquipo(text);
+      let equipo = await q.findEquipo(text);
+      if (!equipo) {
+        const matches = await q.findEquipos(text);
+        if (matches.length === 1) {
+          equipo = matches[0];
+        } else if (matches.length > 1) {
+          const lines = matches.map((e, i) => `${i + 1}. ${e.ine} — ${e.ubicacion || '?'} (${e.estado || '?'})`);
+          const title = `🔍 *Se encontraron ${matches.length} equipos para "${text}"*: `;
+          setState(chatId, STATES.RESULT);
+          return ctx.reply(`${formatPagedText(title, lines)}\n\n1️⃣ Seguir consultando\n2️⃣ Salir`, { parse_mode: 'Markdown', ...resultKeyboard });
+        }
+      }
+
       if (!equipo) return ctx.reply(promptWithBack('❌ No encontré ningún equipo con ese identificador.'), backKeyboard);
 
       const specs = await q.getEspecificaciones(equipo.id);
@@ -470,16 +541,28 @@ async function handleAwaitingInput(ctx, chatId, text, session) {
       if (!equipo) return ctx.reply(promptWithBack('❌ No encontré ningún equipo con ese identificador.'), backKeyboard);
 
       const specs = await q.getEspecificaciones(equipo.id);
-      const redKeys = ['IP', 'ip', 'MASCARA', 'PUERTA DE ENLACE', 'DNS 1', 'DNS 2', 'MAC', 'PUERTO'];
-      const redSpecs = specs.filter(s => redKeys.includes(s.clave));
+      const normalizedKeys = specs.map(s => ({ key: normalizeKey(s.clave), spec: s }));
 
-      if (redSpecs.length === 0) {
+      const networkKeys = ['IP', 'MASCARA', 'PUERTA DE ENLACE', 'DNS 1', 'DNS 2'];
+      const macKeys = ['MAC'];
+      const allKeys = [...networkKeys, ...macKeys, 'PUERTO'];
+
+      let filtered;
+      if (awaitingType === 'mac_equipo') {
+        filtered = normalizedKeys.filter(({ key }) => macKeys.includes(key)).map(({ spec }) => spec);
+      } else if (awaitingType === 'red_equipo') {
+        filtered = normalizedKeys.filter(({ key }) => networkKeys.includes(key)).map(({ spec }) => spec);
+      } else {
+        filtered = normalizedKeys.filter(({ key }) => allKeys.includes(key)).map(({ spec }) => spec);
+      }
+
+      if (filtered.length === 0) {
         setState(chatId, STATES.RESULT);
         return ctx.reply(`🌐 El equipo *${equipo.ine}* no tiene datos de red registrados.\n\n1️⃣ Seguir consultando\n2️⃣ Salir`, { parse_mode: 'Markdown', ...resultKeyboard });
       }
 
       const card = `🌐 *${equipo.ine}* — ${equipo.ubicacion_nombre || '?'}\n\n` +
-        redSpecs.map(s => `*${s.clave}:* ${s.valor}`).join('\n');
+        filtered.map(s => `*${s.clave}:* ${s.valor}`).join('\n');
       setState(chatId, STATES.RESULT);
       return ctx.reply(`${card}\n\n1️⃣ Seguir consultando\n2️⃣ Salir`, { parse_mode: 'Markdown', ...resultKeyboard });
     }
@@ -519,13 +602,26 @@ async function handleAwaitingInput(ctx, chatId, text, session) {
     if (awaitingType === 'listado_ubicacion') {
       const equipos = await q.getEquiposByUbicacion(text);
       if (equipos.length === 0) return ctx.reply(
-        promptWithBack('📍 No encontré equipos en esa ubicación.\n\n' + ubicacionesList(await q.listUbicaciones())),
+        promptWithBack('📍 No encontré equipos en esa ubicación.'),
         { parse_mode: 'Markdown', ...await createUbicacionKeyboard() }
       );
       const lines = equipos.map(e => `💻 ${e.ine} — ${e.estado || '?'}`);
+      const title = `📍 *Equipos en "${text}" (${equipos.length}):*`;
+      if (lines.length > 10) {
+        setState(chatId, STATES.RESULT, {
+          awaitingType: 'listado_ubicacion',
+          pagedLines: lines,
+          pagedTitle: title,
+          pagedPage: 1,
+        });
+        return ctx.reply(
+          formatPagedText(title, getPageLines(lines, 1)),
+          { parse_mode: 'Markdown', ...verMasKeyboard }
+        );
+      }
       setState(chatId, STATES.RESULT);
       return ctx.reply(
-        `📍 *Equipos en "${text}" (${equipos.length}):*\n${lines.join('\n')}\n\n1️⃣ Seguir consultando\n2️⃣ Salir`,
+        `${formatPagedText(title, lines)}\n\n1️⃣ Seguir consultando\n2️⃣ Salir`,
         { parse_mode: 'Markdown', ...resultKeyboard }
       );
     }
@@ -533,13 +629,26 @@ async function handleAwaitingInput(ctx, chatId, text, session) {
     if (awaitingType === 'listado_responsable') {
       const equipos = await q.getEquiposByResponsable(text);
       if (equipos.length === 0) return ctx.reply(
-        promptWithBack('👤 No encontré equipos de ese responsable.\n\n' + responsablesList(await q.listResponsables())),
+        promptWithBack('👤 No encontré equipos de ese responsable.'),
         { parse_mode: 'Markdown', ...await createResponsableKeyboard() }
       );
       const lines = equipos.map(e => `💻 ${e.ine} — ${e.ubicacion || '?'}`);
+      const title = `👤 *Equipos de "${text}" (${equipos.length}):*`;
+      if (lines.length > 10) {
+        setState(chatId, STATES.RESULT, {
+          awaitingType: 'listado_responsable',
+          pagedLines: lines,
+          pagedTitle: title,
+          pagedPage: 1,
+        });
+        return ctx.reply(
+          formatPagedText(title, getPageLines(lines, 1)),
+          { parse_mode: 'Markdown', ...verMasKeyboard }
+        );
+      }
       setState(chatId, STATES.RESULT);
       return ctx.reply(
-        `👤 *Equipos de "${text}" (${equipos.length}):*\n${lines.join('\n')}\n\n1️⃣ Seguir consultando\n2️⃣ Salir`,
+        `${formatPagedText(title, lines)}\n\n1️⃣ Seguir consultando\n2️⃣ Salir`,
         { parse_mode: 'Markdown', ...resultKeyboard }
       );
     }
@@ -547,14 +656,27 @@ async function handleAwaitingInput(ctx, chatId, text, session) {
     if (awaitingType === 'listado_estado') {
       const equipos = await q.getEquiposByEstado(text);
       if (equipos.length === 0) return ctx.reply(
-        promptWithBack('📌 No encontré equipos con ese estado.\n\n' + estadosList(await q.listEstados())),
+        promptWithBack('📌 No encontré equipos con ese estado.'),
         { parse_mode: 'Markdown', ...await createEstadoKeyboard() }
       );
       const desc = q.ESTADO_DESC[equipos[0].estado] || equipos[0].estado;
       const lines = equipos.map(e => `💻 ${e.ine} — ${e.ubicacion || '?'}`);
+      const title = `📌 *Equipos en estado "${desc}" (${equipos.length}):*`;
+      if (lines.length > 10) {
+        setState(chatId, STATES.RESULT, {
+          awaitingType: 'listado_estado',
+          pagedLines: lines,
+          pagedTitle: title,
+          pagedPage: 1,
+        });
+        return ctx.reply(
+          formatPagedText(title, getPageLines(lines, 1)),
+          { parse_mode: 'Markdown', ...verMasKeyboard }
+        );
+      }
       setState(chatId, STATES.RESULT);
       return ctx.reply(
-        `📌 *Equipos en estado "${desc}" (${equipos.length}):*\n${lines.join('\n')}\n\n1️⃣ Seguir consultando\n2️⃣ Salir`,
+        `${formatPagedText(title, lines)}\n\n1️⃣ Seguir consultando\n2️⃣ Salir`,
         { parse_mode: 'Markdown', ...resultKeyboard }
       );
     }
@@ -565,9 +687,22 @@ async function handleAwaitingInput(ctx, chatId, text, session) {
       const lines = results.map((e, i) =>
         `${i + 1}. ${e.ine} — ${e.ubicacion || '?'} (${e.estado || '?'})`
       );
+      const title = `🔍 *Resultados para "${text}" (${results.length}):*`;
+      if (lines.length > 10) {
+        setState(chatId, STATES.RESULT, {
+          awaitingType: 'busqueda_libre',
+          pagedLines: lines,
+          pagedTitle: title,
+          pagedPage: 1,
+        });
+        return ctx.reply(
+          formatPagedText(title, getPageLines(lines, 1)),
+          { parse_mode: 'Markdown', ...verMasKeyboard }
+        );
+      }
       setState(chatId, STATES.RESULT);
       return ctx.reply(
-        `🔍 *Resultados para "${text}" (${results.length}):*\n${lines.join('\n')}\n\n1️⃣ Seguir consultando\n2️⃣ Salir`,
+        `${formatPagedText(title, lines)}\n\n1️⃣ Seguir consultando\n2️⃣ Salir`,
         { parse_mode: 'Markdown', ...resultKeyboard }
       );
     }

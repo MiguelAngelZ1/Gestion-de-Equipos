@@ -45,6 +45,27 @@ module.exports = {
     if (!hasCol(userCols, 'rol')) await run(`ALTER TABLE usuarios ADD COLUMN rol TEXT DEFAULT 'USER'`);
     if (!hasCol(userCols, 'permisos_json')) await run(`ALTER TABLE usuarios ADD COLUMN permisos_json TEXT DEFAULT '[]'`);
 
+    await run(`CREATE TABLE IF NOT EXISTS telegram_authorized_users (
+      chat_id TEXT PRIMARY KEY,
+      telegram_user_id TEXT,
+      authorized_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`);
+
+    await run(`CREATE TABLE IF NOT EXISTS soporte_tareas (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      ticket_id TEXT NOT NULL UNIQUE,
+      equipo_id TEXT NOT NULL,
+      responsable TEXT NOT NULL,
+      tarea_realizada TEXT NOT NULL,
+      fecha DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      tipo_falla TEXT,
+      costo_estimado REAL DEFAULT 0,
+      FOREIGN KEY (equipo_id) REFERENCES equipos(id) ON DELETE CASCADE
+    )`);
+    if (!hasCol(userCols, 'rol')) await run(`ALTER TABLE usuarios ADD COLUMN rol TEXT DEFAULT 'USER'`);
+    if (!hasCol(userCols, 'permisos_json')) await run(`ALTER TABLE usuarios ADD COLUMN permisos_json TEXT DEFAULT '[]'`);
+
     await run(`CREATE TABLE IF NOT EXISTS soporte_tareas (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       ticket_id TEXT NOT NULL UNIQUE,
@@ -290,6 +311,7 @@ module.exports = {
       'componentes_instalados',
       'componentes_repuestos',
       'soporte_tareas',
+      'telegram_authorized_users',
       'usuarios',
       'equipos',
     ];

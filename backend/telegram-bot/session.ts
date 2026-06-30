@@ -10,15 +10,14 @@ const STATES = {
 
 function getSession(chatId) {
   if (!sessions.has(chatId)) {
-    sessions.set(chatId, { state: STATES.IDLE });
+    sessions.set(chatId, { state: STATES.IDLE, inviteAttempts: 0 });
   }
   return sessions.get(chatId);
 }
 
 function setState(chatId, state, extra = {}) {
-  const session = getSession(chatId);
-  session.state = state;
-  Object.assign(session, extra);
+  const previous = getSession(chatId);
+  sessions.set(chatId, { ...previous, state, ...extra });
 }
 
 function resetSession(chatId) {

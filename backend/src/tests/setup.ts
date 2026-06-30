@@ -9,6 +9,7 @@ process.env.TEST = 'true';
 
 const dbPath = path.resolve(__dirname, '../../test-data/test.db');
 process.env.DB_PATH = dbPath;
+process.env.DATABASE_URL = '';
 
 const testDir = path.dirname(dbPath);
 if (!fs.existsSync(testDir)) {

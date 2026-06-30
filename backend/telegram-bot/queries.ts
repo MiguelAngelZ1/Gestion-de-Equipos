@@ -7,6 +7,25 @@ const ESTADO_DESC = {
   'PRESTAMO': 'Préstamo',
 };
 
+function normalizeKey(key) {
+  if (!key || typeof key !== 'string') return '';
+  return key.trim().replace(/\s+/g, ' ').toUpperCase();
+}
+
+async function isTelegramAuthorized(chatId) {
+  if (!chatId) return false;
+  const row = await db.get('SELECT chat_id FROM telegram_authorized_users WHERE chat_id = ?', [String(chatId)]);
+  return Boolean(row);
+}
+
+async function addTelegramAuthorizedChat(chatId, telegramUserId = null) {
+  if (!chatId) return;
+  await db.run(
+    'INSERT OR IGNORE INTO telegram_authorized_users (chat_id, telegram_user_id, authorized_at) VALUES (?, ?, CURRENT_TIMESTAMP)',
+    [String(chatId), telegramUserId ? String(telegramUserId) : null]
+  );
+}
+
 const ESTADO_SYNONYMS = {
   'en servicio': 'E/S',
   'servicio': 'E/S',
@@ -70,6 +89,29 @@ async function getTotalEquipos() {
   return row.total;
 }
 
+async function findEquipos(term) {
+  if (!term || !term.trim()) return [];
+  const searchTerm = term.trim();
+  const searchPattern = `%${searchTerm}%`;
+
+  return db.all(`
+    SELECT DISTINCT e.*, u.nombre as ubicacion_nombre, u.ubicacion as ubicacion_desc,
+           r.nombre as responsable_nombre, r.apellido as responsable_apellido, r.grado as responsable_grado,
+           es.nombre as estado
+    FROM equipos e
+    LEFT JOIN ubicaciones u ON e.ubicacion_id = u.id
+    LEFT JOIN responsables r ON e.responsable_id = r.id
+    LEFT JOIN estados es ON e.estado_id = es.id
+    LEFT JOIN especificaciones esp ON esp.equipo_id = e.id
+    WHERE e.is_deleted = 0
+      AND (
+        e.serie = ? OR e.nne = ? OR LOWER(e.ine) LIKE LOWER(?) OR LOWER(esp.valor) = LOWER(?)
+      )
+    ORDER BY e.ine ASC
+    LIMIT 15
+  `, [searchTerm, searchTerm, searchPattern, searchTerm]);
+}
+
 async function findEquipo(term) {
   if (!term || !term.trim()) return null;
   const searchTerm = term.trim();
@@ -82,9 +124,10 @@ async function findEquipo(term) {
     LEFT JOIN ubicaciones u ON e.ubicacion_id = u.id
     LEFT JOIN responsables r ON e.responsable_id = r.id
     LEFT JOIN estados es ON e.estado_id = es.id
-    WHERE e.is_deleted = 0 AND (e.serie = ? OR e.nne = ?)
-    LIMIT 1
-  `, [searchTerm, searchTerm]);
+    WHERE e.is_deleted = 0 AND (
+      e.serie = ? OR e.nne = ? OR LOWER(e.ine) = LOWER(?)
+    )
+  `, [searchTerm, searchTerm, searchTerm]);
 
   if (equipo) return equipo;
 
@@ -111,8 +154,7 @@ async function findEquipo(term) {
     LEFT JOIN ubicaciones u ON e.ubicacion_id = u.id
     LEFT JOIN responsables r ON e.responsable_id = r.id
     LEFT JOIN estados es ON e.estado_id = es.id
-    WHERE e.is_deleted = 0 AND esp.valor = ?
-    LIMIT 1
+    WHERE e.is_deleted = 0 AND LOWER(esp.valor) = LOWER(?)
   `, [searchTerm]);
 
   return equipo || null;
@@ -227,9 +269,10 @@ function estadosConDescripcion() {
 
 module.exports = {
   countByUbicacion, countByEstado, countByResponsable, getTotalEquipos,
-  findEquipo, getEspecificaciones,
+  findEquipo, findEquipos, getEspecificaciones,
   getEquiposByUbicacion, getEquiposByEstado, getEquiposByResponsable,
   searchAll, searchByIP,
   listUbicaciones, listResponsables, listEstados,
   estadosConDescripcion, ESTADO_DESC,
+  isTelegramAuthorized, addTelegramAuthorizedChat,
 };

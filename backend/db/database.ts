@@ -23,7 +23,7 @@ class Database {
 
   async _doConnect() {
     const dbUrl = process.env.DATABASE_URL;
-    if (dbUrl) return this._connectPG(dbUrl);
+    if (dbUrl && !dbUrl.startsWith('file:')) return this._connectPG(dbUrl);
     return this._connectSQLite();
   }
 
