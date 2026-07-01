@@ -88,7 +88,8 @@ const backKeyboard = Markup.keyboard([['0️⃣ 🔙 Volver']]).resize();
 const configKeyboard = Markup.keyboard([
   ['1️⃣ Estados', '2️⃣ Ubicaciones'],
   ['3️⃣ Grupos comodidad', '4️⃣ Grados'],
-  ['5️⃣ Repuestos', '0️⃣ 🔙 Volver'],
+  ['5️⃣ Repuestos', '6️⃣ Tareas sop.'],
+  ['0️⃣ 🔙 Volver'],
 ]).resize();
 
 const configEntityKeyboard = Markup.keyboard([
@@ -142,6 +143,15 @@ const CONFIG_ENTITY_MAP = {
     update: (id, nombre, cantidad) => q.updateRepuesto(id, nombre, cantidad),
     delete: (id) => q.deleteRepuesto(id),
     fields: ['nombre', 'cantidad'],
+  },
+  'Tarea de soporte': {
+    name: 'Tarea de soporte',
+    list: () => q.listTareasSoporte(),
+    get: (id) => q.getTareaSoporte(id),
+    create: (equipoRef, responsable, tareaRealizada, tipoFalla, costoEstimado) => q.createTareaSoporte(equipoRef, responsable, tareaRealizada, tipoFalla, costoEstimado),
+    update: (id, responsable, tareaRealizada, tipoFalla, costoEstimado) => q.updateTareaSoporte(id, responsable, tareaRealizada, tipoFalla, costoEstimado),
+    delete: (id) => q.deleteTareaSoporte(id),
+    fields: ['equipo (INE/serie)', 'responsable', 'tarea_realizada', 'tipo_falla (opc)', 'costo (opc)'],
   },
 };
 
@@ -522,6 +532,7 @@ async function handleConfigSubMenu(ctx, chatId, text) {
     '3': 'Grupo de comodidad',
     '4': 'Grado',
     '5': 'Repuesto',
+    '6': 'Tarea de soporte',
   };
   const entityName = entityMap[text];
   if (!entityName) return replySafe(ctx, '❌ Opción no válida. Elegí 1-4 o 0 para volver.');
@@ -1017,6 +1028,7 @@ async function handleAwaitingInput(ctx, chatId, text, session) {
         : entityName === 'Ubicación' ? `${item.nombre}${item.ubicacion ? ' — ' + item.ubicacion : ''}`
         : entityName === 'Grado' ? `${item.abreviatura} — ${item.grado_completo}`
         : entityName === 'Repuesto' ? `${item.nombre} (cant: ${item.cantidad || 0})`
+        : entityName === 'Tarea de soporte' ? `${item.ticket_id} — ${item.equipo_ine || item.equipo_id}`
         : item.nombre;
 
       setState(chatId, STATES.AWAITING_INPUT, {

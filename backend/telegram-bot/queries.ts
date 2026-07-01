@@ -564,6 +564,109 @@ async function updateRepuesto(id, nombre, cantidad) {
   }
 }
 
+async function generateTicketId() {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  const d = String(now.getDate()).padStart(2, '0');
+  const rand = Math.floor(Math.random() * 9000 + 1000);
+  const ticketId = `ST-${y}${m}${d}-${rand}`;
+
+  const existing = await db.get('SELECT id FROM soporte_tareas WHERE ticket_id = ?', [ticketId]);
+  if (existing) {
+    return generateTicketId();
+  }
+  return ticketId;
+}
+
+async function listTareasSoporte() {
+  try {
+    return db.all(`
+      SELECT st.*, e.ine as equipo_ine
+      FROM soporte_tareas st
+      LEFT JOIN equipos e ON st.equipo_id = e.id
+      ORDER BY st.fecha DESC
+    `);
+  } catch (err) {
+    logger.error({ err }, '[DB] listTareasSoporte error');
+    throw new Error('Error al listar tareas de soporte: ' + (err.message || ''));
+  }
+}
+
+async function getTareaSoporte(id) {
+  try {
+    return db.get(`
+      SELECT st.*, e.ine as equipo_ine
+      FROM soporte_tareas st
+      LEFT JOIN equipos e ON st.equipo_id = e.id
+      WHERE st.id = ?
+    `, [id]);
+  } catch (err) {
+    logger.error({ err }, '[DB] getTareaSoporte error');
+    throw new Error('Error al obtener tarea de soporte: ' + (err.message || ''));
+  }
+}
+
+async function createTareaSoporte(equipoRef, responsable, tareaRealizada, tipoFalla, costoEstimado) {
+  try {
+    const equipo = await findEquipoByIne(equipoRef);
+    if (!equipo) throw new Error('No se encontró un equipo con ese identificador');
+    const ticketId = await generateTicketId();
+    const costo = parseFloat(costoEstimado) || 0;
+    await db.run(
+      'INSERT INTO soporte_tareas (ticket_id, equipo_id, responsable, tarea_realizada, tipo_falla, costo_estimado) VALUES (?, ?, ?, ?, ?, ?)',
+      [ticketId, equipo.id, responsable, tareaRealizada, tipoFalla || null, costo]
+    );
+    return { ticket_id: ticketId, equipo_ine: equipo.ine };
+  } catch (err) {
+    if (err.message.startsWith('No se encontró')) throw err;
+    logger.error({ err }, '[DB] createTareaSoporte error');
+    throw new Error('Error al crear tarea de soporte: ' + (err.message || ''));
+  }
+}
+
+async function updateTareaSoporte(id, responsable, tareaRealizada, tipoFalla, costoEstimado) {
+  try {
+    const sets = [];
+    const params = [];
+    if (responsable !== undefined && responsable !== null) { sets.push('responsable = ?'); params.push(responsable); }
+    if (tareaRealizada !== undefined && tareaRealizada !== null) { sets.push('tarea_realizada = ?'); params.push(tareaRealizada); }
+    if (tipoFalla !== undefined && tipoFalla !== null) { sets.push('tipo_falla = ?'); params.push(tipoFalla); }
+    if (costoEstimado !== undefined && costoEstimado !== null) { sets.push('costo_estimado = ?'); params.push(parseFloat(costoEstimado) || 0); }
+    if (sets.length === 0) return;
+    sets.push("updated_at = CURRENT_TIMESTAMP");
+    params.push(id);
+    await db.run('UPDATE soporte_tareas SET ' + sets.join(', ') + ' WHERE id = ?', params);
+  } catch (err) {
+    logger.error({ err }, '[DB] updateTareaSoporte error');
+    throw new Error('Error al actualizar tarea de soporte: ' + (err.message || ''));
+  }
+}
+
+async function deleteTareaSoporte(id) {
+  try {
+    const result = await db.run('DELETE FROM soporte_tareas WHERE id = ?', [id]);
+    if (result.changes === 0) {
+      throw new Error('No se pudo eliminar: el registro no existe');
+    }
+    return true;
+  } catch (err) {
+    if (err.message.startsWith('No se pudo eliminar')) throw err;
+    logger.error({ err }, '[DB] deleteTareaSoporte error');
+    throw new Error('Error al eliminar tarea de soporte: ' + (err.message || ''));
+  }
+}
+
+async function findEquipoByIne(term) {
+  try {
+    const row = await db.get('SELECT id, ine FROM equipos WHERE is_deleted = 0 AND (ine = ? OR serie = ? OR nne = ?) LIMIT 1', [term, term, term]);
+    return row || null;
+  } catch (err) {
+    logger.error({ err }, '[DB] findEquipoByIne error');
+    throw new Error('Error al buscar equipo: ' + (err.message || ''));
+  }
+}
+
 async function deleteRepuesto(id) {
   try {
     if (await isRepuestoInUse(id)) {
@@ -595,4 +698,5 @@ module.exports = {
   listGruposComodidad, getGrupoComodidad, createGrupoComodidad, updateGrupoComodidad, deleteGrupoComodidad, isGrupoComodidadInUse,
   listGrados, getGrado, createGrado, updateGrado, deleteGrado, isGradoInUse,
   listRepuestos, getRepuesto, createRepuesto, updateRepuesto, deleteRepuesto, isRepuestoInUse,
+  generateTicketId, listTareasSoporte, getTareaSoporte, createTareaSoporte, updateTareaSoporte, deleteTareaSoporte, findEquipoByIne,
 };

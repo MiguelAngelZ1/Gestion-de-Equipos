@@ -146,6 +146,7 @@ function subMenuConfiguracion() {
     '3️⃣  Grupos de comodidad\n' +
     '4️⃣  Grados\n' +
     '5️⃣  Repuestos\n' +
+    '6️⃣  Tareas de soporte\n' +
     '0️⃣  🔙 Volver'
   );
 }
@@ -187,6 +188,12 @@ function formatGrado(grado) {
 
 function formatRepuesto(repuesto) {
   return `🔧 ${esc(repuesto.nombre)} — Cant: ${repuesto.cantidad || 0}${repuesto.specs_count ? ` (${repuesto.specs_count} espec.)` : ''}`;
+}
+
+function formatTareaSoporte(t) {
+  const fecha = t.fecha ? new Date(t.fecha).toLocaleDateString('es-AR') : '?';
+  const costo = t.costo_estimado ? ` $${t.costo_estimado}` : '';
+  return `🎫 ${esc(t.ticket_id)} — ${esc(t.equipo_ine || t.equipo_id)} — ${esc(t.responsable)}${costo} [${fecha}]`;
 }
 
 function createConfigPrompt(entityName, action) {
@@ -231,6 +238,13 @@ function createConfigPrompt(entityName, action) {
       `Ejemplo: 1, Mouse óptico, 15`
     );
   }
+  if (entityName === 'Tarea de soporte') {
+    return (
+      `✏️ Ingresá los datos de la Tarea de soporte que estás editando.\n\n` +
+      `Formato: ID, Responsable, Tarea realizada, Tipo de falla (opcional), Costo estimado (opcional)\n` +
+      `Ejemplo: 1, Juan Pérez, Cambio de disco SSD, Falla hardware, 500`
+    );
+  }
   }
 
   if (entityName === 'Estado') {
@@ -267,6 +281,14 @@ function createConfigPrompt(entityName, action) {
       `Ejemplo: Mouse óptico, 15`
     );
   }
+  if (entityName === 'Tarea de soporte') {
+    return (
+      `✏️ Ingresá los datos de la nueva Tarea de soporte.\n\n` +
+      `El *ticket_id* se genera automáticamente.\n\n` +
+      `Formato: INE/Serie del equipo, Responsable, Tarea realizada, Tipo de falla (opcional), Costo estimado (opcional)\n` +
+      `Ejemplo: PC-001, Juan Pérez, Cambio de disco SSD, Falla hardware, 500`
+    );
+  }
 
   return `✏️ Ingresá los datos del ${esc(entityName)}:`;
 }
@@ -287,6 +309,7 @@ function formatEntityList(entityName, items) {
     'Grupo de comodidad': formatGrupoComodidad,
     Grado: formatGrado,
     Repuesto: formatRepuesto,
+    'Tarea de soporte': formatTareaSoporte,
   };
   const fmt = formatters[entityName] || (item => esc(item.nombre || JSON.stringify(item)));
   const lines = items.map((item, i) => `${i + 1}. ${fmt(item)}`);
@@ -298,6 +321,6 @@ module.exports = {
   subMenuListados, helpText, formatEquipoCard,
   ubicacionesList, estadosList, responsablesList,
   subMenuConfiguracion, subMenuConfigEntity, entityListTitle,
-  formatEstado, formatUbicacion, formatGrupoComodidad, formatGrado, formatRepuesto,
+  formatEstado, formatUbicacion, formatGrupoComodidad, formatGrado, formatRepuesto, formatTareaSoporte,
   createConfigPrompt, configDeleteConfirmText, formatEntityList,
 };
