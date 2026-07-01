@@ -325,6 +325,29 @@ function configDeleteConfirmText(entityName, itemFormatted) {
   );
 }
 
+function createStepPrompt(entityName, fieldLabel, stepNum, totalSteps) {
+  const isOptional = fieldLabel.toLowerCase().includes('opc') || fieldLabel.toLowerCase().includes('opcional');
+  let text = `✏️ *Creando ${esc(entityName)}* — Paso ${stepNum}/${totalSteps}\n\nIngresá el *${esc(fieldLabel)}*:`;
+  if (isOptional) text += '\n\n_(— para saltar)_';
+  return text;
+}
+
+function editFieldSelectPrompt(entityName, fieldLabels, fieldValues) {
+  const lines = [
+    `✏️ *Editando ${esc(entityName)}*\n`,
+    'Elegí el campo a modificar:\n',
+  ];
+  fieldLabels.forEach((label, i) => {
+    lines.push(`${i + 1}️⃣ *${esc(label)}:* ${esc(String(fieldValues[i] || '—'))}`);
+  });
+  lines.push('\n0️⃣ ✅ Guardar y salir');
+  return lines.join('\n');
+}
+
+function editFieldInputPrompt(entityName, fieldLabel) {
+  return `✏️ *Editando ${esc(entityName)}*\n\nIngresá el nuevo valor para *${esc(fieldLabel)}*:\n\n0️⃣  🔙 Volver`;
+}
+
 function formatEntityList(entityName, items) {
   const title = entityListTitle(entityName, items.length);
   const formatters = {
@@ -348,4 +371,5 @@ module.exports = {
   subMenuConfiguracion, subMenuConfigEntity, entityListTitle,
   formatEstado, formatUbicacion, formatGrupoComodidad, formatGrado, formatRepuesto, formatTareaSoporte, formatEquipo,
   createConfigPrompt, configDeleteConfirmText, formatEntityList,
+  createStepPrompt, editFieldSelectPrompt, editFieldInputPrompt,
 };

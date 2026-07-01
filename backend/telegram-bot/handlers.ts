@@ -7,6 +7,7 @@ const {
   ubicacionesList, estadosList, responsablesList,
   subMenuConfiguracion, subMenuConfigEntity, formatEntityList,
   createConfigPrompt, configDeleteConfirmText,
+  createStepPrompt, editFieldSelectPrompt, editFieldInputPrompt,
 } = require('./menus');
 const q = require('./queries');
 
@@ -107,6 +108,7 @@ const CONFIG_ENTITY_MAP = {
     update: (id, nombre, colorHex) => q.updateEstado(id, nombre, colorHex),
     delete: (id) => q.deleteEstado(id),
     fields: ['nombre', 'color_hex'],
+    fieldKeys: ['nombre', 'color_hex'],
   },
   Ubicación: {
     name: 'Ubicación',
@@ -116,6 +118,7 @@ const CONFIG_ENTITY_MAP = {
     update: (id, nombre, ubicacion) => q.updateUbicacion(id, nombre, ubicacion),
     delete: (id) => q.deleteUbicacion(id),
     fields: ['nombre', 'ubicacion'],
+    fieldKeys: ['nombre', 'ubicacion'],
   },
   'Grupo de comodidad': {
     name: 'Grupo de comodidad',
@@ -125,6 +128,7 @@ const CONFIG_ENTITY_MAP = {
     update: (id, nombre) => q.updateGrupoComodidad(id, nombre),
     delete: (id) => q.deleteGrupoComodidad(id),
     fields: ['nombre'],
+    fieldKeys: ['nombre'],
   },
   Grado: {
     name: 'Grado',
@@ -134,6 +138,7 @@ const CONFIG_ENTITY_MAP = {
     update: (id, abreviatura, gradoCompleto) => q.updateGrado(id, abreviatura, gradoCompleto),
     delete: (id) => q.deleteGrado(id),
     fields: ['abreviatura', 'grado_completo'],
+    fieldKeys: ['abreviatura', 'grado_completo'],
   },
   Repuesto: {
     name: 'Repuesto',
@@ -143,6 +148,7 @@ const CONFIG_ENTITY_MAP = {
     update: (id, nombre, cantidad) => q.updateRepuesto(id, nombre, cantidad),
     delete: (id) => q.deleteRepuesto(id),
     fields: ['nombre', 'cantidad'],
+    fieldKeys: ['nombre', 'cantidad'],
   },
   'Tarea de soporte': {
     name: 'Tarea de soporte',
@@ -152,6 +158,7 @@ const CONFIG_ENTITY_MAP = {
     update: (id, responsable, tareaRealizada, tipoFalla, costoEstimado) => q.updateTareaSoporte(id, responsable, tareaRealizada, tipoFalla, costoEstimado),
     delete: (id) => q.deleteTareaSoporte(id),
     fields: ['equipo (INE/serie)', 'responsable', 'tarea_realizada', 'tipo_falla (opc)', 'costo (opc)'],
+    fieldKeys: ['equipo_ine', 'responsable', 'tarea_realizada', 'tipo_falla', 'costo_estimado'],
   },
   Equipo: {
     name: 'Equipo',
@@ -161,6 +168,7 @@ const CONFIG_ENTITY_MAP = {
     update: (id, ine, nne, serie, categoriaRef, ubicacionRef, responsableRef, estadoRef) => q.updateEquipo(id, ine, nne, serie, categoriaRef, ubicacionRef, responsableRef, estadoRef),
     delete: (id) => q.deleteEquipo(id),
     fields: ['INE', 'NNE (opc)', 'Serie (opc)', 'Categoría', 'Ubicación', 'Responsable', 'Estado'],
+    fieldKeys: ['ine', 'nne', 'serie', 'categoria', 'ubicacion_nombre', 'responsable_nombre', 'estado'],
   },
 };
 
@@ -584,11 +592,15 @@ async function handleConfigEntitySubMenu(ctx, chatId, text, session) {
   }
 
   if (text === '2') {
+    const fields = entity.fields;
+    const firstField = fields[0];
     setState(chatId, STATES.AWAITING_INPUT, {
-      awaitingType: 'config_create',
+      awaitingType: 'config_create_step',
       configEntity: entityName,
+      configCreateValues: [],
+      configCreateStep: 0,
     });
-    return replySafe(ctx, promptWithBack(createConfigPrompt(entityName, 'crear')), { parse_mode: 'Markdown', ...backKeyboard });
+    return replySafe(ctx, promptWithBack(createStepPrompt(entityName, firstField, 1, fields.length)), { parse_mode: 'Markdown', ...backKeyboard });
   }
 
   if (text === '3') {
@@ -633,7 +645,7 @@ async function handleConfigEntitySubMenu(ctx, chatId, text, session) {
 async function handleAwaitingInput(ctx, chatId, text, session) {
   const { awaitingType, credencialTipo, hardwareClave } = session;
 
-  if (text === '0' && awaitingType !== 'invite_password') {
+  if (text === '0' && !['invite_password', 'config_create_step', 'config_edit_field_select', 'config_edit_field_input', 'config_delete_confirm'].includes(awaitingType)) {
     setState(chatId, STATES.MAIN_MENU);
     return replySafe(ctx, mainMenu(), { parse_mode: 'Markdown', ...mainKeyboard });
   }
@@ -943,32 +955,49 @@ async function handleAwaitingInput(ctx, chatId, text, session) {
       );
     }
 
-    if (awaitingType === 'config_create') {
-      if (text === '0') {
-        setState(chatId, STATES.SUB_MENU, { subMenu: 'config_entity', configEntity: session.configEntity });
-        return replySafe(ctx, subMenuConfigEntity(session.configEntity), { parse_mode: 'Markdown', ...configEntityKeyboard });
-      }
+    if (awaitingType === 'config_create_step') {
       const entityName = session.configEntity;
       const entity = CONFIG_ENTITY_MAP[entityName];
       if (!entity) return replySafe(ctx, '❌ Error de configuración.');
 
-      const parts = text.split(',').map(s => s.trim()).filter(Boolean);
-      if (parts.length < 1) {
-        return replySafe(ctx, promptWithBack(`❌ Formato incorrecto. ${createConfigPrompt(entityName, 'crear')}`), backKeyboard);
+      const fields = entity.fields;
+      const step = session.configCreateStep || 0;
+      const values = session.configCreateValues || [];
+
+      if (text === '0') {
+        setState(chatId, STATES.SUB_MENU, { subMenu: 'config_entity', configEntity: entityName });
+        return replySafe(ctx, subMenuConfigEntity(entityName), { parse_mode: 'Markdown', ...configEntityKeyboard });
       }
 
-      try {
-        await entity.create(...parts);
-        setState(chatId, STATES.RESULT);
-        return replySafe(ctx, `✅ ${entityName} creado correctamente.\n\n1️⃣ Seguir consultando\n2️⃣ Salir`, { parse_mode: 'Markdown', ...resultKeyboard });
-      } catch (err) {
-        const msg = err.message || '';
-        if (msg.includes('UNIQUE constraint')) {
-          return replySafe(ctx, promptWithBack(`❌ Ya existe un ${entityName.toLowerCase()} con ese nombre.`), backKeyboard);
+      const currentField = fields[step];
+      const isOptional = currentField.toLowerCase().includes('opc') || currentField.toLowerCase().includes('opcional');
+      const val = (isOptional && (text === '—' || text === '-')) ? null : text;
+      values.push(val);
+      const nextStep = step + 1;
+
+      if (nextStep >= fields.length) {
+        try {
+          await entity.create(...values);
+          setState(chatId, STATES.RESULT);
+          return replySafe(ctx, `✅ ${entityName} creado correctamente.\n\n1️⃣ Seguir consultando\n2️⃣ Salir`, { parse_mode: 'Markdown', ...resultKeyboard });
+        } catch (err) {
+          const msg = err.message || '';
+          if (msg.includes('UNIQUE constraint')) {
+            return replySafe(ctx, promptWithBack(`❌ Ya existe un ${entityName.toLowerCase()} con ese nombre.`), backKeyboard);
+          }
+          logger.error({ err, entityName }, '[TelegramBot] config create error');
+          return replySafe(ctx, promptWithBack(`❌ Error al crear ${entityName.toLowerCase()}: ${escapeMD(msg)}`), backKeyboard);
         }
-        logger.error({ err, entityName }, '[TelegramBot] config create error');
-        return replySafe(ctx, promptWithBack(`❌ Error al crear ${entityName.toLowerCase()}: ${escapeMD(msg)}`), backKeyboard);
       }
+
+      const nextField = fields[nextStep];
+      setState(chatId, STATES.AWAITING_INPUT, {
+        awaitingType: 'config_create_step',
+        configEntity: entityName,
+        configCreateValues: values,
+        configCreateStep: nextStep,
+      });
+      return replySafe(ctx, promptWithBack(createStepPrompt(entityName, nextField, nextStep + 1, fields.length)), { parse_mode: 'Markdown', ...backKeyboard });
     }
 
     if (awaitingType === 'config_edit_select') {
@@ -986,36 +1015,78 @@ async function handleAwaitingInput(ctx, chatId, text, session) {
       const item = await entity.get(id);
       if (!item) return replySafe(ctx, promptWithBack(`❌ No se encontró ${entityName.toLowerCase()} con ID ${id}.`), backKeyboard);
 
+      const fieldKeys = entity.fieldKeys || entity.fields;
+      const fieldValues = fieldKeys.map(k => item[k] !== undefined && item[k] !== null ? String(item[k]) : '');
+
       setState(chatId, STATES.AWAITING_INPUT, {
-        awaitingType: 'config_edit_input',
+        awaitingType: 'config_edit_field_select',
         configEntity: entityName,
         configEditId: id,
+        configEditFieldValues: fieldValues,
       });
-      return replySafe(ctx, promptWithBack(createConfigPrompt(entityName, 'editar')), { parse_mode: 'Markdown', ...backKeyboard });
+      return replySafe(ctx, promptWithBack(editFieldSelectPrompt(entityName, entity.fields, fieldValues)), { parse_mode: 'Markdown', ...backKeyboard });
     }
 
-    if (awaitingType === 'config_edit_input') {
+    if (awaitingType === 'config_edit_field_select') {
       if (text === '0') {
-        setState(chatId, STATES.SUB_MENU, { subMenu: 'config_entity', configEntity: session.configEntity });
-        return replySafe(ctx, subMenuConfigEntity(session.configEntity), { parse_mode: 'Markdown', ...configEntityKeyboard });
+        setState(chatId, STATES.RESULT);
+        return replySafe(ctx, `✅ ${session.configEntity} actualizado correctamente.\n\n1️⃣ Seguir consultando\n2️⃣ Salir`, { parse_mode: 'Markdown', ...resultKeyboard });
       }
       const entityName = session.configEntity;
       const entity = CONFIG_ENTITY_MAP[entityName];
-      const editId = session.configEditId;
-      if (!entity || !editId) return replySafe(ctx, '❌ Error de configuración.');
+      if (!entity) return replySafe(ctx, '❌ Error de configuración.');
 
-      const parts = text.split(',').map(s => s.trim()).filter(Boolean);
-      if (parts.length < 1) {
-        return replySafe(ctx, promptWithBack(`❌ Formato incorrecto. ${createConfigPrompt(entityName, 'editar')}`), backKeyboard);
+      const fieldIndex = parseInt(text, 10) - 1;
+      if (isNaN(fieldIndex) || fieldIndex < 0 || fieldIndex >= entity.fields.length) {
+        return replySafe(ctx, promptWithBack('❌ Número de campo no válido.'), backKeyboard);
       }
 
+      setState(chatId, STATES.AWAITING_INPUT, {
+        awaitingType: 'config_edit_field_input',
+        configEntity: entityName,
+        configEditId: session.configEditId,
+        configEditFieldIndex: fieldIndex,
+        configEditFieldValues: session.configEditFieldValues,
+      });
+      return replySafe(ctx, promptWithBack(editFieldInputPrompt(entityName, entity.fields[fieldIndex])), { parse_mode: 'Markdown', ...backKeyboard });
+    }
+
+    if (awaitingType === 'config_edit_field_input') {
+      if (text === '0') {
+        const entityName = session.configEntity;
+        const entity = CONFIG_ENTITY_MAP[entityName];
+        const fv = session.configEditFieldValues;
+        setState(chatId, STATES.AWAITING_INPUT, {
+          awaitingType: 'config_edit_field_select',
+          configEntity: entityName,
+          configEditId: session.configEditId,
+          configEditFieldValues: fv,
+        });
+        return replySafe(ctx, promptWithBack(editFieldSelectPrompt(entityName, entity.fields, fv)), { parse_mode: 'Markdown', ...backKeyboard });
+      }
+      const entityName = session.configEntity;
+      const entity = CONFIG_ENTITY_MAP[entityName];
+      if (!entity) return replySafe(ctx, '❌ Error de configuración.');
+
+      const fieldValues = [...session.configEditFieldValues];
+      fieldValues[session.configEditFieldIndex] = text;
+
       try {
-        await entity.update(editId, ...parts);
-        setState(chatId, STATES.RESULT);
-        return replySafe(ctx, `✅ ${entityName} actualizado correctamente.\n\n1️⃣ Seguir consultando\n2️⃣ Salir`, { parse_mode: 'Markdown', ...resultKeyboard });
+        await entity.update(session.configEditId, ...fieldValues);
+        setState(chatId, STATES.AWAITING_INPUT, {
+          awaitingType: 'config_edit_field_select',
+          configEntity: entityName,
+          configEditId: session.configEditId,
+          configEditFieldValues: fieldValues,
+        });
+        return replySafe(ctx, promptWithBack(editFieldSelectPrompt(entityName, entity.fields, fieldValues)), { parse_mode: 'Markdown', ...backKeyboard });
       } catch (err) {
-        logger.error({ err, entityName, editId }, '[TelegramBot] config edit error');
-        return replySafe(ctx, promptWithBack(`❌ Error al actualizar: ${escapeMD(err.message || '')}`), backKeyboard);
+        const msg = err.message || '';
+        if (msg.includes('UNIQUE constraint')) {
+          return replySafe(ctx, promptWithBack(`❌ Ya existe un ${entityName.toLowerCase()} con ese valor.`), backKeyboard);
+        }
+        logger.error({ err, entityName }, '[TelegramBot] config edit field error');
+        return replySafe(ctx, promptWithBack(`❌ Error al actualizar: ${escapeMD(msg)}`), backKeyboard);
       }
     }
 
