@@ -514,6 +514,74 @@ async function deleteGrado(id) {
   }
 }
 
+async function listRepuestos() {
+  try {
+    return db.all(`SELECT cr.*,
+      (SELECT COUNT(*) FROM especificaciones_repuestos er WHERE er.repuesto_id = cr.id) as specs_count
+      FROM componentes_repuestos cr ORDER BY cr.nombre ASC`);
+  } catch (err) {
+    logger.error({ err }, '[DB] listRepuestos error');
+    throw new Error('Error al listar repuestos: ' + (err.message || ''));
+  }
+}
+
+async function getRepuesto(id) {
+  try {
+    return db.get('SELECT * FROM componentes_repuestos WHERE id = ?', [id]);
+  } catch (err) {
+    logger.error({ err }, '[DB] getRepuesto error');
+    throw new Error('Error al obtener repuesto: ' + (err.message || ''));
+  }
+}
+
+async function createRepuesto(nombre, cantidad) {
+  try {
+    const result = await db.run('INSERT INTO componentes_repuestos (nombre, cantidad) VALUES (?, ?)', [nombre, parseInt(cantidad, 10) || 0]);
+    return { id: result.lastID, nombre, cantidad: parseInt(cantidad, 10) || 0 };
+  } catch (err) {
+    logger.error({ err }, '[DB] createRepuesto error');
+    throw new Error('Error al crear repuesto: ' + (err.message || ''));
+  }
+}
+
+async function isRepuestoInUse(id) {
+  const row = await db.get('SELECT COUNT(*) as total FROM movimientos_stock WHERE repuesto_id = ?', [id]);
+  return (row?.total || 0) > 0;
+}
+
+async function updateRepuesto(id, nombre, cantidad) {
+  try {
+    const sets = [];
+    const params = [];
+    if (nombre !== undefined && nombre !== null) { sets.push('nombre = ?'); params.push(nombre); }
+    if (cantidad !== undefined && cantidad !== null) { sets.push('cantidad = ?'); params.push(parseInt(cantidad, 10) || 0); }
+    if (sets.length === 0) return;
+    params.push(id);
+    await db.run('UPDATE componentes_repuestos SET ' + sets.join(', ') + ' WHERE id = ?', params);
+  } catch (err) {
+    logger.error({ err }, '[DB] updateRepuesto error');
+    throw new Error('Error al actualizar repuesto: ' + (err.message || ''));
+  }
+}
+
+async function deleteRepuesto(id) {
+  try {
+    if (await isRepuestoInUse(id)) {
+      throw new Error('No se puede eliminar: el repuesto tiene movimientos de stock registrados');
+    }
+    await db.run('DELETE FROM especificaciones_repuestos WHERE repuesto_id = ?', [id]);
+    const result = await db.run('DELETE FROM componentes_repuestos WHERE id = ?', [id]);
+    if (result.changes === 0) {
+      throw new Error('No se pudo eliminar: el registro no existe');
+    }
+    return true;
+  } catch (err) {
+    if (err.message.startsWith('No se puede eliminar') || err.message.startsWith('No se pudo eliminar')) throw err;
+    logger.error({ err }, '[DB] deleteRepuesto error');
+    throw new Error('Error al eliminar repuesto: ' + (err.message || ''));
+  }
+}
+
 module.exports = {
   countByUbicacion, countByEstado, countByResponsable, getTotalEquipos,
   findEquipo, findEquipos, getEspecificaciones,
@@ -526,4 +594,5 @@ module.exports = {
   getUbicacion, createUbicacion, updateUbicacion, deleteUbicacion, isUbicacionInUse,
   listGruposComodidad, getGrupoComodidad, createGrupoComodidad, updateGrupoComodidad, deleteGrupoComodidad, isGrupoComodidadInUse,
   listGrados, getGrado, createGrado, updateGrado, deleteGrado, isGradoInUse,
+  listRepuestos, getRepuesto, createRepuesto, updateRepuesto, deleteRepuesto, isRepuestoInUse,
 };

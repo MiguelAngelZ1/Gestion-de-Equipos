@@ -145,6 +145,7 @@ function subMenuConfiguracion() {
     '2️⃣  Ubicaciones\n' +
     '3️⃣  Grupos de comodidad\n' +
     '4️⃣  Grados\n' +
+    '5️⃣  Repuestos\n' +
     '0️⃣  🔙 Volver'
   );
 }
@@ -184,6 +185,10 @@ function formatGrado(grado) {
   return `🎖️ ${esc(grado.abreviatura)} — ${esc(grado.grado_completo)}`;
 }
 
+function formatRepuesto(repuesto) {
+  return `🔧 ${esc(repuesto.nombre)} — Cant: ${repuesto.cantidad || 0}${repuesto.specs_count ? ` (${repuesto.specs_count} espec.)` : ''}`;
+}
+
 function createConfigPrompt(entityName, action) {
   if (action === 'listar') return '';
   if (action === 'eliminar') {
@@ -212,13 +217,20 @@ function createConfigPrompt(entityName, action) {
         `Ejemplo: 1, TC, Teniente Coronel`
       );
     }
-    if (entityName === 'Grupo de comodidad') {
-      return (
-        `✏️ Ingresá los datos del Grupo de comodidad que estás editando.\n\n` +
-        `Formato: ID, Nombre\n` +
-        `Ejemplo: 1, Oficina`
-      );
-    }
+  if (entityName === 'Grupo de comodidad') {
+    return (
+      `✏️ Ingresá los datos del Grupo de comodidad que estás editando.\n\n` +
+      `Formato: ID, Nombre\n` +
+      `Ejemplo: 1, Oficina`
+    );
+  }
+  if (entityName === 'Repuesto') {
+    return (
+      `✏️ Ingresá los datos del Repuesto que estás editando.\n\n` +
+      `Formato: ID, Nombre, Cantidad (opcional)\n` +
+      `Ejemplo: 1, Mouse óptico, 15`
+    );
+  }
   }
 
   if (entityName === 'Estado') {
@@ -248,6 +260,13 @@ function createConfigPrompt(entityName, action) {
       `Ejemplo: Oficina`
     );
   }
+  if (entityName === 'Repuesto') {
+    return (
+      `✏️ Ingresá los datos del nuevo Repuesto.\n\n` +
+      `Formato: Nombre, Cantidad (opcional)\n` +
+      `Ejemplo: Mouse óptico, 15`
+    );
+  }
 
   return `✏️ Ingresá los datos del ${esc(entityName)}:`;
 }
@@ -267,6 +286,7 @@ function formatEntityList(entityName, items) {
     Ubicación: formatUbicacion,
     'Grupo de comodidad': formatGrupoComodidad,
     Grado: formatGrado,
+    Repuesto: formatRepuesto,
   };
   const fmt = formatters[entityName] || (item => esc(item.nombre || JSON.stringify(item)));
   const lines = items.map((item, i) => `${i + 1}. ${fmt(item)}`);
@@ -278,6 +298,6 @@ module.exports = {
   subMenuListados, helpText, formatEquipoCard,
   ubicacionesList, estadosList, responsablesList,
   subMenuConfiguracion, subMenuConfigEntity, entityListTitle,
-  formatEstado, formatUbicacion, formatGrupoComodidad, formatGrado,
+  formatEstado, formatUbicacion, formatGrupoComodidad, formatGrado, formatRepuesto,
   createConfigPrompt, configDeleteConfirmText, formatEntityList,
 };

@@ -88,7 +88,7 @@ const backKeyboard = Markup.keyboard([['0️⃣ 🔙 Volver']]).resize();
 const configKeyboard = Markup.keyboard([
   ['1️⃣ Estados', '2️⃣ Ubicaciones'],
   ['3️⃣ Grupos comodidad', '4️⃣ Grados'],
-  ['0️⃣ 🔙 Volver'],
+  ['5️⃣ Repuestos', '0️⃣ 🔙 Volver'],
 ]).resize();
 
 const configEntityKeyboard = Markup.keyboard([
@@ -133,6 +133,15 @@ const CONFIG_ENTITY_MAP = {
     update: (id, abreviatura, gradoCompleto) => q.updateGrado(id, abreviatura, gradoCompleto),
     delete: (id) => q.deleteGrado(id),
     fields: ['abreviatura', 'grado_completo'],
+  },
+  Repuesto: {
+    name: 'Repuesto',
+    list: () => q.listRepuestos(),
+    get: (id) => q.getRepuesto(id),
+    create: (nombre, cantidad) => q.createRepuesto(nombre, cantidad),
+    update: (id, nombre, cantidad) => q.updateRepuesto(id, nombre, cantidad),
+    delete: (id) => q.deleteRepuesto(id),
+    fields: ['nombre', 'cantidad'],
   },
 };
 
@@ -512,6 +521,7 @@ async function handleConfigSubMenu(ctx, chatId, text) {
     '2': 'Ubicación',
     '3': 'Grupo de comodidad',
     '4': 'Grado',
+    '5': 'Repuesto',
   };
   const entityName = entityMap[text];
   if (!entityName) return replySafe(ctx, '❌ Opción no válida. Elegí 1-4 o 0 para volver.');
@@ -1006,6 +1016,7 @@ async function handleAwaitingInput(ctx, chatId, text, session) {
       const itemText = entityName === 'Estado' ? `${item.nombre} (${item.color_hex || ''})`
         : entityName === 'Ubicación' ? `${item.nombre}${item.ubicacion ? ' — ' + item.ubicacion : ''}`
         : entityName === 'Grado' ? `${item.abreviatura} — ${item.grado_completo}`
+        : entityName === 'Repuesto' ? `${item.nombre} (cant: ${item.cantidad || 0})`
         : item.nombre;
 
       setState(chatId, STATES.AWAITING_INPUT, {
