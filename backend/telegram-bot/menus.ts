@@ -147,6 +147,7 @@ function subMenuConfiguracion() {
     '4️⃣  Grados\n' +
     '5️⃣  Repuestos\n' +
     '6️⃣  Tareas de soporte\n' +
+    '7️⃣  Equipos\n' +
     '0️⃣  🔙 Volver'
   );
 }
@@ -188,6 +189,14 @@ function formatGrado(grado) {
 
 function formatRepuesto(repuesto) {
   return `🔧 ${esc(repuesto.nombre)} — Cant: ${repuesto.cantidad || 0}${repuesto.specs_count ? ` (${repuesto.specs_count} espec.)` : ''}`;
+}
+
+function formatEquipo(e) {
+  let result = `💻 ${esc(e.ine)}`;
+  if (e.serie) result += ` — ${esc(e.serie)}`;
+  result += ` [${esc(e.estado || '?')}]`;
+  if (e.ubicacion) result += ` 📍${esc(e.ubicacion)}`;
+  return result;
 }
 
 function formatTareaSoporte(t) {
@@ -245,6 +254,13 @@ function createConfigPrompt(entityName, action) {
       `Ejemplo: 1, Juan Pérez, Cambio de disco SSD, Falla hardware, 500`
     );
   }
+  if (entityName === 'Equipo') {
+    return (
+      `✏️ Ingresá los datos del Equipo que estás editando.\n\n` +
+      `Formato: ID, INE, NNE (opcional), Serie (opcional), Categoría, Ubicación, Responsable, Estado\n` +
+      `Ejemplo: 1, PC-001, NNE-123, SN-456, Oficina, Edif Principal, Juan Pérez, Activo`
+    );
+  }
   }
 
   if (entityName === 'Estado') {
@@ -289,6 +305,14 @@ function createConfigPrompt(entityName, action) {
       `Ejemplo: PC-001, Juan Pérez, Cambio de disco SSD, Falla hardware, 500`
     );
   }
+  if (entityName === 'Equipo') {
+    return (
+      `✏️ Ingresá los datos del nuevo Equipo.\n\n` +
+      `El *ID* se genera automáticamente (UUID).\n\n` +
+      `Formato: INE, NNE (opcional), Serie (opcional), Categoría, Ubicación, Responsable, Estado\n` +
+      `Ejemplo: PC-001, NNE-123, SN-456, Oficina, Edif Principal, Juan Pérez, Activo`
+    );
+  }
 
   return `✏️ Ingresá los datos del ${esc(entityName)}:`;
 }
@@ -310,6 +334,7 @@ function formatEntityList(entityName, items) {
     Grado: formatGrado,
     Repuesto: formatRepuesto,
     'Tarea de soporte': formatTareaSoporte,
+    Equipo: formatEquipo,
   };
   const fmt = formatters[entityName] || (item => esc(item.nombre || JSON.stringify(item)));
   const lines = items.map((item, i) => `${i + 1}. ${fmt(item)}`);
@@ -321,6 +346,6 @@ module.exports = {
   subMenuListados, helpText, formatEquipoCard,
   ubicacionesList, estadosList, responsablesList,
   subMenuConfiguracion, subMenuConfigEntity, entityListTitle,
-  formatEstado, formatUbicacion, formatGrupoComodidad, formatGrado, formatRepuesto, formatTareaSoporte,
+  formatEstado, formatUbicacion, formatGrupoComodidad, formatGrado, formatRepuesto, formatTareaSoporte, formatEquipo,
   createConfigPrompt, configDeleteConfirmText, formatEntityList,
 };

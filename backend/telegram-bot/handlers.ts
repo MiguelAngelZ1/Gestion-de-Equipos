@@ -89,7 +89,7 @@ const configKeyboard = Markup.keyboard([
   ['1️⃣ Estados', '2️⃣ Ubicaciones'],
   ['3️⃣ Grupos comodidad', '4️⃣ Grados'],
   ['5️⃣ Repuestos', '6️⃣ Tareas sop.'],
-  ['0️⃣ 🔙 Volver'],
+  ['7️⃣ Equipos', '0️⃣ 🔙 Volver'],
 ]).resize();
 
 const configEntityKeyboard = Markup.keyboard([
@@ -152,6 +152,15 @@ const CONFIG_ENTITY_MAP = {
     update: (id, responsable, tareaRealizada, tipoFalla, costoEstimado) => q.updateTareaSoporte(id, responsable, tareaRealizada, tipoFalla, costoEstimado),
     delete: (id) => q.deleteTareaSoporte(id),
     fields: ['equipo (INE/serie)', 'responsable', 'tarea_realizada', 'tipo_falla (opc)', 'costo (opc)'],
+  },
+  Equipo: {
+    name: 'Equipo',
+    list: () => q.listEquiposResumen(),
+    get: (id) => q.getEquipoResumen(id),
+    create: (ine, nne, serie, categoriaRef, ubicacionRef, responsableRef, estadoRef) => q.createEquipo(ine, nne, serie, categoriaRef, ubicacionRef, responsableRef, estadoRef),
+    update: (id, ine, nne, serie, categoriaRef, ubicacionRef, responsableRef, estadoRef) => q.updateEquipo(id, ine, nne, serie, categoriaRef, ubicacionRef, responsableRef, estadoRef),
+    delete: (id) => q.deleteEquipo(id),
+    fields: ['INE', 'NNE (opc)', 'Serie (opc)', 'Categoría', 'Ubicación', 'Responsable', 'Estado'],
   },
 };
 
@@ -533,9 +542,10 @@ async function handleConfigSubMenu(ctx, chatId, text) {
     '4': 'Grado',
     '5': 'Repuesto',
     '6': 'Tarea de soporte',
+    '7': 'Equipo',
   };
   const entityName = entityMap[text];
-  if (!entityName) return replySafe(ctx, '❌ Opción no válida. Elegí 1-4 o 0 para volver.');
+  if (!entityName) return replySafe(ctx, '❌ Opción no válida. Elegí 1-7 o 0 para volver.');
 
   setState(chatId, STATES.SUB_MENU, { subMenu: 'config_entity', configEntity: entityName });
   return replySafe(ctx, subMenuConfigEntity(entityName), { parse_mode: 'Markdown', ...configEntityKeyboard });
@@ -1029,6 +1039,7 @@ async function handleAwaitingInput(ctx, chatId, text, session) {
         : entityName === 'Grado' ? `${item.abreviatura} — ${item.grado_completo}`
         : entityName === 'Repuesto' ? `${item.nombre} (cant: ${item.cantidad || 0})`
         : entityName === 'Tarea de soporte' ? `${item.ticket_id} — ${item.equipo_ine || item.equipo_id}`
+        : entityName === 'Equipo' ? `${item.ine}${item.serie ? ' — ' + item.serie : ''} [${item.estado || '?'}]`
         : item.nombre;
 
       setState(chatId, STATES.AWAITING_INPUT, {

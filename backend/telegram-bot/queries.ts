@@ -667,6 +667,130 @@ async function findEquipoByIne(term) {
   }
 }
 
+async function _resolveRef(nombre, listFn, label) {
+  if (!nombre || !nombre.trim()) return null;
+  const items = await listFn();
+  const n = nombre.trim();
+  const match = items.find(i => i.nombre?.toLowerCase() === n.toLowerCase() || i.abreviatura?.toLowerCase() === n.toLowerCase());
+  if (!match) throw new Error(`No se encontró ${label}: "${n}"`);
+  return match.id;
+}
+
+function generateUUID() {
+  const hex = '0123456789abcdef';
+  let uuid = '';
+  for (let i = 0; i < 36; i++) {
+    if (i === 8 || i === 13 || i === 18 || i === 23) uuid += '-';
+    else if (i === 14) uuid += '4';
+    else if (i === 19) uuid += hex[(Math.random() * 4 | 0) + 8];
+    else uuid += hex[Math.random() * 16 | 0];
+  }
+  return uuid;
+}
+
+async function createEquipo(ine, nne, serie, categoriaRef, ubicacionRef, responsableRef, estadoRef) {
+  try {
+    const categoriaId = await _resolveRef(categoriaRef, listGruposComodidad, 'grupo de comodidad');
+    const ubicacionId = await _resolveRef(ubicacionRef, listUbicaciones, 'ubicación');
+    const responsableId = await _resolveRef(responsableRef, listResponsables, 'responsable');
+    const estadoId = await _resolveRef(estadoRef, listEstados, 'estado');
+    const id = generateUUID();
+    await db.run(
+      'INSERT INTO equipos (id, ine, nne, serie, categoria_id, ubicacion_id, responsable_id, estado_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      [id, ine, nne || null, serie || null, categoriaId, ubicacionId, responsableId, estadoId]
+    );
+    return { id, ine };
+  } catch (err) {
+    if (err.message.startsWith('No se encontró')) throw err;
+    if (err.message.includes('UNIQUE constraint')) throw new Error(`Ya existe un equipo con INE "${ine}"`);
+    logger.error({ err }, '[DB] createEquipo error');
+    throw new Error('Error al crear equipo: ' + (err.message || ''));
+  }
+}
+
+async function updateEquipo(id, ine, nne, serie, categoriaRef, ubicacionRef, responsableRef, estadoRef) {
+  try {
+    const sets = [];
+    const params = [];
+    if (ine !== undefined && ine !== null) { sets.push('ine = ?'); params.push(ine); }
+    if (nne !== undefined) { sets.push('nne = ?'); params.push(nne || null); }
+    if (serie !== undefined) { sets.push('serie = ?'); params.push(serie || null); }
+    if (categoriaRef !== undefined && categoriaRef !== null) {
+      const categoriaId = await _resolveRef(categoriaRef, listGruposComodidad, 'grupo de comodidad');
+      sets.push('categoria_id = ?'); params.push(categoriaId);
+    }
+    if (ubicacionRef !== undefined && ubicacionRef !== null) {
+      const ubicacionId = await _resolveRef(ubicacionRef, listUbicaciones, 'ubicación');
+      sets.push('ubicacion_id = ?'); params.push(ubicacionId);
+    }
+    if (responsableRef !== undefined && responsableRef !== null) {
+      const responsableId = await _resolveRef(responsableRef, listResponsables, 'responsable');
+      sets.push('responsable_id = ?'); params.push(responsableId);
+    }
+    if (estadoRef !== undefined && estadoRef !== null) {
+      const estadoId = await _resolveRef(estadoRef, listEstados, 'estado');
+      sets.push('estado_id = ?'); params.push(estadoId);
+    }
+    if (sets.length === 0) return;
+    sets.push("updated_at = CURRENT_TIMESTAMP");
+    params.push(id);
+    const result = await db.run('UPDATE equipos SET ' + sets.join(', ') + ' WHERE id = ? AND is_deleted = 0', params);
+    if (result.changes === 0) throw new Error('No se encontró el equipo o está eliminado');
+  } catch (err) {
+    if (err.message.startsWith('No se encontró') || err.message.startsWith('No se encontró el equipo')) throw err;
+    if (err.message.includes('UNIQUE constraint')) throw new Error(`Ya existe un equipo con ese INE`);
+    logger.error({ err }, '[DB] updateEquipo error');
+    throw new Error('Error al actualizar equipo: ' + (err.message || ''));
+  }
+}
+
+async function deleteEquipo(id) {
+  try {
+    const result = await db.run('UPDATE equipos SET is_deleted = 1, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND is_deleted = 0', [id]);
+    if (result.changes === 0) throw new Error('No se encontró el equipo o ya está eliminado');
+    return true;
+  } catch (err) {
+    if (err.message.startsWith('No se encontró')) throw err;
+    logger.error({ err }, '[DB] deleteEquipo error');
+    throw new Error('Error al eliminar equipo: ' + (err.message || ''));
+  }
+}
+
+async function listEquiposResumen() {
+  try {
+    return db.all(`
+      SELECT e.id, e.ine, e.nne, e.serie, u.nombre as ubicacion, es.nombre as estado
+      FROM equipos e
+      LEFT JOIN ubicaciones u ON e.ubicacion_id = u.id
+      LEFT JOIN estados es ON e.estado_id = es.id
+      WHERE e.is_deleted = 0
+      ORDER BY e.ine ASC LIMIT 50
+    `);
+  } catch (err) {
+    logger.error({ err }, '[DB] listEquiposResumen error');
+    throw new Error('Error al listar equipos: ' + (err.message || ''));
+  }
+}
+
+async function getEquipoResumen(id) {
+  try {
+    return db.get(`
+      SELECT e.*, u.nombre as ubicacion_nombre, u.ubicacion as ubicacion_desc,
+             r.nombre as responsable_nombre, r.apellido as responsable_apellido, r.grado as responsable_grado,
+             gc.nombre as categoria, es.nombre as estado, es.color_hex as estado_color
+      FROM equipos e
+      LEFT JOIN ubicaciones u ON e.ubicacion_id = u.id
+      LEFT JOIN responsables r ON e.responsable_id = r.id
+      LEFT JOIN grupos_comodidad gc ON e.categoria_id = gc.id
+      LEFT JOIN estados es ON e.estado_id = es.id
+      WHERE e.id = ? AND e.is_deleted = 0
+    `, [id]);
+  } catch (err) {
+    logger.error({ err }, '[DB] getEquipoResumen error');
+    throw new Error('Error al obtener equipo: ' + (err.message || ''));
+  }
+}
+
 async function deleteRepuesto(id) {
   try {
     if (await isRepuestoInUse(id)) {
@@ -699,4 +823,5 @@ module.exports = {
   listGrados, getGrado, createGrado, updateGrado, deleteGrado, isGradoInUse,
   listRepuestos, getRepuesto, createRepuesto, updateRepuesto, deleteRepuesto, isRepuestoInUse,
   generateTicketId, listTareasSoporte, getTareaSoporte, createTareaSoporte, updateTareaSoporte, deleteTareaSoporte, findEquipoByIne,
+  createEquipo, updateEquipo, deleteEquipo, listEquiposResumen, getEquipoResumen,
 };
