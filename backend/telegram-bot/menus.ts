@@ -1,5 +1,11 @@
 const q = require('./queries');
 
+const MD_SPECIAL = /[_*[\]()~`>#+\-=|{}.!]/g;
+function esc(text) {
+  if (!text || typeof text !== 'string') return '';
+  return text.replace(MD_SPECIAL, '\\$&');
+}
+
 function mainMenu() {
   return (
     '🤖 *Bot de Consulta de Equipos*\n\n' +
@@ -92,22 +98,22 @@ function formatEquipoCard(equipo, specs) {
   const desc = q.ESTADO_DESC[equipo.estado];
   const estadoStr = desc ? `${equipo.estado} (${desc})` : (equipo.estado || 'N/A');
   const lines = [
-    `💻 *${equipo.ine}*`,
+    `💻 *${esc(equipo.ine)}*`,
     ``,
-    `📍 *Ubicación:* ${equipo.ubicacion_nombre || 'Sin asignar'}`,
+    `📍 *Ubicación:* ${esc(equipo.ubicacion_nombre || 'Sin asignar')}`,
   ];
   const responsable = [equipo.responsable_grado, equipo.responsable_nombre, equipo.responsable_apellido]
     .filter(Boolean).join(' ');
-  lines.push(`👤 *Responsable:* ${responsable || 'Sin asignar'}`);
-  lines.push(`📌 *Estado:* ${estadoStr}`);
+  lines.push(`👤 *Responsable:* ${esc(responsable || 'Sin asignar')}`);
+  lines.push(`📌 *Estado:* ${esc(estadoStr)}`);
 
-  if (equipo.nne && equipo.nne !== '-') lines.push(`🔖 *NNE:* ${equipo.nne}`);
-  if (equipo.serie && equipo.serie !== '-') lines.push(`🔖 *Serie:* ${equipo.serie}`);
+  if (equipo.nne && equipo.nne !== '-') lines.push(`🔖 *NNE:* ${esc(equipo.nne)}`);
+  if (equipo.serie && equipo.serie !== '-') lines.push(`🔖 *Serie:* ${esc(equipo.serie)}`);
 
   if (specs && specs.length > 0) {
     lines.push(``, `📋 *Especificaciones:*`);
     for (const spec of specs) {
-      lines.push(`  • *${spec.clave}:* ${spec.valor}`);
+      lines.push(`  • *${esc(spec.clave)}:* ${esc(spec.valor)}`);
     }
   }
 
@@ -115,24 +121,163 @@ function formatEquipoCard(equipo, specs) {
 }
 
 function ubicacionesList(ubicaciones) {
-  return '📍 *Ubicaciones:*\n' + ubicaciones.map(u => `  • ${u.nombre}`).join('\n');
+  return '📍 *Ubicaciones:*\n' + ubicaciones.map(u => `  • ${esc(u.nombre)}`).join('\n');
 }
 
 function estadosList(estados) {
   return '📌 *Estados disponibles:*\n' + estados.map(e => {
     const desc = q.ESTADO_DESC[e.nombre];
-    return desc ? `  • ${e.nombre} (${desc})` : `  • ${e.nombre}`;
+    return desc ? `  • ${esc(e.nombre)} (${esc(desc)})` : `  • ${esc(e.nombre)}`;
   }).join('\n');
 }
 
 function responsablesList(responsables) {
   return '👤 *Responsables:*\n' + responsables.map(r =>
-    `  • ${r.grado ? r.grado + ' ' : ''}${r.nombre} ${r.apellido}`
+    `  • ${esc(r.grado ? r.grado + ' ' : '')}${esc(r.nombre)} ${esc(r.apellido)}`
   ).join('\n');
+}
+
+function subMenuConfiguracion() {
+  return (
+    '⚙️ *Configuración*\n\n' +
+    'Elegí una opción:\n\n' +
+    '1️⃣  Estados\n' +
+    '2️⃣  Ubicaciones\n' +
+    '3️⃣  Grupos de comodidad\n' +
+    '4️⃣  Grados\n' +
+    '0️⃣  🔙 Volver'
+  );
+}
+
+function subMenuConfigEntity(entityName) {
+  return (
+    `⚙️ *Configuración — ${esc(entityName)}*\n\n` +
+    '1️⃣  Listar\n' +
+    '2️⃣  Crear\n' +
+    '3️⃣  Editar\n' +
+    '4️⃣  Eliminar\n' +
+    '0️⃣  🔙 Volver'
+  );
+}
+
+function entityListTitle(entityName, count) {
+  return `📋 *${esc(entityName)} (${count}):*`;
+}
+
+function formatEstado(estado) {
+  return `🟢 ${esc(estado.nombre)} (color: ${esc(estado.color_hex || 'N/A')})`;
+}
+
+function formatUbicacion(ubicacion) {
+  let result = `📍 ${esc(ubicacion.nombre)}`;
+  if (ubicacion.ubicacion) {
+    result += ` — ${esc(ubicacion.ubicacion)}`;
+  }
+  return result;
+}
+
+function formatGrupoComodidad(grupo) {
+  return `📁 ${esc(grupo.nombre)}`;
+}
+
+function formatGrado(grado) {
+  return `🎖️ ${esc(grado.abreviatura)} — ${esc(grado.grado_completo)}`;
+}
+
+function createConfigPrompt(entityName, action) {
+  if (action === 'listar') return '';
+  if (action === 'eliminar') {
+    return `⚠️ Ingresá el ID del ${esc(entityName)} que querés eliminar:`;
+  }
+
+  if (action === 'editar') {
+    if (entityName === 'Estado') {
+      return (
+        `✏️ Ingresá los datos del Estado que estás editando.\n\n` +
+        `Formato: ID, Nombre, Color HEX (opcional)\n` +
+        `Ejemplo: 1, Activo, #00ff00`
+      );
+    }
+    if (entityName === 'Ubicación') {
+      return (
+        `✏️ Ingresá los datos de la Ubicación que estás editando.\n\n` +
+        `Formato: ID, Nombre, Descripción (opcional)\n` +
+        `Ejemplo: 1, Oficina Central, Edificio Principal Piso 3`
+      );
+    }
+    if (entityName === 'Grado') {
+      return (
+        `✏️ Ingresá los datos del Grado que estás editando.\n\n` +
+        `Formato: ID, Abreviatura, Nombre completo\n` +
+        `Ejemplo: 1, TC, Teniente Coronel`
+      );
+    }
+    if (entityName === 'Grupo de comodidad') {
+      return (
+        `✏️ Ingresá los datos del Grupo de comodidad que estás editando.\n\n` +
+        `Formato: ID, Nombre\n` +
+        `Ejemplo: 1, Oficina`
+      );
+    }
+  }
+
+  if (entityName === 'Estado') {
+    return (
+      `✏️ Ingresá los datos del nuevo Estado.\n\n` +
+      `Formato: Nombre, Color HEX (opcional)\n` +
+      `Ejemplo: Activo, #00ff00`
+    );
+  }
+  if (entityName === 'Ubicación') {
+    return (
+      `✏️ Ingresá los datos de la nueva Ubicación.\n\n` +
+      `Formato: Nombre, Descripción (opcional)\n` +
+      `Ejemplo: Oficina Central, Edificio Principal Piso 3`
+    );
+  }
+  if (entityName === 'Grado') {
+    return (
+      `✏️ Ingresá los datos del nuevo Grado.\n\n` +
+      `Formato: Abreviatura, Nombre completo\n` +
+      `Ejemplo: TC, Teniente Coronel`
+    );
+  }
+  if (entityName === 'Grupo de comodidad') {
+    return (
+      `✏️ Ingresá el nombre del nuevo Grupo de comodidad:\n\n` +
+      `Ejemplo: Oficina`
+    );
+  }
+
+  return `✏️ Ingresá los datos del ${esc(entityName)}:`;
+}
+
+function configDeleteConfirmText(entityName, itemFormatted) {
+  return (
+    `⚠️ *Confirmar eliminación*\n\n` +
+    `${esc(entityName)}: ${esc(itemFormatted)}\n\n` +
+    `Escribí "si" para confirmar o 0 para cancelar.`
+  );
+}
+
+function formatEntityList(entityName, items) {
+  const title = entityListTitle(entityName, items.length);
+  const formatters = {
+    Estado: formatEstado,
+    Ubicación: formatUbicacion,
+    'Grupo de comodidad': formatGrupoComodidad,
+    Grado: formatGrado,
+  };
+  const fmt = formatters[entityName] || (item => esc(item.nombre || JSON.stringify(item)));
+  const lines = items.map((item, i) => `${i + 1}. ${fmt(item)}`);
+  return title + '\n\n' + lines.join('\n');
 }
 
 module.exports = {
   mainMenu, subMenuCantidad, subMenuContrasenas, subMenuRed, subMenuHardware,
   subMenuListados, helpText, formatEquipoCard,
   ubicacionesList, estadosList, responsablesList,
+  subMenuConfiguracion, subMenuConfigEntity, entityListTitle,
+  formatEstado, formatUbicacion, formatGrupoComodidad, formatGrado,
+  createConfigPrompt, configDeleteConfirmText, formatEntityList,
 };

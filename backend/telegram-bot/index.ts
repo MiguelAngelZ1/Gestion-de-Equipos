@@ -1,6 +1,13 @@
-const { Telegraf } = require('telegraf');
+const { Telegraf, Markup } = require('telegraf');
 const logger = require('../utils/logger');
 const { handleMessage } = require('./handlers');
+const { mainMenu, helpText } = require('./menus');
+
+const mainKeyboard = Markup.keyboard([
+  ['1️⃣ Cantidad', '2️⃣ Contraseñas', '3️⃣ Red'],
+  ['4️⃣ Hardware', '5️⃣ Info completa', '6️⃣ Buscar'],
+  ['7️⃣ Listados', '8️⃣ Ayuda', '0️⃣ Salir'],
+]).resize();
 
 let bot = null;
 
@@ -12,6 +19,22 @@ function initBot() {
   }
 
   bot = new Telegraf(token);
+
+  bot.start(async (ctx) => {
+    try {
+      await ctx.reply(mainMenu(), { parse_mode: 'Markdown', ...mainKeyboard });
+    } catch (err) {
+      logger.error({ err, chatId: ctx.chat.id }, '[TelegramBot] /start error');
+    }
+  });
+
+  bot.help(async (ctx) => {
+    try {
+      await ctx.reply(helpText(), { parse_mode: 'Markdown', ...mainKeyboard });
+    } catch (err) {
+      logger.error({ err, chatId: ctx.chat.id }, '[TelegramBot] /help error');
+    }
+  });
 
   bot.on('text', async (ctx) => {
     try {

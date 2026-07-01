@@ -17,7 +17,8 @@ function getSession(chatId) {
 
 function setState(chatId, state, extra = {}) {
   const previous = getSession(chatId);
-  sessions.set(chatId, { ...previous, state, ...extra });
+  const clean = { inviteAttempts: previous.inviteAttempts || 0 };
+  sessions.set(chatId, { ...clean, state, ...extra });
 }
 
 function resetSession(chatId) {

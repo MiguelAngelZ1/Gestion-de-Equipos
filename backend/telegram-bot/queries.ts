@@ -1,4 +1,5 @@
 const db = require('../db/database');
+const logger = require('../utils/logger');
 
 const ESTADO_DESC = {
   'E/S': 'En servicio',
@@ -140,8 +141,13 @@ async function findEquipo(term) {
     LEFT JOIN responsables r ON e.responsable_id = r.id
     LEFT JOIN estados es ON e.estado_id = es.id
     WHERE e.is_deleted = 0 AND LOWER(e.ine) LIKE LOWER(?)
+    ORDER BY
+      CASE WHEN LOWER(e.ine) = LOWER(?) THEN 0
+           WHEN LOWER(e.ine) LIKE LOWER(? || '%') THEN 1
+           ELSE 2 END,
+      LENGTH(e.ine) ASC
     LIMIT 1
-  `, [`%${searchTerm}%`]);
+  `, [`%${searchTerm}%`, searchTerm, searchTerm]);
 
   if (equipo) return equipo;
 
@@ -267,6 +273,247 @@ function estadosConDescripcion() {
   return Object.entries(ESTADO_DESC).map(([codigo, desc]) => `${codigo} (${desc})`).join('\n');
 }
 
+async function getEstado(id) {
+  try {
+    return db.get('SELECT * FROM estados WHERE id = ?', [id]);
+  } catch (err) {
+    logger.error({ err }, '[DB] getEstado error');
+    throw new Error('Error al obtener estado: ' + (err.message || ''));
+  }
+}
+
+async function createEstado(nombre, colorHex) {
+  try {
+    const result = await db.run('INSERT INTO estados (nombre, color_hex) VALUES (?, ?)', [nombre, colorHex || '#10b981']);
+    return { id: result.lastID, nombre, color_hex: colorHex || '#10b981' };
+  } catch (err) {
+    logger.error({ err }, '[DB] createEstado error');
+    throw new Error('Error al crear estado: ' + (err.message || ''));
+  }
+}
+
+async function isEstadoInUse(id) {
+  const row = await db.get('SELECT COUNT(*) as total FROM equipos WHERE estado_id = ?', [id]);
+  return (row?.total || 0) > 0;
+}
+
+async function updateEstado(id, nombre, colorHex) {
+  try {
+    const sets = [];
+    const params = [];
+    if (nombre !== undefined && nombre !== null) { sets.push('nombre = ?'); params.push(nombre); }
+    if (colorHex !== undefined && colorHex !== null) { sets.push('color_hex = ?'); params.push(colorHex); }
+    if (sets.length === 0) return;
+    params.push(id);
+    await db.run('UPDATE estados SET ' + sets.join(', ') + ' WHERE id = ?', params);
+  } catch (err) {
+    logger.error({ err }, '[DB] updateEstado error');
+    throw new Error('Error al actualizar estado: ' + (err.message || ''));
+  }
+}
+
+async function deleteEstado(id) {
+  try {
+    if (await isEstadoInUse(id)) {
+      throw new Error('No se puede eliminar: el estado está asignado a uno o más equipos');
+    }
+    const result = await db.run('DELETE FROM estados WHERE id = ?', [id]);
+    if (result.changes === 0) {
+      throw new Error('No se pudo eliminar: el registro no existe');
+    }
+    return true;
+  } catch (err) {
+    if (err.message.startsWith('No se puede eliminar') || err.message.startsWith('No se pudo eliminar')) throw err;
+    logger.error({ err }, '[DB] deleteEstado error');
+    throw new Error('Error al eliminar estado: ' + (err.message || ''));
+  }
+}
+
+async function getUbicacion(id) {
+  try {
+    return db.get('SELECT * FROM ubicaciones WHERE id = ?', [id]);
+  } catch (err) {
+    logger.error({ err }, '[DB] getUbicacion error');
+    throw new Error('Error al obtener ubicación: ' + (err.message || ''));
+  }
+}
+
+async function createUbicacion(nombre, ubicacion) {
+  try {
+    const result = await db.run('INSERT INTO ubicaciones (nombre, ubicacion) VALUES (?, ?)', [nombre, ubicacion || null]);
+    return { id: result.lastID, nombre, ubicacion: ubicacion || null };
+  } catch (err) {
+    logger.error({ err }, '[DB] createUbicacion error');
+    throw new Error('Error al crear ubicación: ' + (err.message || ''));
+  }
+}
+
+async function isUbicacionInUse(id) {
+  const row = await db.get('SELECT COUNT(*) as total FROM equipos WHERE ubicacion_id = ?', [id]);
+  return (row?.total || 0) > 0;
+}
+
+async function updateUbicacion(id, nombre, ubicacion) {
+  try {
+    const sets = [];
+    const params = [];
+    if (nombre !== undefined && nombre !== null) { sets.push('nombre = ?'); params.push(nombre); }
+    if (ubicacion !== undefined && ubicacion !== null) { sets.push('ubicacion = ?'); params.push(ubicacion); }
+    if (sets.length === 0) return;
+    params.push(id);
+    await db.run('UPDATE ubicaciones SET ' + sets.join(', ') + ' WHERE id = ?', params);
+  } catch (err) {
+    logger.error({ err }, '[DB] updateUbicacion error');
+    throw new Error('Error al actualizar ubicación: ' + (err.message || ''));
+  }
+}
+
+async function deleteUbicacion(id) {
+  try {
+    if (await isUbicacionInUse(id)) {
+      throw new Error('No se puede eliminar: la ubicación está asignada a uno o más equipos');
+    }
+    const result = await db.run('DELETE FROM ubicaciones WHERE id = ?', [id]);
+    if (result.changes === 0) {
+      throw new Error('No se pudo eliminar: el registro no existe');
+    }
+    return true;
+  } catch (err) {
+    if (err.message.startsWith('No se puede eliminar') || err.message.startsWith('No se pudo eliminar')) throw err;
+    logger.error({ err }, '[DB] deleteUbicacion error');
+    throw new Error('Error al eliminar ubicación: ' + (err.message || ''));
+  }
+}
+
+async function listGruposComodidad() {
+  try {
+    return db.all('SELECT id, nombre FROM grupos_comodidad ORDER BY nombre ASC');
+  } catch (err) {
+    logger.error({ err }, '[DB] listGruposComodidad error');
+    throw new Error('Error al listar grupos de comodidad: ' + (err.message || ''));
+  }
+}
+
+async function getGrupoComodidad(id) {
+  try {
+    return db.get('SELECT * FROM grupos_comodidad WHERE id = ?', [id]);
+  } catch (err) {
+    logger.error({ err }, '[DB] getGrupoComodidad error');
+    throw new Error('Error al obtener grupo de comodidad: ' + (err.message || ''));
+  }
+}
+
+async function createGrupoComodidad(nombre) {
+  try {
+    const result = await db.run('INSERT INTO grupos_comodidad (nombre) VALUES (?)', [nombre]);
+    return { id: result.lastID, nombre };
+  } catch (err) {
+    logger.error({ err }, '[DB] createGrupoComodidad error');
+    throw new Error('Error al crear grupo de comodidad: ' + (err.message || ''));
+  }
+}
+
+async function isGrupoComodidadInUse(id) {
+  const row = await db.get('SELECT COUNT(*) as total FROM equipos WHERE categoria_id = ?', [id]);
+  return (row?.total || 0) > 0;
+}
+
+async function updateGrupoComodidad(id, nombre) {
+  try {
+    const sets = [];
+    const params = [];
+    if (nombre !== undefined && nombre !== null) { sets.push('nombre = ?'); params.push(nombre); }
+    if (sets.length === 0) return;
+    params.push(id);
+    await db.run('UPDATE grupos_comodidad SET ' + sets.join(', ') + ' WHERE id = ?', params);
+  } catch (err) {
+    logger.error({ err }, '[DB] updateGrupoComodidad error');
+    throw new Error('Error al actualizar grupo de comodidad: ' + (err.message || ''));
+  }
+}
+
+async function deleteGrupoComodidad(id) {
+  try {
+    if (await isGrupoComodidadInUse(id)) {
+      throw new Error('No se puede eliminar: el grupo de comodidad está asignado a uno o más equipos');
+    }
+    const result = await db.run('DELETE FROM grupos_comodidad WHERE id = ?', [id]);
+    if (result.changes === 0) {
+      throw new Error('No se pudo eliminar: el registro no existe');
+    }
+    return true;
+  } catch (err) {
+    if (err.message.startsWith('No se puede eliminar') || err.message.startsWith('No se pudo eliminar')) throw err;
+    logger.error({ err }, '[DB] deleteGrupoComodidad error');
+    throw new Error('Error al eliminar grupo de comodidad: ' + (err.message || ''));
+  }
+}
+
+async function listGrados() {
+  try {
+    return db.all('SELECT id, abreviatura, grado_completo FROM grados ORDER BY grado_completo ASC');
+  } catch (err) {
+    logger.error({ err }, '[DB] listGrados error');
+    throw new Error('Error al listar grados: ' + (err.message || ''));
+  }
+}
+
+async function getGrado(id) {
+  try {
+    return db.get('SELECT * FROM grados WHERE id = ?', [id]);
+  } catch (err) {
+    logger.error({ err }, '[DB] getGrado error');
+    throw new Error('Error al obtener grado: ' + (err.message || ''));
+  }
+}
+
+async function createGrado(abreviatura, gradoCompleto) {
+  try {
+    const result = await db.run('INSERT INTO grados (abreviatura, grado_completo) VALUES (?, ?)', [abreviatura, gradoCompleto]);
+    return { id: result.lastID, abreviatura, grado_completo: gradoCompleto };
+  } catch (err) {
+    logger.error({ err }, '[DB] createGrado error');
+    throw new Error('Error al crear grado: ' + (err.message || ''));
+  }
+}
+
+async function isGradoInUse(id) {
+  const row = await db.get('SELECT COUNT(*) as total FROM responsables WHERE grado_id = ?', [id]);
+  return (row?.total || 0) > 0;
+}
+
+async function updateGrado(id, abreviatura, gradoCompleto) {
+  try {
+    const sets = [];
+    const params = [];
+    if (abreviatura !== undefined && abreviatura !== null) { sets.push('abreviatura = ?'); params.push(abreviatura); }
+    if (gradoCompleto !== undefined && gradoCompleto !== null) { sets.push('grado_completo = ?'); params.push(gradoCompleto); }
+    if (sets.length === 0) return;
+    params.push(id);
+    await db.run('UPDATE grados SET ' + sets.join(', ') + ' WHERE id = ?', params);
+  } catch (err) {
+    logger.error({ err }, '[DB] updateGrado error');
+    throw new Error('Error al actualizar grado: ' + (err.message || ''));
+  }
+}
+
+async function deleteGrado(id) {
+  try {
+    if (await isGradoInUse(id)) {
+      throw new Error('No se puede eliminar: el grado está asignado a uno o más responsables');
+    }
+    const result = await db.run('DELETE FROM grados WHERE id = ?', [id]);
+    if (result.changes === 0) {
+      throw new Error('No se pudo eliminar: el registro no existe');
+    }
+    return true;
+  } catch (err) {
+    if (err.message.startsWith('No se puede eliminar') || err.message.startsWith('No se pudo eliminar')) throw err;
+    logger.error({ err }, '[DB] deleteGrado error');
+    throw new Error('Error al eliminar grado: ' + (err.message || ''));
+  }
+}
+
 module.exports = {
   countByUbicacion, countByEstado, countByResponsable, getTotalEquipos,
   findEquipo, findEquipos, getEspecificaciones,
@@ -275,4 +522,8 @@ module.exports = {
   listUbicaciones, listResponsables, listEstados,
   estadosConDescripcion, ESTADO_DESC,
   isTelegramAuthorized, addTelegramAuthorizedChat,
+  getEstado, createEstado, updateEstado, deleteEstado, isEstadoInUse,
+  getUbicacion, createUbicacion, updateUbicacion, deleteUbicacion, isUbicacionInUse,
+  listGruposComodidad, getGrupoComodidad, createGrupoComodidad, updateGrupoComodidad, deleteGrupoComodidad, isGrupoComodidadInUse,
+  listGrados, getGrado, createGrado, updateGrado, deleteGrado, isGradoInUse,
 };
