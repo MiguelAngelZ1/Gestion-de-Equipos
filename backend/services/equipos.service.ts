@@ -12,7 +12,7 @@ class EquiposService {
             LEFT JOIN responsables r ON e.responsable_id = r.id
         `;
 
-        let whereClause = "WHERE e.is_deleted = false";
+        let whereClause = "WHERE e.is_deleted = 0";
         const params = [];
 
         if (q && q.trim() !== "") {
@@ -106,7 +106,7 @@ class EquiposService {
             LEFT JOIN estados es ON e.estado_id = es.id
             LEFT JOIN ubicaciones u ON e.ubicacion_id = u.id
             LEFT JOIN responsables r ON e.responsable_id = r.id
-            WHERE e.id = ? AND is_deleted = false
+            WHERE e.id = ? AND is_deleted = 0
         `;
 
         const e = await db.get(sql, [id]);
@@ -185,7 +185,7 @@ class EquiposService {
 
             if (hasSerie && serie.trim() !== '-' && serie.trim() !== '') {
                 const existingSerie = await db.get(
-                    "SELECT ine FROM equipos WHERE serie = ? AND id != ? AND is_deleted = false",
+                    "SELECT ine FROM equipos WHERE serie = ? AND id != ? AND is_deleted = 0",
                     [serie.trim(), targetId || '']
                 );
                 if (existingSerie) {

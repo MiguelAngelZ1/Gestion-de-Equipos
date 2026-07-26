@@ -135,7 +135,7 @@ class NotificationService {
      */
     async markAsRead(alertId) {
         return await db.run(
-            `UPDATE alertas_notificaciones SET leido = true WHERE id = ?`,
+            `UPDATE alertas_notificaciones SET leido = 1 WHERE id = ?`,
             [parseInt(alertId)]
         );
     }
@@ -145,7 +145,7 @@ class NotificationService {
      */
     async markAllAsRead(userId) {
         return await db.run(
-            `UPDATE alertas_notificaciones SET leido = true WHERE usuario_id = ?`,
+            `UPDATE alertas_notificaciones SET leido = 1 WHERE usuario_id = ?`,
             [parseInt(userId)]
         );
     }
@@ -155,7 +155,7 @@ class NotificationService {
      */
     async clearReadAlerts(userId) {
         return await db.run(
-            `DELETE FROM alertas_notificaciones WHERE usuario_id = ? AND leido = true`,
+            `DELETE FROM alertas_notificaciones WHERE usuario_id = ? AND leido = 1`,
             [parseInt(userId)]
         );
     }
@@ -184,7 +184,7 @@ class NotificationService {
             JOIN estados es ON eq.estado_id = es.id
             WHERE (es.nombre LIKE '%Taller%' OR es.nombre LIKE '%Reparación%')
             AND eq.updated_at < ?
-            AND eq.is_deleted = false
+            AND eq.is_deleted = 0
         `, [twoDaysAgo.toISOString()]);
   
         if (delayed.length > 0) {
