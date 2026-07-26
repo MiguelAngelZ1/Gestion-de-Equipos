@@ -26,6 +26,7 @@ const usuariosRoutes = require('./routes/usuarios.routes');
 const notificacionesRoutes = require('./routes/notificaciones.routes');
 const ipamRoutes = require('./routes/ipam.routes');
 const prestamosRoutes = require('./routes/prestamos');
+const adminMigrateRoutes = require('./routes/admin-migrate');
 const { apiLimiter } = require('./utils/rateLimiter');
 const { validateOrigin } = require('./middleware/csrf.middleware');
 const errorHandler = require('./middleware/error.middleware');
@@ -216,6 +217,7 @@ app.use('/api/mantenimiento', mantenimientoRoutes);
 app.use('/api/backup', backupRoutes);
 app.use('/api/prestamos', prestamosRoutes);
 app.use('/api/ipam', ipamRoutes);
+app.use('/api/admin', adminMigrateRoutes);
 app.use('/api', exportRoutes);
 
 if (distExists) {
