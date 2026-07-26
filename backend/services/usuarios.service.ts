@@ -106,8 +106,9 @@ class UsuariosService {
     // Nota: recuperacion_claves se mantiene con Prisma o se adapta si es necesario.
     // Para simplificar el entorno local, lo adaptamos.
     async saveRecoveryCode(email, codigo, expires) {
+        await db.run(`DELETE FROM recuperacion_claves WHERE email = ?`, [email]);
         return await db.run(`
-            INSERT OR REPLACE INTO recuperacion_claves (email, codigo, expires) 
+            INSERT INTO recuperacion_claves (email, codigo, expires) 
             VALUES (?, ?, ?)
         `, [email, codigo, expires.toISOString()]);
     }

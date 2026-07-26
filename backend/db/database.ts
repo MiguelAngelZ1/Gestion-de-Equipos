@@ -91,6 +91,7 @@ class Database {
       this.client = { pool };
       this.connected = true;
       logger.info("[DB] Conectado a PostgreSQL (Supabase)");
+      await this._runMigrations();
     } catch (error) {
       this.connected = false;
       this.connecting = null;
@@ -116,8 +117,15 @@ class Database {
       let pgSql = sql;
       let idx = 0;
       pgSql = pgSql.replace(/\?/g, () => `$${++idx}`);
+
+      const isInsert = pgSql.trim().toUpperCase().startsWith("INSERT");
+      if (isInsert && !pgSql.toUpperCase().includes("RETURNING")) {
+        pgSql += " RETURNING id";
+      }
+
       const result = await this.client.pool.query(pgSql, params);
-      return { rows: result.rows, changes: result.rowCount || 0, lastID: undefined };
+      const lastID = (isInsert && result.rows.length > 0) ? result.rows[0].id : undefined;
+      return { rows: result.rows, changes: result.rowCount || 0, lastID };
     }
 
     return new Promise((resolve, reject) => {
