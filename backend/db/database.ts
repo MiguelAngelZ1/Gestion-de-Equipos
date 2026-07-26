@@ -118,8 +118,10 @@ class Database {
       let idx = 0;
       pgSql = pgSql.replace(/\?/g, () => `$${++idx}`);
 
-      const isInsert = pgSql.trim().toUpperCase().startsWith("INSERT");
-      if (isInsert && !pgSql.toUpperCase().includes("RETURNING")) {
+      const upperSql = pgSql.trim().toUpperCase();
+      const isInsert = upperSql.startsWith("INSERT");
+      const hasOnConflict = upperSql.includes("ON CONFLICT");
+      if (isInsert && !hasOnConflict && !upperSql.includes("RETURNING")) {
         pgSql += " RETURNING id";
       }
 
