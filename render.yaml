@@ -3,8 +3,8 @@ services:
     name: control-equipos
     runtime: node
     plan: free
-    buildCommand: cd frontend && pnpm install && pnpm run build
-    startCommand: cd backend && pnpm install --prod && pnpm start
+    buildCommand: cd backend && pnpm install --prod && cd ../frontend && pnpm install && pnpm run build
+    startCommand: cd backend && pnpm start
     healthCheckPath: /health
     envVars:
       - key: NODE_ENV
@@ -21,6 +21,8 @@ services:
         generateValue: true
       - key: ADMIN_PASSWORD
         generateValue: true
+      - key: NODE_OPTIONS
+        value: "--max-old-space-size=384"
 
 databases:
   - name: control-equipos-db
