@@ -6,7 +6,7 @@ const db = require("../db/database");
 exports.enviarMensaje = async (req, res, next) => {
     try {
         const { mensaje } = req.body;
-        const usuarioId = req.user?.userId || req.user?.id;
+        const usuarioId = req.user?.userId ?? req.user?.id;
         const remitente = req.user?.usuario || 'Usuario';
 
         if (!mensaje || mensaje.trim() === "") {

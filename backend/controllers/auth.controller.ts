@@ -66,9 +66,23 @@ const login = async (req, res, next) => {
 
         const count = await usuariosService.countUsuarios();
         if (ADMIN_PASSWORD && count === 0 && usuario === 'admin' && password === ADMIN_PASSWORD) {
-            const token = jwt.sign({ userId: 0, rol: "admin", usuario: 'admin', permisos: [] }, JWT_SECRET, { expiresIn: "24h" });
+            let adminId;
+            try {
+                const created = await usuariosService.createUsuario({
+                    usuario: 'admin',
+                    email: 'admin@control-equipos.local',
+                    password: ADMIN_PASSWORD,
+                    rol: 'ADMIN',
+                    permisos_json: []
+                });
+                adminId = created.id;
+            } catch (_) {
+                const existing = await usuariosService.findByUsuarioOrEmail('admin');
+                adminId = existing?.id || 1;
+            }
+            const token = jwt.sign({ userId: adminId, rol: "admin", usuario: 'admin', permisos: [] }, JWT_SECRET, { expiresIn: "24h" });
             setTokenCookie(res, token);
-            return res.json({ success: true, user: { id: 0, usuario: 'admin', rol: 'admin' }, initial: true });
+            return res.json({ success: true, user: { id: adminId, usuario: 'admin', rol: 'admin' }, initial: true });
         }
 
         return res.status(401).json({ error: "Credenciales incorrectas" });
