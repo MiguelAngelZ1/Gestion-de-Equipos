@@ -1,26 +1,16 @@
-# =============================================================================
-# render.yaml - Control de Equipos 3.0
-# Infraestructura como código para Render
-# =============================================================================
-
 services:
-  # Backend API + Frontend Static
   - type: web
     name: control-equipos
     runtime: node
     plan: free
-    buildCommand: |
-      cd frontend && pnpm install && pnpm run build
+    buildCommand: cd frontend && pnpm install && pnpm run build
     startCommand: cd backend && pnpm install --prod && pnpm start
     healthCheckPath: /health
-    healthCheckPolicy:
-      responseTimeoutSeconds: 60
-      gracefulShutdownTimeoutSeconds: 30
     envVars:
       - key: NODE_ENV
         value: production
       - key: PORT
-        value: 3000
+        value: "3000"
       - key: STATIC_PATH
         value: /opt/render/project/src/frontend/dist
       - key: DATABASE_URL
@@ -29,20 +19,8 @@ services:
           property: connectionString
       - key: JWT_SECRET
         generateValue: true
-        serverValue: false
       - key: ADMIN_PASSWORD
         generateValue: true
-        serverValue: false
-      - key: FRONTEND_URL
-        fromService:
-          name: control-equipos
-          type: web
-          property: url
-      - key: CORS_ORIGINS
-        fromService:
-          name: control-equipos
-          type: web
-          property: url
 
 databases:
   - name: control-equipos-db
