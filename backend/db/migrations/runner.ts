@@ -4,18 +4,38 @@ const logger = require("../../utils/logger");
 
 class MigrationRunner {
   async runPending(db) {
-    const run = (sql, params = []) => new Promise<void>((res, rej) => {
-      db.client.run(sql, params, (err) => err ? rej(err) : res());
-    });
-    const all = (sql, params = []) => new Promise<any[]>((res, rej) => {
-      db.client.all(sql, params, (err, rows) => err ? rej(err) : res(rows));
-    });
+    // Usar db.query() que ya maneja SQLite y PostgreSQL
+    const run = async (sql, params = []) => {
+      await db.query(sql, params);
+    };
+    const all = async (sql, params = []) => {
+      const result = await db.query(sql, params);
+      return result.rows;
+    };
 
-    await run(`CREATE TABLE IF NOT EXISTS _migrations (
-      version INTEGER PRIMARY KEY,
-      name TEXT NOT NULL,
-      applied_at TEXT DEFAULT (datetime('now'))
-    )`);
+    // Crear tabla de migraciones si no existe
+    // Usar sintaxis compatible con ambos motores
+    const isPG = !!db.client?.pool;
+    
+    if (isPG) {
+      // PostgreSQL
+      await run(`
+        CREATE TABLE IF NOT EXISTS _migrations (
+          version INTEGER PRIMARY KEY,
+          name TEXT NOT NULL,
+          applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+    } else {
+      // SQLite
+      await run(`
+        CREATE TABLE IF NOT EXISTS _migrations (
+          version INTEGER PRIMARY KEY,
+          name TEXT NOT NULL,
+          applied_at TEXT DEFAULT (datetime('now'))
+        )
+      `);
+    }
 
     const applied = await all("SELECT version FROM _migrations");
     const appliedSet = new Set(applied.map((r) => r.version));
@@ -30,7 +50,12 @@ class MigrationRunner {
     for (const migration of pending) {
       try {
         await migration.up(db, run, all);
-        await run("INSERT OR IGNORE INTO _migrations (version, name) VALUES (?, ?)", [migration.version, migration.name]);
+        // INSERT compatible con ambos motores
+        if (isPG) {
+          await run("INSERT INTO _migrations (version, name) VALUES ($1, $2) ON CONFLICT DO NOTHING", [migration.version, migration.name]);
+        } else {
+          await run("INSERT OR IGNORE INTO _migrations (version, name) VALUES (?, ?)", [migration.version, migration.name]);
+        }
         logger.info({ version: migration.version, name: migration.name }, "[Migrations] Aplicada");
       } catch (err) {
         logger.error({ err, version: migration.version, name: migration.name }, "[Migrations] Error aplicando migracion");

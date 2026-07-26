@@ -1,50 +1,62 @@
 # =============================================================================
-# Dockerfile - Control de Equipos 3.0
-# Multi-stage: frontend build (Vite) + backend serve (Express + SQLite)
+# Dockerfile Multi-Stage - Control de Equipos 3.0
+# Backend Express + Frontend React/Vite
 # =============================================================================
 
-# ---- Stage 1: Frontend build ----
-FROM node:22-alpine AS frontend-builder
+# ------------------- Stage 1: Build Frontend -------------------
+FROM node:22-slim AS frontend-builder
 
-WORKDIR /build
+WORKDIR /app/frontend
 
-COPY frontend/package.json frontend/package-lock.json* ./
-RUN npm ci
+RUN apt-get update && apt-get install -y \
+    python3 make g++ \
+    && rm -rf /var/lib/apt/lists/*
 
-COPY frontend/ .
-RUN npm run build
+COPY frontend/package.json frontend/pnpm-lock.yaml ./
 
-# ---- Stage 2: Backend production build ----
-FROM node:22-alpine AS backend-builder
+RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN pnpm install --frozen-lockfile
 
-WORKDIR /build
+COPY frontend/ ./
 
-COPY backend/package.json backend/package-lock.json* ./
-RUN npm ci
+RUN pnpm run build
 
-COPY backend/ .
-RUN npx tsc
+# ------------------- Stage 2: Production Runtime -------------------
+FROM node:22-slim AS production
 
-# ---- Stage 3: Backend production serve ----
-FROM node:22-alpine
+WORKDIR /app
 
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+RUN apt-get update && apt-get install -y \
+    curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && groupadd -r appuser && useradd -r -g appuser -m appuser
 
+# --- Backend ---
 WORKDIR /app/backend
 
-COPY backend/package.json backend/package-lock.json* ./
-RUN npm ci --omit=dev && npm cache clean --force
+COPY backend/package.json backend/pnpm-lock.yaml ./
 
-COPY --from=backend-builder /build/dist ./dist
-COPY --from=frontend-builder --chown=appuser:appgroup /build/dist /app/frontend/dist
+RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN pnpm install --frozen-lockfile --prod
 
-RUN mkdir -p /app/backend/backups && chown appuser:appgroup /app/backend/backups
+COPY backend/ ./
 
+# --- Frontend build ---
+RUN mkdir -p /app/frontend
+COPY --from=frontend-builder /app/frontend/dist /app/frontend/dist
+
+# --- Environment ---
+ENV NODE_ENV=production
+ENV PORT=3000
+ENV STATIC_PATH=/app/frontend/dist
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:3000/health || exit 1
+
+# Non-root
 USER appuser
 
 EXPOSE 3000
 
-HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1
-
-CMD ["node", "dist/server.js"]
+CMD ["pnpm", "start"]

@@ -73,12 +73,17 @@ app.use((req, res, next) => {
 
 const STATIC_PATH = process.env.STATIC_PATH || path.join(__dirname, "../frontend/dist");
 let cachedHtml = null;
-try {
-  cachedHtml = fs.readFileSync(path.join(STATIC_PATH, 'index.html'), 'utf-8');
-} catch (e) {
-  if (process.env.NODE_ENV !== 'test') {
-    logger.warn({ staticPath: STATIC_PATH }, "No se encontro index.html");
+const distExists = fs.existsSync(STATIC_PATH);
+if (distExists) {
+  try {
+    cachedHtml = fs.readFileSync(path.join(STATIC_PATH, 'index.html'), 'utf-8');
+  } catch (e) {
+    if (process.env.NODE_ENV !== 'test') {
+      logger.warn({ staticPath: STATIC_PATH }, "No se encontro index.html");
+    }
   }
+} else if (process.env.NODE_ENV !== 'test') {
+  logger.info("Modo API-only (frontend servido por Vite en puerto 5300)");
 }
 
 const injectNonces = (html, nonce) => html
@@ -153,22 +158,48 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(serveIndexWithNonce);
-app.use('/sw.js', (req, res, next) => {
-  res.removeHeader('Content-Security-Policy');
-  res.sendFile(path.join(STATIC_PATH, 'sw.js'));
-});
-app.use(express.static(STATIC_PATH, {
-  maxAge: IS_PROD ? '1y' : 0,
-  immutable: true,
-  setHeaders(res, filePath) {
-    if (filePath.endsWith('.html') || filePath.endsWith('.webmanifest')) {
-      res.setHeader('Cache-Control', 'no-cache');
+if (distExists) {
+  app.use(serveIndexWithNonce);
+  app.use('/sw.js', (req, res, next) => {
+    res.removeHeader('Content-Security-Policy');
+    res.sendFile(path.join(STATIC_PATH, 'sw.js'));
+  });
+  app.use(express.static(STATIC_PATH, {
+    maxAge: IS_PROD ? '1y' : 0,
+    immutable: true,
+    setHeaders(res, filePath) {
+      if (filePath.endsWith('.html') || filePath.endsWith('.webmanifest')) {
+        res.setHeader('Cache-Control', 'no-cache');
+      }
     }
-  }
-}));
+  }));
+}
 
 app.use('/api', apiLimiter);
+
+// Health check endpoint para Render
+app.get('/health', async (req, res) => {
+  try {
+    // Verificar conexión a base de datos
+    if (db.connected) {
+      await db.query('SELECT 1');
+    }
+    res.status(200).json({
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      database: db.connected ? 'connected' : 'disconnected',
+      environment: process.env.NODE_ENV || 'development'
+    });
+  } catch (error) {
+    logger.error({ err: error }, 'Health check failed');
+    res.status(503).json({
+      status: 'error',
+      message: 'Service unavailable',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
 
 const dashboardController = require('./controllers/dashboard.controller');
 app.use('/api/auth', authRoutes);
@@ -187,24 +218,15 @@ app.use('/api/prestamos', prestamosRoutes);
 app.use('/api/ipam', ipamRoutes);
 app.use('/api', exportRoutes);
 
-app.get("/health", (req, res) => {
-  const dbEngine = process.env.DATABASE_URL ? "PostgreSQL (Supabase)" : "SQLite (Local)";
-  res.json({
-    status: db.connected ? "ok" : "degraded",
-    timestamp: new Date().toISOString(),
-    database: dbEngine,
-    db_connected: db.connected,
-    uptime: process.uptime(),
+if (distExists) {
+  app.get("*", (req, res, next) => {
+    if (req.url.startsWith('/api')) return next();
+    if (!cachedHtml) {
+      try { cachedHtml = fs.readFileSync(path.join(STATIC_PATH, 'index.html'), 'utf-8'); } catch (e) { return res.sendFile(path.join(STATIC_PATH, "index.html")); }
+    }
+    res.send(injectNonces(cachedHtml, res.locals.nonce));
   });
-});
-
-app.get("*", (req, res, next) => {
-  if (req.url.startsWith('/api')) return next();
-  if (!cachedHtml) {
-    try { cachedHtml = fs.readFileSync(path.join(STATIC_PATH, 'index.html'), 'utf-8'); } catch (e) { return res.sendFile(path.join(STATIC_PATH, "index.html")); }
-  }
-  res.send(injectNonces(cachedHtml, res.locals.nonce));
-});
+}
 
 app.use(errorHandler);
 

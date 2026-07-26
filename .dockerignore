@@ -1,13 +1,74 @@
+# =============================================================================
+# .dockerignore - Control de Equipos 3.0
+# Excluir archivos innecesarios del build de Docker
+# =============================================================================
+
+# Dependencias
 node_modules
-.git
-.gitignore
-.env
+.pnpm-store
+
+# Build outputs
 dist
+build
+.next
+.nuxt
+
+# Archivos de desarrollo
+*.log
+*.pid
+*.seed
+*.pid.lock
+coverage
+.nyc_output
+
+# Archivos de entorno (sensibles)
+.env
+.env.local
+.env.*.local
+google-credentials.json
+
+# Archivos de base de datos
 *.db
+*.db-journal
 *.db-wal
 *.db-shm
-backups
-nul
-iniciar_local.bat
-README.md
+
+# Archivos temporales
 tmp
+temp
+*.tmp
+*.bak
+*.swp
+*.swo
+*~
+
+# IDEs
+.vscode
+.idea
+*.sublime-project
+*.sublime-workspace
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Documentación
+*.md
+LICENSE
+
+# Scripts de inicio (no necesarios en Docker)
+*.bat
+*.sh
+
+# Docker
+Dockerfile
+docker-compose*.yml
+.dockerignore
+
+# Render
+render.yaml
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db

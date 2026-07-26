@@ -6,7 +6,6 @@ const { Server } = require("socket.io");
 const jwt = require('jsonwebtoken');
 const { JWT_SECRET } = require('./middleware/auth.middleware');
 const notificationService = require('./services/notificationService');
-const { initBot, stopBot } = require('./telegram-bot/index');
 
 function getCookieValue(cookieHeader, name) {
   if (!cookieHeader) return null;
@@ -46,16 +45,24 @@ process.on('SIGINT', shutdown);
 
 async function shutdown() {
   logger.info('Apagando servidor gracefulmente...');
-  stopBot();
   server.close(async () => {
     try {
       if (db.client) {
-        await new Promise<void>((resolve, reject) => {
-          db.client.close((err: any) => err ? reject(err) : resolve());
-        });
+        // PostgreSQL: cerrar pool
+        if (db.client.pool) {
+          await db.client.pool.end();
+          logger.info('Pool PostgreSQL cerrado');
+        }
+        // SQLite: cerrar conexion
+        else if (typeof db.client.close === 'function') {
+          await new Promise<void>((resolve, reject) => {
+            db.client.close((err: any) => err ? reject(err) : resolve());
+          });
+          logger.info('SQLite cerrado');
+        }
       }
     } catch (e) {
-      logger.error({ err: e.message }, 'Error cerrando DB');
+      logger.error({ err: e?.message || e }, 'Error cerrando DB');
     }
     process.exit(0);
   });
@@ -80,7 +87,6 @@ server.listen(PORT, async () => {
     notificationService.checkLowStock();
   }, notificationInterval);
 
-  initBot();
 });
 
 server.on("error", (error) => {

@@ -1,0 +1,72 @@
+# =============================================================================
+# render.yaml - Control de Equipos 3.0
+# Infraestructura como código para Render
+# =============================================================================
+
+services:
+  # Backend API + Frontend Static
+  - type: web
+    name: control-equipos
+    runtime: node
+    plan: starter
+    buildCommand: |
+      cd frontend && pnpm install && pnpm run build
+    startCommand: cd backend && pnpm install --prod && pnpm start
+    healthCheckPath: /health
+    healthCheckPolicy:
+      responseTimeoutSeconds: 60
+      gracefulShutdownTimeoutSeconds: 30
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: STATIC_PATH
+        value: /opt/render/project/src/frontend/dist
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+        serverValue: false
+      - key: ADMIN_PASSWORD
+        generateValue: true
+        serverValue: false
+      - key: FRONTEND_URL
+        fromService:
+          name: control-equipos
+          type: web
+          property: url
+      - key: CORS_ORIGINS
+        fromService:
+          name: control-equipos
+          type: web
+          property: url
+    disk:
+      mountPath: /opt/render/project/data
+      sizeGB: 1
+
+  # Cron job para backups (opcional)
+  - type: cron
+    name: control-equipos-backup
+    schedule: "0 2 * * *"  # 2 AM diario
+    runtime: node
+    buildCommand: cd backend && pnpm install --prod
+    startCommand: cd backend && node -e "const db = require('./db/database'); const backup = require('./services/backupService'); backup.createBackup().then(() => process.exit(0)).catch(e => { console.error(e); process.exit(1); });"
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_REFRESH_TOKEN
+        sync: false
+
+# Configuración de dominio personalizado (opcional)
+# databases:
+#   - name: control-equipos-db
+#     plan: starter
+#     databaseName: control_equipos
+#     user: control_equipos_user

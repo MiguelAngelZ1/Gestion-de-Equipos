@@ -99,11 +99,6 @@ class ConfigService {
         try {
             const dbPaths = [
               path.resolve(process.cwd(), 'backend/equipos.db'),
-              path.resolve(process.cwd(), 'backend/equipos.db'),
-              path.resolve(process.cwd(), 'backend/prisma/equipos.db'),
-              path.resolve(process.cwd(), 'prisma/equipos.db'),
-              path.resolve(__dirname, '../prisma/equipos.db'),
-              path.resolve(__dirname, '../../backend/prisma/equipos.db')
             ];
             
             for (const p of dbPaths) {
