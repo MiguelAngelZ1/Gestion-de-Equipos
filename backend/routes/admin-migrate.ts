@@ -1,13 +1,14 @@
-import { Router, Request, Response } from 'express';
-import { verificarAutenticacion } from '../middleware/auth.middleware';
-import { requirePermission } from '../middleware/rbac.middleware';
-import db from '../db/database';
+const { Router } = require('express');
+const { verificarAutenticacion, requirePermission } = require('../middleware/auth.middleware');
+const db = require('../db/database');
 
 const router = Router();
-
 const MIGRATION_DATA = require('./migration-data.json');
 
-router.post('/migrate-data', verificarAutenticacion, requirePermission('admin:config'), async (req: Request, res: Response) => {
+router.post('/migrate-data', verificarAutenticacion, async (req: any, res: Response) => {
+  if (req.user?.rol !== 'admin' && req.user?.rol !== 'ADMIN') {
+    return res.status(403).json({ error: 'Solo admin' });
+  }
   const isPG = !!(db as any).client?.pool;
   if (!isPG) return res.status(400).json({ error: 'Solo aplica a PostgreSQL' });
 
