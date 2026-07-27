@@ -61,4 +61,73 @@ router.post('/migrate-data', verificarAutenticacion, async (req: any, res: Respo
   }
 });
 
+router.post('/migrate-fix', verificarAutenticacion, async (req: any, res: Response) => {
+  if (req.user?.rol !== 'admin' && req.user?.rol !== 'ADMIN') {
+    return res.status(403).json({ error: 'Solo admin' });
+  }
+  const results: string[] = [];
+  const errors: string[] = [];
+
+  function esc(v: any): string {
+    if (v === null || v === undefined) return 'NULL';
+    if (typeof v === 'number') return String(v);
+    if (typeof v === 'boolean') return v ? '1' : '0';
+    if (typeof v === 'string') return "'" + v.replace(/'/g, "''") + "'";
+    return "'" + String(v).replace(/'/g, "''") + "'";
+  }
+
+  try {
+    // 1. Add missing columns
+    const alters = [
+      'ALTER TABLE responsables ADD COLUMN IF NOT EXISTS dni TEXT',
+      'ALTER TABLE responsables ADD COLUMN IF NOT EXISTS telefono TEXT',
+      'ALTER TABLE responsables ADD COLUMN IF NOT EXISTS email TEXT',
+      'ALTER TABLE componentes_instalados ADD COLUMN IF NOT EXISTS repuesto_id INTEGER',
+      'ALTER TABLE componentes_instalados ADD COLUMN IF NOT EXISTS ine TEXT',
+      'ALTER TABLE componentes_instalados ADD COLUMN IF NOT EXISTS nne TEXT',
+      'ALTER TABLE componentes_instalados ADD COLUMN IF NOT EXISTS serie TEXT',
+      'ALTER TABLE componentes_instalados ADD COLUMN IF NOT EXISTS especificacion_id INTEGER',
+    ];
+    for (const sql of alters) {
+      try {
+        await db.query(sql);
+        results.push(`ALTER OK: ${sql.split(' ')[5]}`);
+      } catch (e: any) {
+        errors.push(`ALTER: ${e.message}`);
+      }
+    }
+
+    // 2. Re-insert responsables
+    const BATCH_SIZE = 50;
+    const resp = MIGRATION_DATA.responsables || [];
+    for (let i = 0; i < resp.length; i += BATCH_SIZE) {
+      const batch = resp.slice(i, i + BATCH_SIZE);
+      const values = batch.map(r => `(${esc(r.id)},${esc(r.grado)},${esc(r.grado_id)},${esc(r.nombre)},${esc(r.apellido)},${esc(r.dni)},${esc(r.telefono)},${esc(r.email)},${esc(r.activo)})`).join(',');
+      try {
+        await db.query(`INSERT INTO responsables (id,grado,grado_id,nombre,apellido,dni,telefono,email,activo) VALUES ${values} ON CONFLICT DO NOTHING`);
+        results.push(`responsables batch OK (${batch.length} rows)`);
+      } catch (e: any) {
+        errors.push(`responsables: ${e.message}`);
+      }
+    }
+
+    // 3. Re-insert componentes_instalados
+    const comp = MIGRATION_DATA.componentes_instalados || [];
+    for (let i = 0; i < comp.length; i += BATCH_SIZE) {
+      const batch = comp.slice(i, i + BATCH_SIZE);
+      const values = batch.map(r => `(${esc(r.id)},${esc(r.equipo_id)},${esc(r.repuesto_id)},${esc(r.nombre)},${esc(r.ine)},${esc(r.nne)},${esc(r.serie)},${esc(r.fecha_instalacion)},${esc(r.especificacion_id)})`).join(',');
+      try {
+        await db.query(`INSERT INTO componentes_instalados (id,equipo_id,repuesto_id,nombre,ine,nne,serie,fecha_instalacion,especificacion_id) VALUES ${values} ON CONFLICT DO NOTHING`);
+        results.push(`componentes_instalados batch OK (${batch.length} rows)`);
+      } catch (e: any) {
+        errors.push(`componentes_instalados: ${e.message}`);
+      }
+    }
+
+    res.json({ success: true, results, errors });
+  } catch (e: any) {
+    res.status(500).json({ error: e.message, results, errors });
+  }
+});
+
 module.exports = router;
