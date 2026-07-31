@@ -47,7 +47,7 @@
     <title>CONTROL DE EQUIPOS | IMPERIO</title>
     <style>
       :root {
-        --app-bg: #0b1120;
+        --app-bg: #000000;
       }
       * { box-sizing: border-box; }
       html, body {
@@ -65,158 +65,19 @@
         display: block;
         position: relative;
       }
-
-      /* Splash Screen Styles */
-      .splash-screen {
-        position: fixed;
-        inset: 0;
-        background-color: var(--app-bg);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        z-index: 9999;
-        color: white;
-        pointer-events: none;
-      }
-
-      .splash-logo-container {
-        position: relative;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 156px;
-        height: 156px;
-        background-color: white;
-        border-radius: 50%;
-        margin-bottom: 2rem;
-        box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-      }
-
-      .splash-logo {
-        width: 124px;
-        height: 124px;
-        object-fit: contain;
-        position: relative;
-        z-index: 2;
-      }
-
-      .splash-glow {
-        position: absolute;
-        width: 180px;
-        height: 180px;
-        background: radial-gradient(circle, rgba(79, 70, 229, 0.3) 0%, transparent 70%);
-        border-radius: 50%;
-        opacity: 0;
-        transition: opacity 1s ease-in-out;
-      }
-
-      .premium-active .splash-glow {
-        opacity: 1;
-        animation: glowPulse 2.5s ease-in-out infinite;
-      }
-
-      .splash-footer {
-        position: absolute;
-        bottom: 3.5rem;
-        text-align: center;
-        width: 100%;
-        padding: 0 2rem;
-        opacity: 0;
-        transform: translateY(10px);
-        transition: all 1s ease-out;
-      }
-
-      .premium-active .splash-footer {
-        opacity: 1;
-        transform: translateY(0);
-      }
-
-      .splash-title {
-        font-weight: 800;
-        font-size: 16px;
-        letter-spacing: 0.25em;
-        text-transform: uppercase;
-        color: #ffffff;
-        margin-bottom: 0.6rem;
-      }
-
-      .splash-subtitle {
-        font-weight: 600;
-        font-size: 10px;
-        letter-spacing: 0.2em;
-        text-transform: uppercase;
-        color: #818cf8;
-      }
-
-      @keyframes glowPulse {
-        0%, 100% { transform: scale(1); opacity: 0.3; }
-        50% { transform: scale(1.4); opacity: 0.6; }
-      }
-
-      .fade-out {
-        opacity: 0 !important;
-        transition: opacity 0.4s ease-out !important;
-      }
-
-      #root:not(:empty) + .splash-screen { display: none; }
     </style>
   </head>
   <body>
-    <!-- 
-      Script de Limpieza Radical de Cache y Service Workers
-      Este script elimina cualquier registro previo que pueda estar causando 
-      que Edge mobile use una pantalla vieja o bloquee el scroll.
-    -->
     <script>
-      // Registro del Service Worker para Notificaciones PWA
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js').then(reg => {
-            // SW registrado
-          }).catch(err => {
-            console.error('Error al registrar SW:', err);
-          });
+          navigator.serviceWorker.register('/sw.js').catch(() => {});
         });
       }
     </script>
 
     <div id="root"></div>
-    
-    <div class="splash-screen" id="app-splash">
-      <div class="splash-logo-container">
-        <div class="splash-glow"></div>
-        <img src="/icon-192x192.png" alt="Logotipo Institucional IMPERIO" class="splash-logo">
-      </div>
-      <div class="splash-footer">
-        <div class="splash-title">CONTROL DE EQUIPOS</div>
-        <div class="splash-subtitle">SISTEMA DE GESTIÓN | IMPERIO</div>
-      </div>
-    </div>
 
     <script type="module" src="/src/main.tsx"></script>
-    <script>
-      // Activar efectos premium tras un breve delay sincronizado
-      setTimeout(() => {
-        const splash = document.getElementById('app-splash');
-        if(splash) splash.classList.add('premium-active');
-      }, 100);
-
-      const observer = new MutationObserver((mutations) => {
-        if (document.getElementById('root').children.length > 0) {
-          const splash = document.getElementById('app-splash');
-          if (splash) {
-            setTimeout(() => {
-              splash.classList.add('fade-out');
-              setTimeout(() => {
-                splash.remove();
-              }, 400);
-            }, 1000);
-            observer.disconnect();
-          }
-        }
-      });
-      observer.observe(document.getElementById('root'), { childList: true });
-    </script>
   </body>
 </html>

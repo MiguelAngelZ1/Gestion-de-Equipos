@@ -93,7 +93,7 @@ const Equipos = () => {
   // Estados para Préstamos
   const [isLoanModalOpen, setIsLoanModalOpen] = useState(false);
   const [equipoForLoan, setEquipoForLoan] = useState(null);
-  const fetchedOnce = useRef(false);
+  const [fetchedOnce, setFetchedOnce] = useState(false);
 
   const userData = JSON.parse(localStorage.getItem("equipos_user_data") || "{}");
   const userRole = (userData.rol || ROLES.USER).toUpperCase();
@@ -144,14 +144,14 @@ const Equipos = () => {
       showToast("Error", "No se pudieron cargar los datos del inventario.", "error");
     } finally {
       setLoading(false);
-      fetchedOnce.current = true;
+      setFetchedOnce(true);
     }
   };
 
   useEffect(() => { fetchConfig(); }, []);
 
   useEffect(() => {
-    if (!search && !fetchedOnce.current) return;
+    if (!search && !fetchedOnce) return;
     if (searchDebounce.current) clearTimeout(searchDebounce.current);
     searchDebounce.current = setTimeout(() => {
       fetchData(search, filterEstado, filterUbicacion, filterGrupo, 1);
@@ -163,7 +163,7 @@ const Equipos = () => {
 
   useEffect(() => {
     const hasActiveFilters = filterEstado !== "TODOS" || filterUbicacion !== "TODAS" || filterGrupo !== "TODOS";
-    if (!hasActiveFilters && !fetchedOnce.current) return;
+    if (!hasActiveFilters && !fetchedOnce) return;
     fetchData(search, filterEstado, filterUbicacion, filterGrupo, 1);
   }, [filterEstado, filterUbicacion, filterGrupo]);
 
@@ -319,7 +319,7 @@ const Equipos = () => {
 
       {/* Content area */}
       <div>
-        {!fetchedOnce.current ? (
+        {!fetchedOnce ? (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

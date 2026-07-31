@@ -1,22 +1,15 @@
 import React, { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { ThemeProvider } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
 import { ToastProvider } from './context/ToastContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ROLES } from './config/constants';
-
-const Spinner = () => (
-  <div className="w-12 h-12 border-[3px] border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin relative z-10" />
-);
+import theme from './theme';
 
 const PageLoader = () => (
-  <div className="min-h-screen bg-[#0f1523] flex flex-col items-center justify-center animate-in fade-in duration-500">
-    <div className="relative flex flex-col items-center">
-      <div className="absolute inset-0 bg-indigo-500/20 blur-[80px] rounded-full" />
-      <Spinner />
-      <p className="text-white font-black uppercase tracking-[0.4em] text-[10px] mt-6 relative z-10 opacity-50">
-        Iniciando Módulo
-      </p>
-    </div>
+  <div className="min-h-screen bg-black flex items-center justify-center">
+    <div className="w-10 h-10 border-[3px] border-white/10 border-t-cyan-400 rounded-full animate-spin" />
   </div>
 );
 
@@ -116,13 +109,16 @@ function AppContent() {
 
 function App() {
   return (
-    <ToastProvider>
-      <AuthProvider>
-        <BrowserRouter>
-          <AppContent />
-        </BrowserRouter>
-      </AuthProvider>
-    </ToastProvider>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <ToastProvider>
+        <AuthProvider>
+          <BrowserRouter>
+            <AppContent />
+          </BrowserRouter>
+        </AuthProvider>
+      </ToastProvider>
+    </ThemeProvider>
   );
 }
 
