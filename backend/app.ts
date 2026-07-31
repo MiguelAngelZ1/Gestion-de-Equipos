@@ -37,6 +37,8 @@ const notificationService = require('./services/notificationService');
 
 const app = express();
 
+app.set('trust proxy', 1);
+
 app.use(pinoHttp({
   logger,
   autoLogging: {
