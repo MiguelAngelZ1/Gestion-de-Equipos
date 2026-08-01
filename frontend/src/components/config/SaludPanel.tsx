@@ -28,8 +28,8 @@ const SaludPanel = () => {
             ]);
             setStats(statsData);
             setTrash(trashData);
-        } catch (error) {
-            console.error("Error fetching health data:", error);
+        } catch {
+            // silent
         } finally {
             setLoading(false);
         }
@@ -114,7 +114,6 @@ const SaludPanel = () => {
             <div className="flex flex-col gap-6">
                 {/* Database Glow Card */}
                 <div className="relative group overflow-hidden sm:bg-white/[0.03] sm:border border-white/10 rounded-2xl sm:rounded-[2.5rem] p-0 sm:p-7 transition-all hover:border-indigo-500/30 w-full shadow-2xl">
-                    <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/5 rounded-full blur-[120px] -mr-48 -mt-48 pointer-events-none group-hover:bg-indigo-500/10 transition-all duration-700"></div>
                     
                     <div className="relative flex flex-col gap-7">
                         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
@@ -182,7 +181,6 @@ const SaludPanel = () => {
                      onClick={() => setIsOptimizeOpen(true)}>
                     
                     {/* Accent Glows handled by the parent now, adding extra internal depth */}
-                    <div className="absolute -top-20 -right-20 w-64 h-64 bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none group-hover:bg-indigo-500/20 transition-all duration-700" />
                     <div className="absolute right-0 top-0 bottom-0 w-1/4 bg-gradient-to-l from-indigo-500/5 to-transparent pointer-events-none" />
                     
                     <div className="p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 md:gap-12 relative z-10">

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { 
   Home, 
@@ -13,11 +13,13 @@ import {
   Package,
   MessageSquarePlus,
   Calendar,
-  Globe
+  Globe,
+  MoreHorizontal,
+  LayoutDashboard,
+  Shield
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { removeAuthToken, apiRequest } from '../services/api';
-// Usamos el logo proporcionado por el usuario
 import logoImage from '../assets/LogoIMPERIO.webp';
 import { notificationManager } from '../services/notificationManager';
 import NotificationBell from '../components/common/NotificationBell';
@@ -65,8 +67,8 @@ const MainLayout = () => {
                 deviceInfo: navigator.userAgent
               }
             });
-          } catch (error) {
-            console.error('❌ Error configurando Push:', error);
+          } catch {
+              // silent
           }
         }
       }
@@ -120,33 +122,38 @@ const MainLayout = () => {
 
   const navItems = allNavItems.filter(item => item.roles.includes(userRole));
 
+  // Bottom nav: max 5 items. Items beyond 5 go into "Más" menu
+  const MAX_BOTTOM_NAV = 5;
+  const bottomNavPrimary = navItems.slice(0, MAX_BOTTOM_NAV);
+  const bottomNavExtra = navItems.slice(MAX_BOTTOM_NAV);
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const moreMenuRef = useRef<HTMLDivElement>(null);
+
+  // Close more menu on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (moreMenuRef.current && !moreMenuRef.current.contains(e.target as Node)) {
+        setShowMoreMenu(false);
+      }
+    };
+    if (showMoreMenu) document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showMoreMenu]);
+
   return (
     <div className="h-screen overflow-hidden bg-[#0f1523] flex flex-col md:flex-row font-sans">
-      {/* Mobile Header */}
+      {/* Mobile Header — minimal */}
       <motion.header 
         role="banner"
         initial={{ y: -50 }}
         animate={{ y: 0 }}
-        className="md:hidden bg-[#1e293b]/80 backdrop-blur-xl border-b border-white/10 p-4 flex items-center justify-between sticky top-0 z-50"
+        className="md:hidden bg-[#1e293b]/90 backdrop-blur-xl border-b border-white/10 px-4 py-2.5 flex items-center justify-between sticky top-0 z-50"
       >
-        <div className="flex items-center gap-3 py-1">
-           <img src={logoImage} alt="Logo IMPERIO" className="h-10 w-10 object-contain drop-shadow-sm" />
-           <div className="flex flex-col">
-              <h1 className="text-white font-black text-lg leading-tight tracking-tight">{pageInfo.title}</h1>
-              <p className="text-slate-400 text-[10px] font-medium leading-[1.2]">{pageInfo.subtitle}</p>
-           </div>
-        </div>
         <div className="flex items-center gap-2">
-           {userRole === ROLES.ADMIN && <NotificationBell />}
-           <motion.button 
-              whileTap={{ scale: 0.9 }}
-              onClick={handleLogout}
-              aria-label="Cerrar sesión"
-              className="text-slate-400 hover:text-rose-400 bg-transparent border-0 p-2.5 rounded-full transition-all cursor-pointer"
-           >
-              <LogOut className="w-6 h-6"/>
-           </motion.button>
+           <img src={logoImage} alt="Logo IMPERIO" className="h-7 w-7 object-contain" />
+           <h1 className="text-white font-bold text-sm tracking-tight">{pageInfo.title}</h1>
         </div>
+        {userRole === ROLES.ADMIN && <NotificationBell />}
       </motion.header>
 
       {/* Sidebar Desktop */}
@@ -240,57 +247,111 @@ const MainLayout = () => {
             initial={{ opacity: 0, y: 15, filter: 'blur(4px)' }}
             animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
             exit={{ opacity: 0, y: -15, filter: 'blur(4px)' }}
-            className="flex-1 overflow-y-auto custom-scrollbar p-4 md:p-8 md:pt-4 pb-24 md:pb-10 max-w-[1400px] mx-auto w-full"
+            className="flex-1 overflow-y-auto custom-scrollbar p-4 md:p-8 md:pt-4 pb-20 md:pb-10 max-w-[1400px] mx-auto w-full"
           >
             <Outlet />
           </motion.div>
         </AnimatePresence>
       </main>
 
-      {/* Bottom Navigation Mobile */}
+      {/* Bottom Navigation Mobile — max 5 items + More */}
       <nav 
         role="navigation"
         aria-label="Navegación móvil inferior"
-        className="md:hidden fixed bottom-0 left-0 right-0 bg-[#1e293b]/90 backdrop-blur-xl border-t border-white/10 flex justify-around items-center h-[4.5rem] z-30 pb-safe shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
+        className="md:hidden fixed bottom-0 left-0 right-0 bg-[#1e293b]/95 backdrop-blur-xl border-t border-white/10 flex justify-around items-center h-16 z-30 pb-safe shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
       >
-        {navItems.map((item) => (
+        {bottomNavPrimary.map((item) => (
           <NavLink
             key={item.name}
             to={item.path}
             aria-label={item.name}
-            className="relative flex flex-col items-center justify-center w-full h-full cursor-pointer"
+            className="relative flex flex-col items-center justify-center flex-1 h-full cursor-pointer"
           >
             {({ isActive }) => (
               <>
                 <motion.div
                   animate={{ 
-                    y: isActive ? -8 : 0, 
+                    y: isActive ? -6 : 0, 
                     color: isActive ? '#818cf8' : '#94a3b8' 
                   }}
                   className="flex flex-col items-center"
                 >
-                  <item.icon className={`w-6 h-6 ${isActive ? 'stroke-[2.5px]' : 'stroke-2'}`} aria-hidden="true" />
+                  <item.icon className={`w-5 h-5 ${isActive ? 'stroke-[2.5px]' : 'stroke-[1.8px]'}`} aria-hidden="true" />
                 </motion.div>
                 
                 <span 
                   translate="no"
-                  className={`absolute bottom-3 text-[9px] font-semibold tracking-wide transition-all duration-300 pointer-events-none max-w-full truncate text-center px-0.5 ${
-                    isActive ? 'opacity-100 translate-y-0 text-indigo-400' : 'opacity-0 translate-y-2 text-slate-400'
+                  className={`absolute bottom-1.5 text-[8px] font-bold tracking-wide transition-all duration-300 pointer-events-none max-w-full truncate text-center px-0.5 ${
+                    isActive ? 'opacity-100 translate-y-0 text-indigo-400' : 'opacity-0 translate-y-1 text-slate-400'
                   }`}
                 >
-                  {item.name === 'Configuración' ? 'Config' : item.name}
+                  {item.name === 'Configuración' ? 'Config' : item.name.length > 8 ? item.name.slice(0, 7) + '…' : item.name}
                 </span>
 
                 {isActive && (
                   <motion.div 
                     layoutId="bottomNavIndicator"
-                    className="absolute top-0 w-12 h-1 bg-indigo-500 rounded-b-full shadow-[0_0_10px_rgba(99,102,241,0.5)]"
+                    className="absolute top-0 w-8 h-[3px] bg-indigo-500 rounded-b-full shadow-[0_0_8px_rgba(99,102,241,0.5)]"
                   />
                 )}
               </>
             )}
           </NavLink>
         ))}
+
+        {/* More menu button */}
+        {bottomNavExtra.length > 0 && (
+          <div className="relative flex-1 h-full flex items-center justify-center" ref={moreMenuRef}>
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              onClick={() => setShowMoreMenu(!showMoreMenu)}
+              className="relative flex flex-col items-center justify-center w-full h-full cursor-pointer bg-transparent border-0 text-slate-400 hover:text-white transition-colors"
+              aria-label="Más opciones"
+              aria-expanded={showMoreMenu}
+            >
+              <MoreHorizontal className="w-5 h-5 stroke-[1.8px]" />
+              <span className="absolute bottom-1.5 text-[8px] font-bold tracking-wide">Más</span>
+              {/* Highlight if any extra item is active */}
+              {bottomNavExtra.some(item => location.pathname === item.path) && (
+                <motion.div 
+                  layoutId="bottomNavIndicator"
+                  className="absolute top-0 w-8 h-[3px] bg-indigo-500 rounded-b-full shadow-[0_0_8px_rgba(99,102,241,0.5)]"
+                />
+              )}
+            </motion.button>
+
+            {/* Popup menu */}
+            <AnimatePresence>
+              {showMoreMenu && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute bottom-full mb-2 right-0 bg-[#1e293b] border border-white/10 rounded-2xl shadow-2xl overflow-hidden min-w-[180px] z-50"
+                >
+                  {bottomNavExtra.map((item) => (
+                    <NavLink
+                      key={item.name}
+                      to={item.path}
+                      onClick={() => setShowMoreMenu(false)}
+                      className={({ isActive }) =>
+                        `flex items-center gap-3 px-4 py-3 transition-all cursor-pointer ${
+                          isActive 
+                            ? 'bg-indigo-500/15 text-indigo-400' 
+                            : 'text-slate-300 hover:bg-white/5 hover:text-white'
+                        }`
+                      }
+                    >
+                      <item.icon className="w-4 h-4 shrink-0" aria-hidden="true" />
+                      <span className="text-sm font-semibold">{item.name}</span>
+                    </NavLink>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        )}
       </nav>
     </div>
   );

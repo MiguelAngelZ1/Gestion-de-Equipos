@@ -21,8 +21,8 @@ const NotificationBell = () => {
             const data = await apiRequest('/notificaciones');
             setNotifications(data || []);
             setUnreadCount((data || []).filter(n => !n.leido).length);
-        } catch (error) {
-            console.error("Error al cargar notificaciones:", error);
+        } catch {
+            // silent
         }
     };
 
@@ -41,8 +41,8 @@ const NotificationBell = () => {
                     localStorage.setItem("equipos_user_data", JSON.stringify(userData));
                 }
                 return extractedId;
-            } catch (e) {
-                console.error("Error decodificando token:", e);
+            } catch {
+                // silent
             }
         }
         return null;
@@ -96,8 +96,8 @@ const NotificationBell = () => {
             await apiRequest(`/notificaciones/${id}/read`, { method: 'PATCH' });
             setNotifications(prev => prev.map(n => n.id === id ? { ...n, leido: 1 } : n));
             setUnreadCount(prev => Math.max(0, prev - 1));
-        } catch (error) {
-            console.error("Error al marcar como leída:", error);
+        } catch {
+            // silent
         }
     };
 
@@ -106,8 +106,8 @@ const NotificationBell = () => {
             await apiRequest('/notificaciones/all/read', { method: 'PATCH' });
             setNotifications(prev => prev.map(n => ({ ...n, leido: 1 })));
             setUnreadCount(0);
-        } catch (error) {
-            console.error("Error al marcar todas como leídas:", error);
+        } catch {
+            // silent
         }
     };
 
@@ -115,8 +115,8 @@ const NotificationBell = () => {
         try {
             await apiRequest('/notificaciones/read/clear', { method: 'DELETE' });
             setNotifications(prev => prev.filter(n => !n.leido));
-        } catch (error) {
-            console.error("Error al limpiar notificaciones leídas:", error);
+        } catch {
+            // silent
         }
     };
 

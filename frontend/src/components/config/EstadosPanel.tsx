@@ -21,8 +21,8 @@ const EstadosPanel = () => {
             setLoading(true);
             const data = await apiRequest('/config/estados');
             setEstados(data);
-        } catch (error) {
-            console.error("Error fetching estados:", error);
+        } catch {
+            // silent
         } finally {
             setLoading(false);
         }
@@ -52,8 +52,8 @@ const EstadosPanel = () => {
             setFormData({ nombre: '', color_hex: '#10b981' });
             setEditingNode(null);
             fetchEstados();
-        } catch (error) {
-            console.error("Error saving estado:", error);
+        } catch {
+            // silent
         } finally {
             setIsSaving(false);
         }
@@ -80,8 +80,8 @@ const EstadosPanel = () => {
             setIsDeleteOpen(false);
             setItemToDelete(null);
             fetchEstados(); // Sincronizar
-        } catch (error) {
-            console.error("Error deleting estado:", error);
+        } catch {
+            // silent
         }
     };
 
@@ -208,7 +208,7 @@ const EstadosPanel = () => {
                                             />
                                             <span className="text-sm font-bold text-white tracking-widest uppercase break-words leading-tight flex-1 whitespace-normal">{estado.nombre}</span>
                                         </div>
-                                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                                        <div className="flex items-center gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shrink-0">
                                             <button 
                                                 onClick={() => { 
                                                     setEditingNode(estado); 

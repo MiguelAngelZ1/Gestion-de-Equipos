@@ -1,6 +1,5 @@
 const logger = require('../utils/logger');
 const db = require('../db/database');
-const IS_DELETED_VAL_SQL = 0; // Para SQL local usaremos 0
 
 class DashboardService {
     async getDashboardSummary() {

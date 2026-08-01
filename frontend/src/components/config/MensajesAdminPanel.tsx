@@ -30,7 +30,6 @@ const MensajesAdminPanel = () => {
            showToast('Error', 'Equipo no encontrado en la base de datos.', 'error');
         }
       } catch (err) {
-        console.error(err);
         showToast('Error', 'Error al cargar detalles del equipo.', 'error');
       } finally {
         setLoadingEquipo(false);
@@ -45,7 +44,6 @@ const MensajesAdminPanel = () => {
       setMensajes(data || []);
       setError(null);
     } catch (err) {
-      console.error("Error cargando mensajes:", err);
       setError("No se pudieron cargar los mensajes.");
     } finally {
       setLoading(false);
@@ -62,8 +60,8 @@ const MensajesAdminPanel = () => {
         method: 'PUT'
       });
       setMensajes(prev => prev.map(m => m.id === id ? { ...m, leido: 1 } : m));
-    } catch (err) {
-      console.error("Error al marcar como leído:", err);
+    } catch {
+      // silent
     }
   };
 
@@ -71,8 +69,8 @@ const MensajesAdminPanel = () => {
     try {
       await apiRequest('/usuarios/mensajes-admin/leido/todos', { method: 'PUT' });
       setMensajes(prev => prev.map(m => ({ ...m, leido: 1 })));
-    } catch (err) {
-      console.error("Error al marcar todo como leído:", err);
+    } catch {
+      // silent
     }
   };
 
@@ -80,8 +78,8 @@ const MensajesAdminPanel = () => {
     try {
       await apiRequest('/usuarios/mensajes-admin/leidos/limpiar', { method: 'DELETE' });
       setMensajes(prev => prev.filter(m => !m.leido));
-    } catch (err) {
-      console.error("Error al limpiar leídos:", err);
+    } catch {
+      // silent
     }
   };
 
@@ -108,20 +106,22 @@ const MensajesAdminPanel = () => {
             </p>
           </div>
           
-          <div className="flex items-center gap-3 shrink-0">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0 flex-wrap">
             <button 
               onClick={marcarTodoLeido}
-              className="flex items-center gap-2 px-4 py-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 text-[10px] font-black uppercase tracking-widest rounded-xl transition-colors border border-indigo-500/20 hover:border-indigo-500/40"
+              className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 text-[9px] sm:text-[10px] font-black uppercase tracking-widest rounded-lg sm:rounded-xl transition-colors border border-indigo-500/20 hover:border-indigo-500/40"
             >
-              <CheckCircle2 className="w-4 h-4" />
-              Leer Todas
+              <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">Leer Todas</span>
+              <span className="sm:hidden">Leer</span>
             </button>
             <button 
               onClick={limpiarLeidos}
-              className="flex items-center gap-2 px-4 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-[10px] font-black uppercase tracking-widest rounded-xl transition-colors border border-rose-500/20 hover:border-rose-500/40"
+              className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-[9px] sm:text-[10px] font-black uppercase tracking-widest rounded-lg sm:rounded-xl transition-colors border border-rose-500/20 hover:border-rose-500/40"
             >
-              <Trash2 className="w-4 h-4" />
-              Limpiar Leídas
+              <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">Limpiar Leídas</span>
+              <span className="sm:hidden">Limpiar</span>
             </button>
           </div>
         </div>
@@ -146,22 +146,22 @@ const MensajesAdminPanel = () => {
               <li 
                 key={msg.id} 
                 onClick={() => !msg.leido && marcarComoLeido(msg.id)}
-                className={`p-6 transition-colors ${msg.leido ? 'bg-transparent' : 'bg-indigo-500/[0.03] hover:bg-white/[0.04] cursor-pointer'}`}
+                className={`p-3 sm:p-6 transition-colors ${msg.leido ? 'bg-transparent' : 'bg-indigo-500/[0.03] hover:bg-white/[0.04] cursor-pointer'}`}
               >
-                <div className="flex gap-4">
+                <div className="flex gap-3 sm:gap-4">
                   <div className="shrink-0 mt-1">
                     {msg.leido ? (
-                      <MailOpen className="w-5 h-5 text-slate-600" />
+                      <MailOpen className="w-4 h-4 sm:w-5 sm:h-5 text-slate-600" />
                     ) : (
-                      <Mail className="w-5 h-5 text-indigo-400" />
+                      <Mail className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-400" />
                     )}
                   </div>
-                  <div className="flex-1 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className={`font-bold ${msg.leido ? 'text-slate-400' : 'text-white'}`}>
+                  <div className="flex-1 space-y-1.5 sm:space-y-2 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className={`font-bold text-sm sm:text-base ${msg.leido ? 'text-slate-400' : 'text-white'} truncate`}>
                         {msg.remitente}
                       </span>
-                      <span className="text-[10px] uppercase font-bold tracking-widest text-slate-500">
+                      <span className="text-[8px] sm:text-[10px] uppercase font-bold tracking-widest text-slate-500 whitespace-nowrap shrink-0">
                         {msg.fecha ? format(
                           (typeof msg.fecha === 'string' && !msg.fecha.includes('T') && !msg.fecha.includes('Z')) 
                             ? new Date(msg.fecha.replace(' ', 'T') + 'Z') 

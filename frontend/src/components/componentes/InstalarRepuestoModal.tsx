@@ -34,8 +34,8 @@ const InstalarRepuestoModal = ({ isOpen, onClose, equipo, onInstalled }) => {
                 }
             });
             setEspecificacionesBase(Array.from(unicasSpecsMap.values()));
-        } catch (err) {
-            console.error("Error fetching especificaciones:", err);
+        } catch {
+            // silent
         }
     };
 
@@ -44,8 +44,8 @@ const InstalarRepuestoModal = ({ isOpen, onClose, equipo, onInstalled }) => {
         try {
             const data = await apiRequest('/componentes');
             setRepuestos(data.filter(r => r.cantidad > 0));
-        } catch (err) {
-            console.error(err);
+        } catch {
+            // silent
         } finally {
             setLoading(false);
         }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, MessageSquare, CheckCircle2, AlertCircle, Loader2, Server, Package, ClipboardList, PenTool, X, Search, MapPin, User, Calendar } from 'lucide-react';
+import { Send, MessageSquare, AlertCircle, Loader2, Server, Package, ClipboardList, PenTool, X } from 'lucide-react';
 import { apiRequest } from '../services/api';
 import SearchInput from '../components/common/SearchInput';
 import Select from '../components/common/Select';
@@ -37,8 +37,8 @@ const MensajeAdmin = () => {
             ]);
             setEquipos(equiposData?.data || equiposData || []);
             setRepuestos(repuestosData || []);
-        } catch (error) {
-            console.error("Error cargando catálogos:", error);
+        } catch {
+            // silent
         }
     };
     fetchData();
@@ -126,7 +126,6 @@ const MensajeAdmin = () => {
       setNotas('');
       
     } catch (error) {
-      console.error("Error al enviar nota:", error);
       showToast("Error de Envío", "No se pudo conectar con el servidor.", "error");
     } finally {
       setLoading(false);
@@ -149,7 +148,6 @@ const MensajeAdmin = () => {
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
       >
-        <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/5 blur-[120px] rounded-full -mr-40 -mt-40 pointer-events-none" />
         
         {/* BLOQUE: EQUIPO AFECTADO */}
         <div className="space-y-4" ref={sugerenciasRef}>

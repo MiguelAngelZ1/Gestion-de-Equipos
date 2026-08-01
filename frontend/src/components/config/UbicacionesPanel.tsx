@@ -21,8 +21,8 @@ const UbicacionesPanel = () => {
             setLoading(true);
             const data = await apiRequest('/config/ubicaciones');
             setUbicaciones(data);
-        } catch (error) {
-            console.error("Error fetching ubicaciones:", error);
+        } catch {
+            // silent
         } finally {
             setLoading(false);
         }
@@ -52,8 +52,8 @@ const UbicacionesPanel = () => {
             setFormData({ nombre: '' });
             setEditingNode(null);
             fetchUbicaciones();
-        } catch (error) {
-            console.error("Error saving ubicacion:", error);
+        } catch {
+            // silent
         } finally {
             setIsSaving(false);
         }
@@ -80,8 +80,8 @@ const UbicacionesPanel = () => {
             setIsDeleteOpen(false);
             setItemToDelete(null);
             fetchUbicaciones(); // Sincronizar
-        } catch (error) {
-            console.error("Error deleting ubicacion:", error);
+        } catch {
+            // silent
         }
     };
 
@@ -189,7 +189,7 @@ const UbicacionesPanel = () => {
                                             className="w-4 h-4 rounded border-white/10 bg-black/30 text-indigo-500 focus:ring-indigo-500/50 cursor-pointer shrink-0 mt-0.5"
                                         />
                                         <span className="text-sm font-bold text-white flex-1 break-words leading-tight whitespace-normal">{ubi.nombre}</span>
-                                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                                        <div className="flex items-center gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shrink-0">
                                             <button 
                                                 onClick={() => { 
                                                     setEditingNode(ubi); 

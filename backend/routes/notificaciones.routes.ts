@@ -6,8 +6,6 @@ const notificationService = require('../services/notificationService');
 // Middleware para verificar token
 const { verificarAutenticacion } = require('../middleware/auth.middleware');
 
-// const auth = require('../middleware/auth'); 
-
 // Obtener llave pública VAPID
 router.get('/public-key', (req, res) => {
     res.json({ publicKey: process.env.VAPID_PUBLIC_KEY });

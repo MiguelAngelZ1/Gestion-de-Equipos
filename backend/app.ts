@@ -30,7 +30,6 @@ const { apiLimiter } = require('./utils/rateLimiter');
 const { validateOrigin } = require('./middleware/csrf.middleware');
 const errorHandler = require('./middleware/error.middleware');
 const { verificarAutenticacion } = require('./middleware/auth.middleware');
-const { ROLES } = require('./config/constants');
 
 const pinoHttp = require('pino-http');
 const notificationService = require('./services/notificationService');
@@ -74,17 +73,8 @@ app.use((req, res, next) => {
 });
 
 const STATIC_PATH = process.env.STATIC_PATH || path.join(__dirname, "../frontend/dist");
-let cachedHtml = null;
 const distExists = fs.existsSync(STATIC_PATH);
-if (distExists) {
-  try {
-    cachedHtml = fs.readFileSync(path.join(STATIC_PATH, 'index.html'), 'utf-8');
-  } catch (e) {
-    if (process.env.NODE_ENV !== 'test') {
-      logger.warn({ staticPath: STATIC_PATH }, "No se encontro index.html");
-    }
-  }
-} else if (process.env.NODE_ENV !== 'test') {
+if (!distExists && process.env.NODE_ENV !== 'test') {
   logger.info("Modo API-only (frontend servido por Vite en puerto 5300)");
 }
 
@@ -97,8 +87,12 @@ const serveIndexWithNonce = (req, res, next) => {
   if (req.method !== 'GET') return next();
   const isIndexHtml = req.path === '/' || req.path === '/index.html';
   if (!isIndexHtml) return next();
-  if (!cachedHtml) return next();
-  res.send(injectNonces(cachedHtml, res.locals.nonce));
+  try {
+    const html = fs.readFileSync(path.join(STATIC_PATH, 'index.html'), 'utf-8');
+    res.send(injectNonces(html, res.locals.nonce));
+  } catch {
+    next();
+  }
 };
 
 app.use(helmet({
@@ -223,10 +217,12 @@ app.use('/api', exportRoutes);
 if (distExists) {
   app.get("*", (req, res, next) => {
     if (req.url.startsWith('/api')) return next();
-    if (!cachedHtml) {
-      try { cachedHtml = fs.readFileSync(path.join(STATIC_PATH, 'index.html'), 'utf-8'); } catch (e) { return res.sendFile(path.join(STATIC_PATH, "index.html")); }
+    try {
+      const html = fs.readFileSync(path.join(STATIC_PATH, 'index.html'), 'utf-8');
+      res.send(injectNonces(html, res.locals.nonce));
+    } catch {
+      res.sendFile(path.join(STATIC_PATH, "index.html"));
     }
-    res.send(injectNonces(cachedHtml, res.locals.nonce));
   });
 }
 

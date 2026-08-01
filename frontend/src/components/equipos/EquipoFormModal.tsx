@@ -141,12 +141,12 @@ const EquipoFormModal = ({ isOpen, initialData, onClose, onSave, grados = [], ub
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             onClick={(e) => e.stopPropagation()}
-            className="bg-[#0f1523] border border-white/20 shadow-[0_0_50px_rgba(0,0,0,0.8)] rounded-3xl sm:rounded-[2rem] w-full max-w-4xl relative flex flex-col max-h-[calc(100dvh-40px)] sm:max-h-[85vh]"
+            className="bg-[#0f1523] border border-white/20 shadow-[0_0_50px_rgba(0,0,0,0.8)] rounded-2xl sm:rounded-[2rem] w-full max-w-4xl relative flex flex-col max-h-[calc(100dvh-40px)] sm:max-h-[85vh]"
           >
             <div className="absolute top-0 left-0 right-0 h-40 bg-gradient-to-br from-indigo-900/40 to-transparent pointer-events-none"></div>
             
             {/* Header Fijo */}
-            <div className="p-5 sm:p-6 pb-4 border-b border-white/5 shrink-0 relative z-10">
+            <div className="p-4 sm:p-5 pb-3 sm:pb-4 border-b border-white/5 shrink-0 relative z-10">
               <button 
                 onClick={onClose}
                 disabled={isSaving}
@@ -171,7 +171,7 @@ const EquipoFormModal = ({ isOpen, initialData, onClose, onSave, grados = [], ub
             </div>
 
             {/* Body Scrolleable (Formulario) */}
-            <div className="p-6 sm:p-8 flex-1 overflow-y-auto custom-scrollbar modal-scroll-area relative z-10 bg-[#0B0F19]/50">
+            <div className="p-4 sm:p-6 flex-1 overflow-y-auto custom-scrollbar modal-scroll-area relative z-10 bg-[#0B0F19]/50">
               
               <AnimatePresence>
                 {showErrorSummary && (
@@ -190,7 +190,7 @@ const EquipoFormModal = ({ isOpen, initialData, onClose, onSave, grados = [], ub
                 )}
               </AnimatePresence>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-8">
                  {/* Datos Principales */}
                  <div className="space-y-5">
                     <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-4 pb-2 border-b border-white/10 flex items-center gap-2">
@@ -379,19 +379,19 @@ const EquipoFormModal = ({ isOpen, initialData, onClose, onSave, grados = [], ub
             </div>
 
             {/* Footer Fijo */}
-            <div className="p-4 sm:p-6 border-t border-white/5 shrink-0 bg-[#0f1523] z-20 flex flex-col sm:flex-row justify-end gap-3">
+            <div className="p-4 sm:p-5 border-t border-white/5 shrink-0 bg-[#0f1523] z-20 flex flex-col sm:flex-row justify-end gap-3">
               <button 
                 type="button"
                 onClick={onClose}
                 disabled={isSaving}
-                className={`bg-white/5 hover:bg-white/10 text-slate-400 font-black uppercase tracking-widest text-[10px] px-8 py-4 rounded-2xl transition-all border border-white/10 hover:border-white/20 active:scale-95 ${isSaving ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                className={`bg-white/5 hover:bg-white/10 text-slate-400 font-black uppercase tracking-widest text-[10px] px-6 sm:px-8 py-3 sm:py-3.5 rounded-xl transition-all border border-white/10 hover:border-white/20 active:scale-95 ${isSaving ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
               >
                 Cancelar
               </button>
               <button 
                 onClick={handleSubmit}
                 disabled={isSaving}
-                className={`bg-indigo-600 hover:bg-indigo-500 text-white font-black uppercase tracking-widest text-[10px] px-10 py-4 rounded-2xl transition-all shadow-[0_0_30px_rgba(79,70,229,0.3)] flex items-center justify-center gap-3 active:scale-95 ${isSaving ? 'opacity-80 cursor-not-allowed' : 'cursor-pointer'}`}
+                className={`bg-indigo-600 hover:bg-indigo-500 text-white font-black uppercase tracking-widest text-[10px] px-8 sm:px-10 py-3 sm:py-3.5 rounded-xl transition-all shadow-[0_0_30px_rgba(79,70,229,0.3)] flex items-center justify-center gap-3 active:scale-95 ${isSaving ? 'opacity-80 cursor-not-allowed' : 'cursor-pointer'}`}
               >
                 {isSaving ? (
                   <>

@@ -3,12 +3,11 @@ import { useLocation } from 'react-router-dom';
 import { ROLES } from '../config/constants';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Settings, MapPin, Tag, Shield, Activity, GitBranch, HeartPulse, 
-  ArrowLeft, Loader2, Users, UserCircle, Bell, ChevronRight,
-  Layout, Cpu, Globe
+  MapPin, Tag, Shield, Activity, GitBranch, HeartPulse, 
+  Users, UserCircle, Bell, ChevronRight,
+  Cpu
 } from 'lucide-react';
 
-// Lazy loading de paneles
 const GruposComodidadPanel = lazy(() => import('../components/config/GruposComodidadPanel'));
 const EstadosPanel = lazy(() => import('../components/config/EstadosPanel'));
 const GradosPanel = lazy(() => import('../components/config/GradosPanel'));
@@ -34,20 +33,19 @@ const TABS_CONFIG = [
 ];
 
 const PanelLoader = () => (
-  <div className="flex-1 flex flex-col items-center justify-center py-24">
+  <div className="flex-1 flex flex-col items-center justify-center py-12 sm:py-24">
     <div className="relative">
-        <div className="w-20 h-20 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin"></div>
+        <div className="w-14 h-14 sm:w-20 sm:h-20 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin"></div>
         <div className="absolute inset-0 flex items-center justify-center">
-            <Cpu className="w-8 h-8 text-indigo-400 animate-pulse" />
+            <Cpu className="w-5 h-5 sm:w-8 sm:h-8 text-indigo-400 animate-pulse" />
         </div>
     </div>
-    <span className="mt-8 text-slate-400 font-black uppercase tracking-[0.3em] text-[10px] animate-pulse">Sincronizando Módulo...</span>
+    <span className="mt-6 sm:mt-8 text-slate-400 font-black uppercase tracking-[0.3em] text-[9px] sm:text-[10px] animate-pulse">Sincronizando Módulo...</span>
   </div>
 );
 
 const ScrollReset = () => {
   useEffect(() => {
-    // Intentamos scrollear de varias formas para asegurar éxito
     const header = document.getElementById('config-active-header');
     if (header) {
       header.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -75,18 +73,18 @@ const Configuracion = () => {
   const activeTabData = filteredTabs.find(t => t.id === activeTab) || filteredTabs[0];
 
   return (
-    <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 min-h-[calc(100vh-160px)] p-2 lg:p-0">
+    <div className="flex flex-col lg:flex-row gap-3 lg:gap-8 min-h-[calc(100vh-160px)] p-0 lg:p-0">
       
       {/* --- SIDEBAR NAVIGATION --- */}
       <motion.aside 
         initial={{ x: -30, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
-        className="lg:w-80 h-fit flex flex-col bg-slate-900/40 backdrop-blur-2xl border border-white/10 rounded-[2rem] lg:rounded-[3rem] p-4 lg:p-6 shadow-2xl relative overflow-hidden shrink-0"
+        className="lg:w-80 h-fit flex flex-col bg-slate-900/40 backdrop-blur-2xl border border-white/10 rounded-2xl lg:rounded-[3rem] p-2.5 lg:p-6 shadow-2xl relative overflow-hidden shrink-0"
       >
-        <div className="absolute -top-24 -left-24 w-64 h-64 bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none" />
         
-        <div className="relative z-10 flex flex-col h-full pt-2 lg:pt-4">
-          <nav className="space-y-2 overflow-y-auto max-h-[40vh] sm:max-h-[50vh] lg:max-h-none custom-scrollbar pr-2 pb-2">
+        <div className="relative z-10 flex flex-col h-full lg:pt-4">
+          {/* Mobile: horizontal scroll, Desktop: vertical list */}
+          <nav className="flex lg:flex-col gap-1.5 overflow-x-auto lg:overflow-y-auto lg:max-h-none max-h-[70vh] custom-scrollbar px-1 py-1 snap-x snap-mandatory lg:snap-none">
             {filteredTabs.map((tab) => {
               const Icon = tab.icon;
               const isSelected = activeTab === tab.id;
@@ -95,25 +93,25 @@ const Configuracion = () => {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`w-full group relative flex items-center gap-4 px-4 lg:px-5 py-3 lg:py-4 rounded-[1.2rem] lg:rounded-[1.5rem] transition-all duration-500 overflow-hidden ${
+                  className={`group relative flex items-center gap-2.5 lg:gap-4 px-3 lg:px-5 py-2.5 lg:py-3.5 rounded-xl lg:rounded-[1.5rem] transition-all duration-300 overflow-hidden shrink-0 snap-start lg:snap-none ${
                     isSelected 
                       ? 'bg-gradient-to-br ' + tab.gradient + ' text-white shadow-xl shadow-indigo-600/20 scale-[1.02]' 
                       : 'text-slate-400 hover:text-white hover:bg-white/5'
                   }`}
                 >
-                  <div className={`p-2 lg:p-2.5 rounded-xl transition-all duration-500 ${isSelected ? 'bg-white/20' : 'bg-white/5 group-hover:scale-110 group-hover:bg-indigo-500/20'}`}>
-                    <Icon className={`w-4 h-4 lg:w-5 lg:h-5 ${isSelected ? 'text-white' : 'text-slate-400 group-hover:text-indigo-400'}`} />
+                  <div className={`p-1.5 lg:p-2.5 rounded-lg lg:rounded-xl transition-all duration-300 ${isSelected ? 'bg-white/20' : 'bg-white/5 group-hover:scale-110 group-hover:bg-indigo-500/20'}`}>
+                    <Icon className={`w-3.5 h-3.5 lg:w-5 lg:h-5 ${isSelected ? 'text-white' : 'text-slate-400 group-hover:text-indigo-400'}`} />
                   </div>
-                  <div className="flex flex-col items-start leading-none text-left">
-                    <span className="text-xs lg:text-sm font-black tracking-tight">{tab.title}</span>
-                    <span className={`text-[8px] lg:text-[9px] font-black uppercase tracking-widest mt-1 lg:mt-1.5 transition-colors ${isSelected ? 'text-white/80' : 'text-slate-600 group-hover:text-slate-400'}`}>
+                  <div className="flex flex-col items-start leading-none text-left min-w-0">
+                    <span className="text-[10px] lg:text-sm font-black tracking-tight whitespace-nowrap">{tab.title}</span>
+                    <span className={`text-[7px] lg:text-[9px] font-black uppercase tracking-widest mt-0.5 lg:mt-1 transition-colors hidden sm:block ${isSelected ? 'text-white/80' : 'text-slate-600 group-hover:text-slate-400'}`}>
                       {tab.description}
                     </span>
                   </div>
                   {isSelected && (
                     <motion.div 
                       layoutId="activePointer"
-                      className="ml-auto bg-white/20 p-1 rounded-lg"
+                      className="ml-auto bg-white/20 p-0.5 lg:p-1 rounded-md lg:rounded-lg hidden lg:block"
                       initial={{ opacity: 0, scale: 0.5 }}
                       animate={{ opacity: 1, scale: 1 }}
                     >
@@ -132,31 +130,27 @@ const Configuracion = () => {
         initial={{ scale: 0.98, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ type: "spring", stiffness: 200, damping: 25 }}
-        className="flex-1 flex flex-col bg-slate-900/40 backdrop-blur-xl border border-white/10 rounded-[2.5rem] lg:rounded-[3rem] shadow-2xl relative overflow-hidden min-h-[300px] md:min-h-[500px] lg:min-h-0"
+        className="flex-1 flex flex-col bg-slate-900/40 backdrop-blur-xl border border-white/10 rounded-2xl lg:rounded-[3rem] shadow-2xl relative overflow-hidden min-h-[300px] md:min-h-[500px] lg:min-h-0"
       >
         {/* Glow Header Background */}
         <div className={`absolute top-0 left-0 w-full h-40 bg-gradient-to-b opacity-10 transition-colors duration-700 ${activeTabData.gradient.replace('from-', 'from-').split(' ')[0]}`} />
         
-        <header id="config-active-header" className="flex-shrink-0 flex items-center justify-between p-4 lg:p-6 border-b border-white/5 relative z-10">
-          <div className="flex items-center gap-3 lg:gap-4">
-            <div className={`w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-br ${activeTabData.gradient} rounded-[1rem] lg:rounded-2xl flex items-center justify-center shadow-xl shadow-indigo-500/10 group relative overflow-hidden shrink-0`}>
+        <header id="config-active-header" className="flex-shrink-0 flex items-center justify-between p-3 sm:p-4 lg:p-6 border-b border-white/5 relative z-10">
+          <div className="flex items-center gap-2.5 sm:gap-3 lg:gap-4">
+            <div className={`w-9 h-9 sm:w-10 sm:h-10 lg:w-12 lg:h-12 bg-gradient-to-br ${activeTabData.gradient} rounded-xl lg:rounded-2xl flex items-center justify-center shadow-xl shadow-indigo-500/10 group relative overflow-hidden shrink-0`}>
                 <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-              {activeTabData && <activeTabData.icon className="w-5 h-5 lg:w-6 lg:h-6 text-white relative z-10 drop-shadow-lg" />}
+              {activeTabData && <activeTabData.icon className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-white relative z-10 drop-shadow-lg" />}
             </div>
             <div className="min-w-0">
               <motion.h2 
                 key={activeTab}
                 initial={{ opacity: 0, y: -5 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="text-white text-lg lg:text-2xl font-black tracking-tighter leading-tight truncate"
+                className="text-white text-base sm:text-lg lg:text-2xl font-black tracking-tighter leading-tight truncate"
               >
                 {activeTabData.title}
               </motion.h2>
-              <div className="flex items-center gap-2 mt-0.5 lg:mt-1">
-                <div className="hidden sm:flex -space-x-1 shrink-0">
-                    <div className="w-2.5 h-2.5 lg:w-3 lg:h-3 rounded-full border border-slate-900 bg-emerald-500 shadow-sm" />
-                    <div className="w-2.5 h-2.5 lg:w-3 lg:h-3 rounded-full border border-slate-900 bg-indigo-500 shadow-sm" />
-                </div>
+              <div className="flex items-center gap-2 mt-0.5">
                 <span className="text-slate-500 text-[8px] lg:text-[9px] font-black uppercase tracking-[0.2em] truncate">{activeTabData.description}</span>
               </div>
             </div>
@@ -165,18 +159,16 @@ const Configuracion = () => {
 
         {/* --- STAGE AREA --- */}
         <div className="flex-1 relative lg:overflow-y-auto lg:overflow-x-hidden custom-scrollbar">
-          {/* Inner Decorative Glows */}
-          <div className="absolute -bottom-48 -right-48 w-[500px] h-[500px] bg-indigo-500/5 rounded-full blur-[120px] pointer-events-none" />
           
           <Suspense fallback={<PanelLoader />}>
-            <div className="p-3 sm:p-6 lg:p-12 relative z-10">
+            <div className="p-3 sm:p-4 lg:p-8 relative z-10">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={activeTab}
                   initial={{ opacity: 0, scale: 0.98 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 1.02 }}
-                  transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                  transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
                 >
                   <ScrollReset />
                   {activeTab === 'perfil' && <ProfilePanel />}

@@ -9,15 +9,12 @@ const REQUEST_TIMEOUT = 15000;
 const MAX_RETRIES = 2;
 
 export const getAuthToken = () => null;
-export const setAuthToken = () => {};
 export const removeAuthToken = () => {
     localStorage.removeItem(USER_DATA_KEY);
     window.dispatchEvent(new Event("auth:unauthorized"));
 };
-export const isAuthenticated = () => !!localStorage.getItem(USER_DATA_KEY);
 
 export const getUserData = () => JSON.parse(localStorage.getItem(USER_DATA_KEY) || "null");
-export const setUserData = (userData) => localStorage.setItem(USER_DATA_KEY, JSON.stringify(userData));
 
 export async function apiRequest(endpoint: string, options: Record<string, any> = {}, retries = MAX_RETRIES) {
     if (!navigator.onLine) {

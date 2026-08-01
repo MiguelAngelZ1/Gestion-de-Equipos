@@ -21,8 +21,8 @@ const GradosPanel = () => {
             setLoading(true);
             const data = await apiRequest('/config/grados');
             setGrados(data);
-        } catch (error) {
-            console.error("Error fetching grados:", error);
+        } catch {
+            // silent
         } finally {
             setLoading(false);
         }
@@ -52,8 +52,8 @@ const GradosPanel = () => {
             setFormData({ abreviatura: '', grado_completo: '' });
             setEditingNode(null);
             fetchGrados();
-        } catch (error) {
-            console.error("Error saving grado:", error);
+        } catch {
+            // silent
         } finally {
             setIsSaving(false);
         }
@@ -80,8 +80,8 @@ const GradosPanel = () => {
             setIsDeleteOpen(false);
             setItemToDelete(null);
             fetchGrados(); // Sincronizar
-        } catch (error) {
-            console.error("Error deleting grado:", error);
+        } catch {
+            // silent
         }
     };
 
@@ -203,7 +203,7 @@ const GradosPanel = () => {
                                                 <span className="text-xs text-indigo-400 font-medium truncate">{grado.abreviatura}</span>
                                             </div>
                                         </div>
-                                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                                        <div className="flex items-center gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shrink-0">
                                             <button 
                                                 onClick={() => { 
                                                     setEditingNode(grado); 

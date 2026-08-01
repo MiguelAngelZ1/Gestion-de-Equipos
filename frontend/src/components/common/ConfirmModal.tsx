@@ -117,12 +117,12 @@ const ConfirmModal = ({ isOpen, title, message, children, onConfirm, onClose, co
             className={`bg-[#0f1523] border ${style.border} shadow-2xl rounded-3xl w-full max-w-sm relative overflow-hidden flex flex-col max-h-[calc(100dvh-40px)]`}
           >
             <div className={`absolute top-0 left-0 right-0 h-32 bg-gradient-to-br ${style.gradient} to-transparent pointer-events-none`}></div>
-            <div className="p-8 relative z-10 flex flex-col items-center text-center">
-              <div className={`${style.bg} p-4 rounded-3xl border ${style.border} mb-5`}>
-                 <AlertTriangle className={`w-10 h-10 ${style.icon}`} />
-              </div>
-              <h3 ref={titleRef} id={titleId} className="text-2xl font-black text-white tracking-tight mb-3 font-outfit">{title}</h3>
-              <div className="w-full mb-8">
+            <div className="p-5 sm:p-8 relative z-10 flex flex-col items-center text-center">
+               <div className={`${style.bg} p-3 sm:p-4 rounded-2xl sm:rounded-3xl border ${style.border} mb-4 sm:mb-5`}>
+                  <AlertTriangle className={`w-8 h-8 sm:w-10 sm:h-10 ${style.icon}`} />
+               </div>
+               <h3 ref={titleRef} id={titleId} className="text-xl sm:text-2xl font-black text-white tracking-tight mb-2 sm:mb-3 font-outfit">{title}</h3>
+               <div className="w-full mb-6 sm:mb-8">
                 {children || (
                   <p className="text-slate-400 text-sm leading-relaxed">
                     {message}

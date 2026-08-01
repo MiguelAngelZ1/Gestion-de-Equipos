@@ -35,7 +35,6 @@ const BackupPanel = () => {
                 showToast("Error de Exportación", "No se pudo generar el archivo Excel. Inténtalo de nuevo más tarde.", "error");
             }
         } catch (error) {
-            console.error("Error exporting excel:", error);
             showToast("Error de Red", "No se pudo conectar con el servidor para la exportación.", "error");
         } finally {
             setActionLoading(false);
@@ -58,7 +57,6 @@ const BackupPanel = () => {
                 showToast("Error en la Nube", data.error || 'No se pudo guardar el respaldo en la nube.', "error");
             }
         } catch (error) {
-            console.error("Error cloud backup:", error);
             showToast("Error de Red", "No se pudo conectar con el servidor para la exportación a la nube.", "error");
         } finally {
             setActionLoading(false);
@@ -81,7 +79,6 @@ const BackupPanel = () => {
                 showToast("Error de Sincronización", data.error || 'No se pudo completar la sincronización.', "error");
             }
         } catch (error) {
-            console.error("Error manual sync:", error);
             showToast("Error de Red", "No se pudo conectar con el servidor para la sincronización.", "error");
         } finally {
             setActionLoading(false);

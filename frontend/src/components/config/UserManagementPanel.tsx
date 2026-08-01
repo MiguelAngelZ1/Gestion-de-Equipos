@@ -116,15 +116,17 @@ const UserManagementPanel = () => {
 
     return (
         <div className="flex flex-col lg:h-full">
-        <div className="flex flex-col sm:flex-row justify-start items-center gap-4 mb-6">
-            <SearchInput
+        <div className="flex flex-col sm:flex-row justify-start items-stretch sm:items-center gap-2.5 sm:gap-4 mb-4 sm:mb-6">
+            <div className="flex-1">
+              <SearchInput
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Buscar por usuario o rol..."
-            />
+              />
+            </div>
             <button
                 onClick={() => handleOpenModal()}
-                className="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg shadow-indigo-600/20 cursor-pointer w-auto shrink-0"
+                className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 sm:px-6 py-2.5 rounded-xl text-[10px] sm:text-xs font-bold flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg shadow-indigo-600/20 cursor-pointer w-full sm:w-auto shrink-0"
             >
                 <Plus className="w-4 h-4" /> Nuevo Usuario
             </button>
@@ -186,11 +188,11 @@ const UserManagementPanel = () => {
                             initial={{ opacity: 0, scale: 0.95, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            className="bg-slate-900 border border-white/10 w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden"
+                            className="bg-slate-900 border border-white/10 w-full max-w-md rounded-2xl sm:rounded-[2.5rem] shadow-2xl overflow-hidden"
                         >
-                            <form onSubmit={handleSave} className={`p-8 space-y-5 ${isSaving ? 'opacity-50' : ''}`}>
-                                <div className="flex items-center justify-between mb-2">
-                                    <h3 className="text-xl font-black text-white">{editingUser ? 'Editar Usuario' : 'Nuevo Usuario'}</h3>
+                            <form onSubmit={handleSave} className={`p-5 sm:p-8 space-y-4 sm:space-y-5 ${isSaving ? 'opacity-50' : ''}`}>
+                                <div className="flex items-center justify-between mb-1 sm:mb-2">
+                                    <h3 className="text-lg sm:text-xl font-black text-white">{editingUser ? 'Editar Usuario' : 'Nuevo Usuario'}</h3>
                                     <button type="button" disabled={isSaving} onClick={() => setIsModalOpen(false)} className="text-slate-500 hover:text-white transition-colors cursor-pointer">
                                         <X className="w-6 h-6" />
                                     </button>
@@ -294,9 +296,9 @@ const UserManagementPanel = () => {
                             initial={{ opacity: 0, scale: 0.9, y: 30 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.9, y: 30 }}
-                            className="bg-[#0f1523] border border-white/10 w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden"
+                            className="bg-[#0f1523] border border-white/10 w-full max-w-lg rounded-2xl sm:rounded-[2.5rem] shadow-2xl overflow-hidden"
                         >
-                            <div className="p-8 space-y-8">
+                            <div className="p-5 sm:p-8 space-y-5 sm:space-y-8">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-5">
                                         <div className="w-14 h-14 bg-indigo-500/10 rounded-2xl flex items-center justify-center border border-indigo-500/20">

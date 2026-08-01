@@ -24,8 +24,8 @@ const AsignarIpModal = ({ isOpen, ip, redId, onClose, onAssign }) => {
             try {
                 const data = await apiRequest(`/equipos?q=${search}`);
                 setResults(data?.data || data || []);
-            } catch (error) {
-                console.error("Error buscando equipos:", error);
+            } catch {
+                // silent
             } finally {
                 setLoading(false);
             }
@@ -47,8 +47,8 @@ const AsignarIpModal = ({ isOpen, ip, redId, onClose, onAssign }) => {
                 dns2
             });
             onClose();
-        } catch (error) {
-            console.error("Error asignando IP:", error);
+        } catch {
+            // silent
         } finally {
             setIsAssigning(false);
         }

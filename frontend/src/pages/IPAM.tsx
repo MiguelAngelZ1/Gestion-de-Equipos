@@ -23,6 +23,7 @@ import {
     UploadCloud,
     FileSpreadsheet,
     Eraser,
+    X,
     Eye,
     PlusCircle,
     Link as LinkIcon,
@@ -344,32 +345,32 @@ const IPAM = () => {
     return (
         <div className="space-y-6">
             {/* Toolbar section */}
-            <div className="flex justify-end gap-3">
+            <div className="flex justify-end gap-2 md:gap-3">
                 <button
                     onClick={handleExportExcel}
-                    className="bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-400 border border-emerald-500/20 px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-emerald-500/5 group"
+                    className="bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-400 border border-emerald-500/20 px-3 md:px-4 py-2 md:py-2.5 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-widest transition-all flex items-center gap-1.5 md:gap-2 cursor-pointer shadow-lg shadow-emerald-500/5 group"
                 >
-                    <FileSpreadsheet className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                    Exportar Excel
+                    <FileSpreadsheet className="w-3.5 h-3.5 md:w-4 md:h-4 group-hover:scale-110 transition-transform" />
+                    <span className="hidden sm:inline">Exportar Excel</span><span className="sm:hidden">Excel</span>
                 </button>
                 <button
                     onClick={handleExportDrive}
-                    className="bg-sky-600/10 hover:bg-sky-600/20 text-sky-400 border border-sky-500/20 px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-sky-500/5 group"
+                    className="bg-sky-600/10 hover:bg-sky-600/20 text-sky-400 border border-sky-500/20 px-3 md:px-4 py-2 md:py-2.5 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-widest transition-all flex items-center gap-1.5 md:gap-2 cursor-pointer shadow-lg shadow-sky-500/5 group"
                 >
-                    <UploadCloud className="w-4 h-4 group-hover:animate-bounce transition-transform" />
-                    Exportar Drive
+                    <UploadCloud className="w-3.5 h-3.5 md:w-4 md:h-4 group-hover:animate-bounce transition-transform" />
+                    <span className="hidden sm:inline">Exportar Drive</span><span className="sm:hidden">Drive</span>
                 </button>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                 {/* Sidebar: Redes List */}
                 <div className="lg:col-span-1 space-y-4 min-w-0 relative z-20">
-                    <div className="bg-[#0f172a]/60 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] p-7 shadow-2xl relative min-w-0">
-                        <div className="absolute top-0 right-0 p-8 opacity-5">
-                            <Network className="w-32 h-32 text-white" />
+                    <div className="bg-[#0f172a]/60 backdrop-blur-2xl border border-white/10 rounded-3xl md:rounded-[2.5rem] p-5 md:p-7 shadow-2xl relative min-w-0">
+                        <div className="absolute top-0 right-0 p-6 md:p-8 opacity-5">
+                            <Network className="w-20 h-20 md:w-32 md:h-32 text-white" />
                         </div>
-                        <div className="flex items-center justify-between gap-3 mb-6">
-                            <h3 className="text-[11px] font-black text-indigo-400 uppercase tracking-[0.3em] flex items-center gap-2">
+                        <div className="flex items-center justify-between gap-3 mb-4 md:mb-6">
+                            <h3 className="text-[10px] md:text-[11px] font-black text-indigo-400 uppercase tracking-[0.3em] flex items-center gap-2">
                                 <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></div>
                                 Segmentos
                             </h3>
@@ -487,39 +488,39 @@ const IPAM = () => {
                 {/* Main: IP Map */}
                 <div className="lg:col-span-3 space-y-6">
                     {!selectedRed ? (
-                        <div className="h-full flex flex-col items-center justify-center py-24 bg-white/5 rounded-[3rem] border border-dashed border-white/10">
-                            <Activity className="w-16 h-16 text-slate-600 mb-4 opacity-20" />
-                            <h3 className="text-xl font-black text-white">Selecciona un segmento</h3>
-                            <p className="text-slate-400 mt-2">Configura o selecciona una red para ver su ocupación.</p>
+                        <div className="h-full flex flex-col items-center justify-center py-10 md:py-24 bg-white/5 rounded-3xl md:rounded-[3rem] border border-dashed border-white/10">
+                            <Activity className="w-10 h-10 md:w-16 md:h-16 text-slate-600 mb-3 md:mb-4 opacity-20" />
+                            <h3 className="text-base md:text-xl font-black text-white">Selecciona un segmento</h3>
+                            <p className="text-slate-400 mt-1 md:mt-2 text-xs md:text-sm">Configura o selecciona una red para ver su ocupación.</p>
                         </div>
                     ) : (
                         <div className="space-y-6">
                             {/* Stats Summary */}
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="bg-[#0f172a]/40 backdrop-blur-xl border border-white/10 p-6 rounded-4xl group hover:bg-[#0f172a]/60 transition-all duration-500 shadow-xl">
-                                    <p className="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em] mb-2">Total IPs</p>
-                                    <p className="text-4xl font-black text-white tracking-tight">{networkData?.stats?.total || '-'}</p>
-                                    <div className="h-0.5 w-8 bg-indigo-500/30 mt-4 rounded-full group-hover:w-16 transition-all duration-500"></div>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 md:gap-4">
+                                <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="bg-[#0f172a]/40 backdrop-blur-xl border border-white/10 p-3.5 md:p-6 rounded-2xl md:rounded-4xl group hover:bg-[#0f172a]/60 transition-all duration-500 shadow-xl">
+                                    <p className="text-slate-500 text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] mb-1 md:mb-2">Total IPs</p>
+                                    <p className="text-2xl md:text-4xl font-black text-white tracking-tight">{networkData?.stats?.total || '-'}</p>
+                                    <div className="h-0.5 w-6 md:w-8 bg-indigo-500/30 mt-2.5 md:mt-4 rounded-full group-hover:w-16 transition-all duration-500"></div>
                                 </motion.div>
-                                <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 }} className="bg-emerald-500/3 backdrop-blur-xl border border-emerald-500/20 p-6 rounded-4xl group hover:bg-emerald-500/6 transition-all duration-500 shadow-xl shadow-emerald-500/5">
-                                    <p className="text-emerald-500/60 text-[10px] font-black uppercase tracking-[0.2em] mb-2">Libres</p>
-                                    <p className="text-4xl font-black text-emerald-400 tracking-tight">{networkData?.stats?.free || '-'}</p>
-                                    <div className="h-0.5 w-8 bg-emerald-500/30 mt-4 rounded-full group-hover:w-16 transition-all duration-500"></div>
+                                <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 }} className="bg-emerald-500/3 backdrop-blur-xl border border-emerald-500/20 p-3.5 md:p-6 rounded-2xl md:rounded-4xl group hover:bg-emerald-500/6 transition-all duration-500 shadow-xl shadow-emerald-500/5">
+                                    <p className="text-emerald-500/60 text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] mb-1 md:mb-2">Libres</p>
+                                    <p className="text-2xl md:text-4xl font-black text-emerald-400 tracking-tight">{networkData?.stats?.free || '-'}</p>
+                                    <div className="h-0.5 w-6 md:w-8 bg-emerald-500/30 mt-2.5 md:mt-4 rounded-full group-hover:w-16 transition-all duration-500"></div>
                                 </motion.div>
-                                <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }} className="bg-rose-500/3 backdrop-blur-xl border border-rose-500/20 p-6 rounded-4xl group hover:bg-rose-500/6 transition-all duration-500 shadow-xl shadow-rose-500/5">
-                                    <p className="text-rose-500/60 text-[10px] font-black uppercase tracking-[0.2em] mb-2">Ocupadas</p>
-                                    <p className="text-4xl font-black text-rose-400 tracking-tight">{networkData?.stats?.occupied || '-'}</p>
-                                    <div className="h-0.5 w-8 bg-rose-500/30 mt-4 rounded-full group-hover:w-16 transition-all duration-500"></div>
+                                <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }} className="bg-rose-500/3 backdrop-blur-xl border border-rose-500/20 p-3.5 md:p-6 rounded-2xl md:rounded-4xl group hover:bg-rose-500/6 transition-all duration-500 shadow-xl shadow-rose-500/5">
+                                    <p className="text-rose-500/60 text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] mb-1 md:mb-2">Ocupadas</p>
+                                    <p className="text-2xl md:text-4xl font-black text-rose-400 tracking-tight">{networkData?.stats?.occupied || '-'}</p>
+                                    <div className="h-0.5 w-6 md:w-8 bg-rose-500/30 mt-2.5 md:mt-4 rounded-full group-hover:w-16 transition-all duration-500"></div>
                                 </motion.div>
-                                <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }} className="bg-sky-500/3 backdrop-blur-xl border border-sky-500/20 p-6 rounded-4xl group hover:bg-sky-500/6 transition-all duration-500 shadow-xl shadow-sky-500/5">
-                                    <p className="text-sky-500/60 text-[10px] font-black uppercase tracking-[0.2em] mb-2">Reservadas</p>
-                                    <p className="text-4xl font-black text-sky-400 tracking-tight">{networkData?.stats?.reserved || '-'}</p>
-                                    <div className="h-0.5 w-8 bg-sky-500/30 mt-4 rounded-full group-hover:w-16 transition-all duration-500"></div>
+                                <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }} className="bg-sky-500/3 backdrop-blur-xl border border-sky-500/20 p-3.5 md:p-6 rounded-2xl md:rounded-4xl group hover:bg-sky-500/6 transition-all duration-500 shadow-xl shadow-sky-500/5">
+                                    <p className="text-sky-500/60 text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] mb-1 md:mb-2">Reservadas</p>
+                                    <p className="text-2xl md:text-4xl font-black text-sky-400 tracking-tight">{networkData?.stats?.reserved || '-'}</p>
+                                    <div className="h-0.5 w-6 md:w-8 bg-sky-500/30 mt-2.5 md:mt-4 rounded-full group-hover:w-16 transition-all duration-500"></div>
                                 </motion.div>
                             </div>
 
                             {/* Toolbar */}
-                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-[#0f172a]/60 backdrop-blur-2xl border border-white/10 p-6 rounded-[2.5rem] shadow-2xl relative overflow-hidden group">
+                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-6 bg-[#0f172a]/60 backdrop-blur-2xl border border-white/10 p-4 md:p-6 rounded-2xl md:rounded-[2.5rem] shadow-2xl relative overflow-visible group">
                                 <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-transparent via-indigo-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
 
                                 <div className="max-w-md w-full relative">
@@ -530,10 +531,10 @@ const IPAM = () => {
                                     />
                                 </div>
 
-                                <div className="flex items-center gap-6">
-                                    <div className="flex items-center gap-4">
-                                        <span className="text-[11px] font-black text-slate-500 uppercase tracking-[0.2em] whitespace-nowrap">Ver IP(s):</span>
-                                        <div className="min-w-[180px]">
+                                <div className="flex items-center flex-wrap gap-3 md:gap-6">
+                                    <div className="flex items-center gap-2 md:gap-4">
+                                        <span className="text-[10px] md:text-[11px] font-black text-slate-500 uppercase tracking-[0.2em] whitespace-nowrap">Ver IP(s):</span>
+                                        <div className="min-w-[120px] md:min-w-[160px]">
                                             <Select
                                                 value={filterStatus}
                                                 onChange={(e) => setFilterStatus(e.target.value)}
@@ -559,20 +560,19 @@ const IPAM = () => {
                                                     setSearch('');
                                                     setFilterStatus('');
                                                 }}
-                                                className="flex items-center gap-2 px-4 py-2.5 text-[10px] font-black uppercase tracking-[0.2em] text-rose-400 group/clear hover:text-rose-300 bg-rose-500/5 hover:bg-rose-500/10 border border-rose-500/10 hover:border-rose-500/20 rounded-xl transition-all duration-300 shadow-lg shadow-rose-500/5 active:scale-95 cursor-pointer"
+                                                className="p-2.5 text-rose-400 group/clear hover:text-rose-300 bg-rose-500/5 hover:bg-rose-500/10 border border-rose-500/10 hover:border-rose-500/20 rounded-xl transition-all duration-300 shadow-lg shadow-rose-500/5 active:scale-95 cursor-pointer"
                                                 title="Limpiar filtros"
                                             >
-                                                <Eraser className="w-3.5 h-3.5 group-hover/clear:-rotate-12 transition-transform" />
-                                                <span>Limpiar</span>
+                                                <X className="w-3.5 h-3.5 group-hover/clear:rotate-90 transition-transform" />
                                             </motion.button>
                                         )}
                                     </AnimatePresence>
 
-                                    <div className="w-px h-8 bg-white/5"></div>
+                                    <div className="w-px h-6 md:h-8 bg-white/5"></div>
 
                                     <button
                                         onClick={() => fetchNetworkMap(selectedRed.id)}
-                                        className="p-3.5 text-slate-400 hover:text-indigo-400 bg-white/3 hover:bg-white/6 border border-white/10 rounded-2xl transition-all duration-500 tooltip relative active:scale-95 group/refresh cursor-pointer"
+                                        className="p-2.5 md:p-3.5 text-slate-400 hover:text-indigo-400 bg-white/3 hover:bg-white/6 border border-white/10 rounded-xl md:rounded-2xl transition-all duration-500 tooltip relative active:scale-95 group/refresh cursor-pointer"
                                         title="Sincronizar Mapa de Red"
                                     >
                                         <RefreshCw className={`w-4 h-4 ${mapLoading ? 'animate-spin' : 'group-hover/refresh:rotate-180 transition-transform duration-700'}`} />
@@ -583,24 +583,24 @@ const IPAM = () => {
 
                             {/* IP Grid */}
                             {!showResults && !mapLoading ? (
-                                <div className="py-24 text-center bg-white/2 border border-dashed border-white/10 rounded-[3.5rem] group hover:bg-white/4 transition-all duration-700 relative overflow-hidden">
+                                <div className="py-10 md:py-24 text-center bg-white/2 border border-dashed border-white/10 rounded-2xl md:rounded-[3.5rem] group hover:bg-white/4 transition-all duration-700 relative overflow-hidden">
                                     <div className="absolute inset-0 bg-linear-to-b from-indigo-500/2 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
                                     <motion.div
                                         initial={{ scale: 0.9, opacity: 0 }}
                                         animate={{ scale: 1, opacity: 1 }}
                                         className="flex flex-col items-center relative z-10"
                                     >
-                                        <div className="w-24 h-24 bg-indigo-500/5 rounded-4xl flex items-center justify-center mb-8 border border-indigo-500/10 group-hover:scale-110 group-hover:rotate-12 transition-all duration-700 shadow-2xl">
-                                            <Filter className="w-10 h-10 text-indigo-400/40" />
+                                        <div className="w-14 h-14 md:w-24 md:h-24 bg-indigo-500/5 rounded-2xl md:rounded-4xl flex items-center justify-center mb-4 md:mb-8 border border-indigo-500/10 group-hover:scale-110 group-hover:rotate-12 transition-all duration-700 shadow-2xl">
+                                            <Filter className="w-6 h-6 md:w-10 md:h-10 text-indigo-400/40" />
                                         </div>
-                                        <h4 className="text-white font-black uppercase tracking-[0.4em] text-sm mb-4">Selecciona un filtro para comenzar</h4>
-                                        <p className="text-slate-500 text-xs font-black max-w-xs mx-auto leading-relaxed uppercase tracking-[0.2em] opacity-40">
-                                            Usa el buscador o el selector superior para visualizar las direcciones IP del segmento detectado.
+                                        <h4 className="text-white font-black uppercase tracking-[0.3em] md:tracking-[0.4em] text-xs md:text-sm mb-2 md:mb-4">Selecciona un filtro</h4>
+                                        <p className="text-slate-500 text-[10px] md:text-xs font-black max-w-xs mx-auto leading-relaxed uppercase tracking-[0.15em] md:tracking-[0.2em] opacity-40 px-4">
+                                            Usa el buscador o el selector superior.
                                         </p>
                                     </motion.div>
                                 </div>
                             ) : (
-                                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-5 pb-20">
+                                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3 md:gap-5 pb-20">
                                     {mapLoading ? (
                                         [1, 2, 3, 4, 5, 6, 7, 8].map(i => <div key={i} className="h-44 bg-white/5 rounded-[2.5rem] animate-pulse border border-white/5 shadow-inner"></div>)
                                     ) : filteredIps?.length === 0 ? (
@@ -618,46 +618,43 @@ const IPAM = () => {
                                                 initial={{ opacity: 0, scale: 0.95 }}
                                                 animate={{ opacity: 1, scale: 1 }}
                                                 exit={{ opacity: 0, scale: 0.95 }}
-                                                className={`relative group p-5 rounded-4xl bg-[#0c1222] border border-white/5 hover:border-indigo-500/20 transition-all duration-500 hover:shadow-2xl hover:shadow-indigo-500/10 overflow-hidden ${ip.estado === 'RESERVADA' ? 'hover:border-sky-500/20 hover:shadow-sky-500/10' :
+                                                className={`relative group p-3.5 md:p-5 rounded-2xl md:rounded-4xl bg-[#0c1222] border border-white/5 hover:border-indigo-500/20 transition-all duration-500 hover:shadow-2xl hover:shadow-indigo-500/10 overflow-hidden ${ip.estado === 'RESERVADA' ? 'hover:border-sky-500/20 hover:shadow-sky-500/10' :
                                                     ip.estado === 'OCUPADA' ? 'hover:border-indigo-500/30' : ''
                                                     }`}
                                             >
-                                                {/* Background Glow */}
-                                                <div className={`absolute -right-20 -top-20 w-40 h-40 blur-[80px] rounded-full transition-all duration-700 opacity-0 group-hover:opacity-20 ${ip.estado === 'OCUPADA' ? 'bg-indigo-500' :
-                                                    ip.estado === 'RESERVADA' ? 'bg-sky-500' : 'bg-emerald-500'
-                                                    }`} />
+                                                
 
                                                 {/* Card Content */}
                                                 <div className="relative z-10 flex flex-col h-full items-center text-center">
                                                     {/* Top: IP and Status */}
-                                                    <div className="flex items-center justify-center gap-3 mb-5">
+                                                    <div className="flex items-center justify-center gap-2 md:gap-3 mb-3 md:mb-5">
                                                         <div className="relative">
-                                                            <p className="text-white font-black text-lg tracking-tight leading-none select-none">{ip.ip}</p>
+                                                            <p className="text-white font-black text-sm md:text-lg tracking-tight leading-none select-none">{ip.ip}</p>
                                                         </div>
-                                                        <span className={`px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-[0.15em] border ${ip.estado === 'OCUPADA' ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' :
+                                                        <span className={`px-1.5 md:px-2 py-0.5 rounded-lg text-[7px] md:text-[8px] font-black uppercase tracking-[0.15em] border ${ip.estado === 'OCUPADA' ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' :
                                                             ip.estado === 'RESERVADA' ? 'bg-sky-500/10 text-sky-400 border-sky-500/20' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
                                                             }`}>
                                                             {ip.estado}
                                                         </span>
 
                                                         {ip.estado === 'RESERVADA' && ip.notas && (
-                                                            <span className="text-[9px] text-sky-400/60 font-medium tracking-tight">
+                                                            <span className="text-[8px] md:text-[9px] text-sky-400/60 font-medium tracking-tight hidden md:inline">
                                                                 {ip.notas}
                                                             </span>
                                                         )}
                                                     </div>
 
                                                     {/* Middle: Actions (Buttons) */}
-                                                    <div className="flex items-center justify-center gap-2 mb-2">
+                                                    <div className="flex items-center justify-center gap-1.5 md:gap-2 mb-2">
                                                         {ip.estado === 'OCUPADA' && (
                                                             <>
                                                                 <button
                                                                     onClick={() => handleViewDetails(ip.equipo.id)}
-                                                                    className="p-2.5 rounded-xl transition-all duration-300 border shadow-lg bg-white/3 border-white/5 hover:border-indigo-500/40 text-slate-500 hover:text-indigo-400 hover:bg-indigo-500/5 group/detail flex items-center gap-2 cursor-pointer"
+                                                                    className="p-2 md:p-2.5 rounded-lg md:rounded-xl transition-all duration-300 border shadow-lg bg-white/3 border-white/5 hover:border-indigo-500/40 text-slate-500 hover:text-indigo-400 hover:bg-indigo-500/5 group/detail flex items-center gap-1.5 md:gap-2 cursor-pointer"
                                                                     title="Ver detalles del equipo"
                                                                 >
-                                                                    <Eye className="w-4 h-4 group-hover/detail:scale-110 transition-transform" />
-                                                                    <span className="text-[10px] font-black uppercase tracking-wider hidden group-hover/detail:inline-block animate-in fade-in slide-in-from-left-1">Detalle</span>
+                                                                    <Eye className="w-3.5 h-3.5 md:w-4 md:h-4 group-hover/detail:scale-110 transition-transform" />
+                                                                    <span className="text-[9px] md:text-[10px] font-black uppercase tracking-wider hidden group-hover/detail:inline-block animate-in fade-in slide-in-from-left-1">Detalle</span>
                                                                 </button>
                                                                 <button
                                                                     onClick={() => {
@@ -665,11 +662,11 @@ const IPAM = () => {
                                                                             handleUnlink(ip.ip, ip.equipo.id);
                                                                         }
                                                                     }}
-                                                                    className="p-2.5 rounded-xl transition-all duration-300 border shadow-lg bg-rose-500/5 border-rose-500/10 hover:border-rose-500/40 text-rose-400/50 hover:text-rose-400 hover:bg-rose-500/10 group/unlink flex items-center gap-2 cursor-pointer"
+                                                                    className="p-2 md:p-2.5 rounded-lg md:rounded-xl transition-all duration-300 border shadow-lg bg-rose-500/5 border-rose-500/10 hover:border-rose-500/40 text-rose-400/50 hover:text-rose-400 hover:bg-rose-500/10 group/unlink flex items-center gap-1.5 md:gap-2 cursor-pointer"
                                                                     title="Desvincular IP del equipo"
                                                                 >
-                                                                    <Trash2 className="w-4 h-4 group-hover/unlink:scale-110 transition-transform" />
-                                                                    <span className="text-[10px] font-black uppercase tracking-wider hidden group-hover/unlink:inline-block animate-in fade-in slide-in-from-left-1">Vínculo</span>
+                                                                    <Trash2 className="w-3.5 h-3.5 md:w-4 md:h-4 group-hover/unlink:scale-110 transition-transform" />
+                                                                    <span className="text-[9px] md:text-[10px] font-black uppercase tracking-wider hidden group-hover/unlink:inline-block animate-in fade-in slide-in-from-left-1">Vínculo</span>
                                                                 </button>
                                                             </>
                                                         )}
@@ -680,22 +677,22 @@ const IPAM = () => {
                                                                         setReservingIp(ip.ip);
                                                                         setIsReserveModalOpen(true);
                                                                     }}
-                                                                    className="p-2.5 rounded-xl transition-all duration-300 border shadow-lg bg-white/3 border-white/5 hover:border-sky-500/40 text-slate-500 hover:text-sky-400 hover:bg-sky-500/5 group/reserve flex items-center gap-2 cursor-pointer"
+                                                                    className="p-2 md:p-2.5 rounded-lg md:rounded-xl transition-all duration-300 border shadow-lg bg-white/3 border-white/5 hover:border-sky-500/40 text-slate-500 hover:text-sky-400 hover:bg-sky-500/5 group/reserve flex items-center gap-1.5 md:gap-2 cursor-pointer"
                                                                     title="Reservar IP"
                                                                 >
-                                                                    <Lock className="w-4 h-4 group-hover/reserve:scale-110 transition-transform" />
-                                                                    <span className="text-[10px] font-black uppercase tracking-wider hidden group-hover/reserve:inline-block animate-in fade-in slide-in-from-left-1">Reservar</span>
+                                                                    <Lock className="w-3.5 h-3.5 md:w-4 md:h-4 group-hover/reserve:scale-110 transition-transform" />
+                                                                    <span className="text-[9px] md:text-[10px] font-black uppercase tracking-wider hidden group-hover/reserve:inline-block animate-in fade-in slide-in-from-left-1">Reservar</span>
                                                                 </button>
                                                                 <button
                                                                     onClick={() => {
                                                                         setAssigningIp(ip.ip);
                                                                         setIsAssignModalOpen(true);
                                                                     }}
-                                                                    className="p-2.5 rounded-xl transition-all duration-300 border shadow-lg bg-white/3 border-white/5 hover:border-indigo-500/40 text-slate-500 hover:text-indigo-400 hover:bg-indigo-500/5 group/link flex items-center gap-2 cursor-pointer"
+                                                                    className="p-2 md:p-2.5 rounded-lg md:rounded-xl transition-all duration-300 border shadow-lg bg-white/3 border-white/5 hover:border-indigo-500/40 text-slate-500 hover:text-indigo-400 hover:bg-indigo-500/5 group/link flex items-center gap-1.5 md:gap-2 cursor-pointer"
                                                                     title="Vincular a equipo"
                                                                 >
-                                                                    <LinkIcon className="w-4 h-4 group-hover/link:scale-110 transition-transform" />
-                                                                    <span className="text-[10px] font-black uppercase tracking-wider hidden group-hover/link:inline-block animate-in fade-in slide-in-from-left-1">Vincular</span>
+                                                                    <LinkIcon className="w-3.5 h-3.5 md:w-4 md:h-4 group-hover/link:scale-110 transition-transform" />
+                                                                    <span className="text-[9px] md:text-[10px] font-black uppercase tracking-wider hidden group-hover/link:inline-block animate-in fade-in slide-in-from-left-1">Vincular</span>
                                                                 </button>
                                                             </>
                                                         )}
@@ -703,11 +700,11 @@ const IPAM = () => {
                                                             <>
                                                                 <button
                                                                     onClick={() => handleRelease(ip.ip)}
-                                                                    className="p-2.5 rounded-xl transition-all duration-300 border shadow-lg bg-rose-500/5 border-rose-500/10 hover:border-rose-500/40 text-rose-400/50 hover:text-rose-400 hover:bg-rose-500/10 group/release flex items-center gap-2 cursor-pointer"
+                                                                    className="p-2 md:p-2.5 rounded-lg md:rounded-xl transition-all duration-300 border shadow-lg bg-rose-500/5 border-rose-500/10 hover:border-rose-500/40 text-rose-400/50 hover:text-rose-400 hover:bg-rose-500/10 group/release flex items-center gap-1.5 md:gap-2 cursor-pointer"
                                                                     title="Liberar Reserva"
                                                                 >
-                                                                    <Unlock className="w-4 h-4 group-hover/release:scale-110 transition-transform" />
-                                                                    <span className="text-[10px] font-black uppercase tracking-wider hidden group-hover/release:inline-block animate-in fade-in slide-in-from-left-1">Liberar</span>
+                                                                    <Unlock className="w-3.5 h-3.5 md:w-4 md:h-4 group-hover/release:scale-110 transition-transform" />
+                                                                    <span className="text-[9px] md:text-[10px] font-black uppercase tracking-wider hidden group-hover/release:inline-block animate-in fade-in slide-in-from-left-1">Liberar</span>
                                                                 </button>
                                                                 <button
                                                                     onClick={() => {

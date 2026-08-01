@@ -37,7 +37,7 @@ body {
 
 /* Custom Scrollbar Premium */
 .custom-scrollbar::-webkit-scrollbar {
-  width: 5px;
+  width: 3px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {

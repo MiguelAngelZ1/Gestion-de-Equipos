@@ -31,7 +31,6 @@ const ProfilePanel = () => {
                 confirmPassword: ''
             });
         } catch (error) {
-            console.error("Error fetching perfil:", error);
             setError("No se pudo cargar la información del perfil.");
         } finally {
             setLoading(false);

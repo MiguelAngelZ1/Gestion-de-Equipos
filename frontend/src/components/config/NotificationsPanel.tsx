@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Bell, Shield, Smartphone, Check, AlertCircle, RefreshCw, Smartphone as Mobile } from 'lucide-react';
+import { Bell, Shield, Check, AlertCircle, RefreshCw, Smartphone as Mobile } from 'lucide-react';
 import { notificationManager } from '../../services/notificationManager';
 
 const NotificationsPanel = () => {

@@ -19,8 +19,8 @@ const EquipoDetalleModal = ({ isOpen, equipo, estados, onClose, onEquipoUpdated 
     try {
       const data = await apiRequest(`/componentes/instalados/${equipo.id}`);
       setComponentes(data);
-    } catch (err) {
-      console.error(err);
+    } catch {
+      // silent
     } finally {
       setLoading(false);
     }
@@ -144,7 +144,7 @@ const EquipoDetalleModal = ({ isOpen, equipo, estados, onClose, onEquipoUpdated 
             </div>
 
             {/* Body Scrolleable */}
-            <div className="p-5 sm:p-6 flex-1 overflow-y-auto custom-scrollbar relative z-10 bg-black/20">
+            <div className="p-4 sm:p-5 flex-1 overflow-y-auto custom-scrollbar relative z-10 bg-black/20">
               <AnimatePresence mode="wait">
                 {activeTab === 'info' ? (
                   <motion.div 
@@ -167,13 +167,13 @@ const EquipoDetalleModal = ({ isOpen, equipo, estados, onClose, onEquipoUpdated 
                     </div>
 
                     {/* Ficha Técnica / Especificaciones */}
-                    <div className="bg-white/[0.03] border border-white/5 rounded-[2rem] overflow-hidden">
-                       <div className="px-6 py-4 bg-white/5 border-b border-white/5 flex items-center gap-3">
+                     <div className="bg-white/[0.03] border border-white/5 rounded-2xl overflow-hidden">
+                       <div className="px-4 sm:px-6 py-3 sm:py-4 bg-white/5 border-b border-white/5 flex items-center gap-3">
                           <Info className="w-4 h-4 text-indigo-400" />
                           <h4 className="text-[10px] font-black text-white uppercase tracking-widest">Ficha Técnica Base</h4>
                        </div>
                        
-                       <div className="p-6">
+                       <div className="p-4 sm:p-6">
                          {equipo.especificaciones && equipo.especificaciones.length > 0 ? (
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
                                {equipo.especificaciones.map((spec, i) => (

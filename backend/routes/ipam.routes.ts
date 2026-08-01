@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const ipamService = require('../services/ipam.service');
-const { ROLES, PERMISOS } = require('../config/constants');
+const { PERMISOS } = require('../config/constants');
 const { verificarAutenticacion, requirePermission } = require('../middleware/auth.middleware');
 const { ipamLimiter } = require('../utils/rateLimiter');
 const { validateBody } = require('../middleware/validate.middleware');
