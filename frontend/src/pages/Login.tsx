@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
@@ -44,6 +44,8 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [resendCooldown, setResendCooldown] = useState(0);
   const { login } = useAuth();
 
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -92,6 +94,7 @@ const Login = () => {
       if (data.success) {
         setViewState('recover_code');
         setSuccessMsg('Te hemos enviado un código de seguridad.');
+        setResendCooldown(30);
         setError('');
       }
     } catch (err: any) {
@@ -104,6 +107,10 @@ const Login = () => {
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!codigo || !newPassword) return;
+    if (newPassword !== confirmPassword) {
+      triggerError('Las contraseñas no coinciden.');
+      return;
+    }
     setLoading(true);
     try {
       const data = await apiRequest('/auth/reset-password', {
@@ -116,11 +123,54 @@ const Login = () => {
         showToast('Contraseña actualizada con éxito', 'success');
       }
     } catch (err: any) {
+      setCodigo('');
       triggerError(err.message || 'Error al restablecer la contraseña');
     } finally {
       setLoading(false);
     }
   };
+
+  const handleResendCode = useCallback(async () => {
+    if (resendCooldown > 0 || loading) return;
+    setLoading(true);
+    try {
+      await apiRequest('/auth/forgot-password', {
+        method: 'POST',
+        body: JSON.stringify({ email }),
+      });
+      setCodigo('');
+      setResendCooldown(30);
+      showToast('Te hemos enviado un nuevo código.', 'success');
+    } catch (err: any) {
+      triggerError(err.message || 'Error al reenviar el código');
+    } finally {
+      setLoading(false);
+    }
+  }, [email, resendCooldown, loading, showToast, triggerError]);
+
+  const maskEmail = (e: string): string => {
+    const [user, domain] = e.split('@');
+    if (!domain) return e;
+    const maskedUser = user.length > 2 ? user[0] + '***' + user[user.length - 1] : user[0] + '***';
+    return `${maskedUser}@${domain}`;
+  };
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const timer = setInterval(() => {
+      setResendCooldown((prev) => (prev <= 1 ? 0 : prev - 1));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [resendCooldown]);
+
+  useEffect(() => {
+    if (viewState !== 'success') return;
+    const timer = setTimeout(() => {
+      setViewState('login');
+      setSuccessMsg('');
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [viewState]);
 
   const getPasswordStrength = (pw: string): { level: number; label: string; color: string } => {
     if (!pw) return { level: 0, label: '', color: '' };
@@ -148,7 +198,8 @@ const Login = () => {
         fontFamily: "'Outfit', sans-serif",
         bgcolor: '#000000',
         position: 'relative',
-        overflow: 'hidden',
+        overflowY: 'auto',
+        overflowX: 'hidden',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -177,7 +228,7 @@ const Login = () => {
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          justifyContent: 'center',
+          justifyContent: 'safe center',
           width: '100%',
           maxWidth: { xs: '100%', sm: 420 },
           px: { xs: 2, sm: 3 },
@@ -552,6 +603,9 @@ const Login = () => {
                     onSubmit={handleResetPassword}
                     style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}
                   >
+                    <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', mb: -1, fontSize: '0.813rem' }}>
+                      Código enviado a <Box component="span" sx={{ color: '#818cf8', fontWeight: 600 }}>{maskEmail(email)}</Box>
+                    </Typography>
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
                       {/* Code inputs */}
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: { xs: 0.5, sm: 1 }, px: { xs: 0.2, sm: 0.5 } }}>
@@ -689,6 +743,30 @@ const Login = () => {
                           </Typography>
                         </motion.div>
                       )}
+
+                      {/* Confirm password */}
+                      <TextField
+                        fullWidth
+                        label="Confirmar contraseña"
+                        type="password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        error={confirmPassword.length > 0 && confirmPassword !== newPassword}
+                        helperText={
+                          confirmPassword.length > 0 && confirmPassword !== newPassword
+                            ? 'Las contraseñas no coinciden'
+                            : ''
+                        }
+                        slotProps={{
+                          input: {
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                <KeyRound size={20} style={{ color: '#94a3b8' }} />
+                              </InputAdornment>
+                            ),
+                          },
+                        }}
+                      />
                     </Box>
 
                     <Button
@@ -739,13 +817,14 @@ const Login = () => {
                         component="button"
                         type="button"
                         variant="body2"
-                        onClick={() => {
-                          setCodigo('');
-                          setSuccessMsg('Te hemos enviado un nuevo código.');
+                        onClick={handleResendCode}
+                        sx={{
+                          fontSize: '0.813rem',
+                          color: resendCooldown > 0 ? '#64748b' : '#818cf8',
+                          pointerEvents: resendCooldown > 0 ? 'none' : 'auto',
                         }}
-                        sx={{ fontSize: '0.813rem', color: '#818cf8' }}
                       >
-                        Reenviar código
+                        {resendCooldown > 0 ? `Reenviar código (${resendCooldown}s)` : 'Reenviar código'}
                       </Link>
                     </Box>
                   </motion.form>
@@ -800,6 +879,9 @@ const Login = () => {
                     <Box>
                       <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500, px: 2, lineHeight: 1.6 }}>
                         {successMsg || 'Tu cuenta ya está asegurada con tu nueva clave. Ya puedes iniciar sesión nuevamente.'}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1, opacity: 0.7 }}>
+                        Redirigiendo al inicio en 3s...
                       </Typography>
                     </Box>
 

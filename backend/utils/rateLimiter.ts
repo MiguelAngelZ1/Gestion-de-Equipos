@@ -21,10 +21,16 @@ const authLimiter = createLimiter({
   message: 'Demasiados intentos de login. Intenta mas tarde.',
 });
 
-const passwordResetLimiter = createLimiter({
+const forgotPasswordLimiter = createLimiter({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: 'Demasiados intentos de envío de código. Intenta de nuevo en 15 minutos.',
+});
+
+const resetPasswordLimiter = createLimiter({
   windowMs: 15 * 60 * 1000,
   max: 3,
-  message: 'Demasiados intentos de recuperación de contraseña. Intenta de nuevo en 15 minutos.',
+  message: 'Demasiados intentos de restablecimiento de contraseña. Intenta de nuevo en 15 minutos.',
 });
 
 const registerLimiter = createLimiter({
@@ -65,7 +71,8 @@ const apiLimiter = createLimiter({
 
 module.exports = {
   authLimiter,
-  passwordResetLimiter,
+  forgotPasswordLimiter,
+  resetPasswordLimiter,
   registerLimiter,
   backupSyncLimiter,
   exportLimiter,
