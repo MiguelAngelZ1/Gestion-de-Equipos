@@ -1,8 +1,8 @@
 {
-  "id": "/imperio-v2026",
-  "name": "CONTROL DE EQUIPOS",
-  "short_name": "IMPERIO",
-  "description": "SISTEMA DE GESTIÓN | IMPERIO",
+  "id": "/control-equipos",
+  "name": "Control de Equipos",
+  "short_name": "Equipos",
+  "description": "Sistema de gestión y control de equipos tecnológicos",
   "start_url": "/",
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui"],

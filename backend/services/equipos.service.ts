@@ -18,20 +18,20 @@ class EquiposService {
         if (q && q.trim() !== "") {
             const search = `%${q.trim()}%`;
             whereClause += ` AND (
-                e.ine LIKE ? OR 
-                e.nne LIKE ? OR 
-                e.serie LIKE ? OR 
-                gc.nombre LIKE ? OR 
-                es.nombre LIKE ? OR 
-                u.nombre LIKE ? OR 
-                u.ubicacion LIKE ? OR
-                r.nombre LIKE ? OR 
-                r.apellido LIKE ? OR
-                r.grado LIKE ? OR
+                LOWER(e.ine) LIKE LOWER(?) OR 
+                LOWER(e.nne) LIKE LOWER(?) OR 
+                LOWER(e.serie) LIKE LOWER(?) OR 
+                LOWER(gc.nombre) LIKE LOWER(?) OR 
+                LOWER(es.nombre) LIKE LOWER(?) OR 
+                LOWER(u.nombre) LIKE LOWER(?) OR 
+                LOWER(u.ubicacion) LIKE LOWER(?) OR
+                LOWER(r.nombre) LIKE LOWER(?) OR 
+                LOWER(r.apellido) LIKE LOWER(?) OR
+                LOWER(r.grado) LIKE LOWER(?) OR
                 EXISTS (
                     SELECT 1 FROM especificaciones esp 
                     WHERE esp.equipo_id = e.id 
-                    AND (esp.clave LIKE ? OR esp.valor LIKE ?)
+                    AND (LOWER(esp.clave) LIKE LOWER(?) OR LOWER(esp.valor) LIKE LOWER(?))
                 )
             )`;
             for(let i=0; i<12; i++) params.push(search);

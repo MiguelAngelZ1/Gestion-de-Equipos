@@ -16,7 +16,7 @@ class ComponentesService {
         const params = [];
         if (q && q.trim() !== "") {
             const search = `%${q.trim()}%`;
-            sql += ` AND (nombre LIKE ? OR nne LIKE ? OR serie LIKE ?)`;
+            sql += ` AND (LOWER(nombre) LIKE LOWER(?) OR LOWER(nne) LIKE LOWER(?) OR LOWER(serie) LIKE LOWER(?))`;
             params.push(search, search, search);
         }
 

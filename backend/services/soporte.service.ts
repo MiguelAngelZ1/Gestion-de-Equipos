@@ -24,11 +24,11 @@ class SoporteService {
         if (q && q.trim() !== "") {
             const search = `%${q.trim()}%`;
             sql += ` AND (
-                t.responsable LIKE ? OR 
-                t.tarea_realizada LIKE ? OR 
-                t.ticket_id LIKE ? OR 
-                e.ine LIKE ? OR 
-                e.serie LIKE ?
+                LOWER(t.responsable) LIKE LOWER(?) OR 
+                LOWER(t.tarea_realizada) LIKE LOWER(?) OR 
+                LOWER(t.ticket_id) LIKE LOWER(?) OR 
+                LOWER(e.ine) LIKE LOWER(?) OR 
+                LOWER(e.serie) LIKE LOWER(?)
             )`;
             for(let i=0; i<5; i++) params.push(search);
         }

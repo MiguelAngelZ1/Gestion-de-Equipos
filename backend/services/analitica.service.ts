@@ -107,10 +107,10 @@ class HistorialService {
         if (q && q.trim() !== "") {
             const searchStr = `%${q.trim()}%`;
             whereClause += ` AND (
-                hp.responsable LIKE ? OR hp.evento LIKE ? OR hp.notas LIKE ?
-                OR eq.ine LIKE ? OR eq.serie LIKE ? OR eq.nne LIKE ?
-                OR gc.nombre LIKE ? OR r.apellido LIKE ?
-                OR EXISTS (SELECT 1 FROM especificaciones esp WHERE esp.equipo_id = eq.id AND (esp.clave LIKE ? OR esp.valor LIKE ?))
+                LOWER(hp.responsable) LIKE LOWER(?) OR LOWER(hp.evento) LIKE LOWER(?) OR LOWER(hp.notas) LIKE LOWER(?)
+                OR LOWER(eq.ine) LIKE LOWER(?) OR LOWER(eq.serie) LIKE LOWER(?) OR LOWER(eq.nne) LIKE LOWER(?)
+                OR LOWER(gc.nombre) LIKE LOWER(?) OR LOWER(r.apellido) LIKE LOWER(?)
+                OR EXISTS (SELECT 1 FROM especificaciones esp WHERE esp.equipo_id = eq.id AND (LOWER(esp.clave) LIKE LOWER(?) OR LOWER(esp.valor) LIKE LOWER(?)))
             )`;
             params.push(searchStr, searchStr, searchStr, searchStr, searchStr, searchStr, searchStr, searchStr, searchStr, searchStr);
         }

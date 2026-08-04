@@ -1,4 +1,4 @@
-const CACHE_NAME = 'equipos-cache-v1';
+const CACHE_NAME = 'equipos-cache-v2';
 const OFFLINE_URL = '/offline.html';
 
 self.addEventListener('install', (event) => {
@@ -98,8 +98,8 @@ self.addEventListener('push', (event) => {
   const origin = self.location.origin;
   const options = {
     body: data.body,
-    icon: `${origin}/notification-icon.png?v=6`,
-    badge: `${origin}/notification-badge.png?v=6`,
+    icon: `${origin}/notification-icon.png?v=7`,
+    badge: `${origin}/notification-badge.png?v=7`,
     vibrate: [100, 50, 100],
     data: data.data || {},
     actions: [

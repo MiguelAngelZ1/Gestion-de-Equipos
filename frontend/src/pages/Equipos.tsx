@@ -352,7 +352,7 @@ const Equipos = () => {
                   <CheckCircle className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h4 className="text-white font-bold text-sm">{selectedIds.length}选</h4>
+                  <h4 className="text-white font-bold text-sm">{selectedIds.length} seleccionados</h4>
                   <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Acciones masivas</p>
                 </div>
               </div>
