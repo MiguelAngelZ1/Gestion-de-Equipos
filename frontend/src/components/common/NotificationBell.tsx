@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bell, Package, Wrench, Info, CheckCheck, Trash2, MessageSquare, Zap, Sparkles } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { createPortal } from 'react-dom';
 import { apiRequest, getUserData, getAuthToken } from '../../services/api';
 
 const NotificationBell = () => {
@@ -9,6 +9,8 @@ const NotificationBell = () => {
     const [notifications, setNotifications] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
     const dropdownRef = useRef(null);
+    const panelRef = useRef(null);
+    const [pos, setPos] = useState(null);
     const navigate = useNavigate();
 
     // Determinar la URL del servidor de sockets (misma base que la API sin el /api)
@@ -117,7 +119,7 @@ const NotificationBell = () => {
 
     useEffect(() => {
         const handleClickOutside = (event) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target) && !panelRef.current?.contains(event.target)) {
                 setIsOpen(false);
             }
         };
@@ -187,10 +189,20 @@ const NotificationBell = () => {
         setIsOpen(false);
     };
 
+    const toggleOpen = () => {
+        if (!isOpen) {
+            const rect = dropdownRef.current?.getBoundingClientRect();
+            if (rect) {
+                setPos({ top: rect.bottom + 8, right: Math.max(8, window.innerWidth - rect.right) });
+            }
+        }
+        setIsOpen(!isOpen);
+    };
+
     return (
         <div className="relative" ref={dropdownRef}>
             <button
-                onClick={() => setIsOpen(!isOpen)}
+                onClick={toggleOpen}
                 className="relative p-2.5 rounded-2xl bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-all cursor-pointer active:scale-95"
                 aria-label={`Notificaciones ${unreadCount > 0 ? `(${unreadCount} sin leer)` : ''}`}
                 aria-haspopup="true"
@@ -204,14 +216,12 @@ const NotificationBell = () => {
                 )}
             </button>
 
-            <AnimatePresence>
-                {isOpen && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                        className="absolute right-0 mt-3 w-80 bg-[#1e293b]/95 backdrop-blur-2xl border border-white/10 rounded-[2rem] shadow-2xl z-[100] overflow-hidden"
-                    >
+            {createPortal(isOpen && (
+                <div
+                    ref={panelRef}
+                    style={{ top: pos?.top ?? 8, right: pos?.right ?? 8 }}
+                    className="fixed left-4 z-[100] sm:w-80 flex flex-col overflow-hidden rounded-[2rem] border border-white/10 bg-[#1e293b]/95 backdrop-blur-2xl shadow-2xl max-h-[calc(100dvh-1rem)] notif-drop"
+                >
                         <div className="p-4 border-b border-white/5 flex flex-col gap-3 bg-white/5">
                             <div className="flex justify-between items-center">
                                 <h3 className="text-white font-black tracking-tight flex items-center gap-2">
@@ -243,7 +253,7 @@ const NotificationBell = () => {
                             )}
                         </div>
 
-                        <div className="max-h-[400px] overflow-y-auto custom-scrollbar">
+                        <div className="flex-1 overflow-y-auto custom-scrollbar min-h-0">
                             {notifications.length === 0 ? (
                                 <div className="py-12 flex flex-col items-center justify-center text-center px-6">
                                     <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mb-3">
@@ -285,9 +295,10 @@ const NotificationBell = () => {
                                 </div>
                             )}
                         </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                    </div>
+                ),
+                document.body
+            )}
         </div>
     );
 };

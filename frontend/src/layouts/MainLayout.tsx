@@ -153,7 +153,18 @@ const MainLayout = () => {
            <img src={logoImage} alt="Logo IMPERIO" className="h-7 w-7 object-contain" />
            <h1 className="text-white font-bold text-sm tracking-tight">{pageInfo.title}</h1>
         </div>
-        {userRole === ROLES.ADMIN && <NotificationBell />}
+        <div className="flex items-center gap-2">
+          {userRole === ROLES.ADMIN && <NotificationBell />}
+          <span className="text-white text-[11px] font-black tracking-tight max-w-[80px] truncate">{userData.usuario || 'Usuario'}</span>
+          <motion.button
+            whileTap={{ scale: 0.9 }}
+            onClick={handleLogout}
+            aria-label="Cerrar sesión del sistema"
+            className="flex items-center justify-center w-9 h-9 rounded-xl text-slate-400 hover:text-rose-400 hover:bg-white/5 transition-colors cursor-pointer"
+          >
+            <LogOut className="w-5 h-5" aria-hidden="true" />
+          </motion.button>
+        </div>
       </motion.header>
 
       {/* Sidebar Desktop */}
@@ -225,19 +236,19 @@ const MainLayout = () => {
               <h1 className="text-white font-black text-2xl tracking-tighter leading-none">{pageInfo.title}</h1>
               <p className="text-slate-400 text-xs font-medium mt-1 uppercase tracking-widest">{pageInfo.subtitle}</p>
            </div>
-           <div className="flex items-center gap-4">
-              {userRole === ROLES.ADMIN && <NotificationBell />}
-              <div className="h-10 w-[1px] bg-white/10 mx-2" />
-                  <div className="flex items-center gap-3 bg-white/5 pr-4 pl-2 py-1.5 rounded-2xl border border-white/5 cursor-pointer hover:bg-white/10 transition-colors" role="status" aria-label="Perfil de usuario">
-                     <div className="w-8 h-8 rounded-xl bg-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold text-xs" aria-hidden="true">
-                    {userData.usuario?.substring(0, 2).toUpperCase() || 'AD'}
-                 </div>
-                 <div className="flex flex-col">
-                    <span className="text-white text-[11px] font-black leading-none">{userData.usuario || 'Usuario'}</span>
-                    <span className="text-slate-400 text-[9px] font-bold uppercase tracking-wider">{userRole}</span>
-                 </div>
-              </div>
-           </div>
+            <div className="flex items-center gap-4">
+               {userRole === ROLES.ADMIN && <NotificationBell />}
+               <div className="h-10 w-[1px] bg-white/10 mx-2" />
+                   <div className="flex items-center gap-3 bg-white/5 pr-4 pl-2 py-1.5 rounded-2xl border border-white/5 cursor-pointer hover:bg-white/10 transition-colors" role="status" aria-label="Perfil de usuario">
+                      <div className="w-8 h-8 rounded-xl bg-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold text-xs" aria-hidden="true">
+                     {userData.usuario?.substring(0, 2).toUpperCase() || 'AD'}
+                  </div>
+                  <div className="flex flex-col">
+                     <span className="text-white text-[11px] font-black leading-none">{userData.usuario || 'Usuario'}</span>
+                     <span className="text-slate-400 text-[9px] font-bold uppercase tracking-wider">{userRole}</span>
+                  </div>
+               </div>
+            </div>
         </div>
 
         {/* Dynamic Area: Here to avoid double scrollbars, we let the inner pages handle it if they need to */}
