@@ -2,6 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const notificationService = require('../services/notificationService');
+const db = require('../db/database');
 
 // Middleware para verificar token
 const { verificarAutenticacion } = require('../middleware/auth.middleware');
@@ -36,8 +37,48 @@ router.post('/subscribe', verificarAutenticacion, async (req, res, next) => {
 router.get('/', verificarAutenticacion, async (req, res, next) => {
     try {
         const userId = req.user?.userId ?? req.user?.id;
-        const alerts = await notificationService.getUserAlerts(userId);
-        res.json(alerts);
+        const limit = Math.min(parseInt(req.query.limit) || 20, 100);
+        const offset = parseInt(req.query.offset) || 0;
+
+        const [alerts, total] = await Promise.all([
+            notificationService.getUserAlerts(userId, limit, offset),
+            notificationService.getUserAlertsCount(userId)
+        ]);
+
+        res.json({ data: alerts, total, limit, offset });
+    } catch (error) {
+        next(error);
+    }
+});
+
+// Obtener preferencias de notificación del usuario
+router.get('/preferences', verificarAutenticacion, async (req, res, next) => {
+    try {
+        const userId = req.user?.userId ?? req.user?.id;
+        const prefs = await notificationService.getUserPreferences(userId);
+        res.json(prefs);
+    } catch (error) {
+        next(error);
+    }
+});
+
+// Actualizar preferencias de notificación del usuario
+router.put('/preferences', verificarAutenticacion, async (req, res, next) => {
+    try {
+        const userId = req.user?.userId ?? req.user?.id;
+        const prefs = req.body;
+        const allowedKeys = ['stock', 'taller', 'prestamo', 'sistema'];
+        const sanitized = {};
+        for (const key of allowedKeys) {
+            if (typeof prefs[key] === 'boolean') {
+                sanitized[key] = prefs[key];
+            }
+        }
+        await db.run(
+            `UPDATE usuarios SET notification_preferences = ? WHERE id = ?`,
+            [JSON.stringify(sanitized), parseInt(userId)]
+        );
+        res.json({ success: true, preferences: sanitized });
     } catch (error) {
         next(error);
     }
@@ -80,9 +121,22 @@ router.delete('/read/clear', verificarAutenticacion, async (req, res, next) => {
 });
 
 // Enviar notificación de prueba
+const testNotificationTimestamps = new Map();
+
 router.post('/test', verificarAutenticacion, async (req, res, next) => {
     try {
         const userId = req.user?.userId ?? req.user?.id;
+        const now = Date.now();
+        const lastTest = testNotificationTimestamps.get(userId) || 0;
+
+        if (now - lastTest < 30000) {
+            return res.status(429).json({
+                error: "Espera 30 segundos antes de enviar otra notificación de prueba"
+            });
+        }
+
+        testNotificationTimestamps.set(userId, now);
+
         await notificationService.sendToUser(userId, {
             title: 'Notificación de Prueba',
             body: '¡Excelente! Las notificaciones Push están configuradas correctamente.'
