@@ -2,6 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { Bell, Shield, Check, AlertCircle, RefreshCw, Smartphone as Mobile } from 'lucide-react';
 import { notificationManager } from '../../services/notificationManager';
+import { apiRequest } from '../../services/api';
+import toast from 'react-hot-toast';
 
 const NotificationsPanel = () => {
     const [permission, setPermission] = useState(Notification.permission);
@@ -28,23 +30,46 @@ const NotificationsPanel = () => {
         setTimeout(() => setTestSent(false), 3000);
     };
 
-    const [preferences, setPreferences] = useState(() => {
-        const saved = localStorage.getItem('notification_preferences');
-        return saved ? JSON.parse(saved) : {
-            'stock': true,
-            'tickets': true,
-            'mantenimiento': true,
-            'backups': false,
-            'seguridad': true
-        };
+    const [preferences, setPreferences] = useState({
+        'stock': true,
+        'tickets': true,
+        'mantenimiento': true,
+        'backups': false,
+        'seguridad': true
     });
 
     useEffect(() => {
-        localStorage.setItem('notification_preferences', JSON.stringify(preferences));
-    }, [preferences]);
+        const loadPreferences = async () => {
+            try {
+                const serverPrefs = await apiRequest('/notificaciones/preferences');
+                if (serverPrefs) {
+                    setPreferences(serverPrefs);
+                    localStorage.setItem('notification_preferences', JSON.stringify(serverPrefs));
+                }
+            } catch {
+                const saved = localStorage.getItem('notification_preferences');
+                if (saved) {
+                    setPreferences(JSON.parse(saved));
+                }
+            }
+        };
+        loadPreferences();
+    }, []);
 
-    const togglePreference = (key) => {
-        setPreferences(prev => ({ ...prev, [key]: !prev[key] }));
+    const togglePreference = async (key) => {
+        const newValue = !preferences[key];
+        setPreferences(prev => ({ ...prev, [key]: newValue }));
+        localStorage.setItem('notification_preferences', JSON.stringify({ ...preferences, [key]: newValue }));
+
+        try {
+            await apiRequest('/notificaciones/preferences', {
+                method: 'PUT',
+                body: { ...preferences, [key]: newValue },
+            });
+        } catch {
+            setPreferences(prev => ({ ...prev, [key]: !newValue }));
+            toast.error('No se pudo guardar la preferencia');
+        }
     };
 
     const categories = [
