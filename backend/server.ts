@@ -7,6 +7,14 @@ const jwt = require('jsonwebtoken');
 const { JWT_SECRET } = require('./middleware/auth.middleware');
 const notificationService = require('./services/notificationService');
 
+// Validate VAPID keys on startup
+if (!process.env.VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY) {
+  console.warn('[NOTIFICATIONS] VAPID keys not configured. Push notifications will be disabled.');
+  console.warn('[NOTIFICATIONS] Set VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY in .env');
+} else {
+  console.log('[NOTIFICATIONS] VAPID keys loaded. Push notifications enabled.');
+}
+
 function getCookieValue(cookieHeader, name) {
   if (!cookieHeader) return null;
   const match = cookieHeader.match(new RegExp(`(?:^|;\\s*)${name}=([^;]*)`));
