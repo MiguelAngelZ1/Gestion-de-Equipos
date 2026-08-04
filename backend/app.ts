@@ -14,7 +14,6 @@ const IS_PROD = process.env.NODE_ENV === 'production';
 
 const authRoutes = require('./routes/auth.routes');
 const equiposRoutes = require('./routes/equipos.routes');
-const syncRoutes = require('./routes/sync.routes');
 const exportRoutes = require('./routes/export.routes');
 const configRoutes = require('./routes/config.routes');
 const historialRoutes = require('./routes/historial.routes');
@@ -32,7 +31,6 @@ const errorHandler = require('./middleware/error.middleware');
 const { verificarAutenticacion } = require('./middleware/auth.middleware');
 
 const pinoHttp = require('pino-http');
-const notificationService = require('./services/notificationService');
 
 const app = express();
 
@@ -149,11 +147,6 @@ app.use(cookieParser());
 app.use(express.json({ limit: "1mb" }));
 app.use(validateOrigin);
 
-app.use((req, res, next) => {
-  res.setHeader('X-Content-Type-Options', 'nosniff');
-  next();
-});
-
 if (distExists) {
   app.use(serveIndexWithNonce);
   app.use('/sw.js', (req, res, next) => {
@@ -201,7 +194,6 @@ const dashboardController = require('./controllers/dashboard.controller');
 app.use('/api/auth', authRoutes);
 app.get('/api/dashboard/summary', verificarAutenticacion, dashboardController.getDashboardSummary);
 app.use('/api/equipos', equiposRoutes);
-app.use('/api/sync', syncRoutes);
 app.use('/api/config', configRoutes);
 app.use('/api/historial', historialRoutes);
 app.use('/api/componentes', componentesRoutes);

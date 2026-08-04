@@ -1,4 +1,5 @@
 const logger = require('../utils/logger');
+const db = require('../db/database');
 const componentesService = require('../services/componentes.service');
 const notificationService = require('../services/notificationService');
 
@@ -59,7 +60,10 @@ const instalarComponente = async (req, res, next) => {
 
         // After installation, check stock for the source component
         if (req.body.componente_id) {
-            const componente = await componentesService.getComponenteById(req.body.componente_id);
+            const componente = await db.get(
+                "SELECT id, nombre, cantidad FROM componentes_repuestos WHERE id = ?",
+                [parseInt(req.body.componente_id)]
+            );
             if (componente) {
                 notificationService.checkComponentStock(
                     componente.id,
@@ -90,15 +94,7 @@ const getMovimientosStock = async (req, res, next) => {
         const { id } = req.params;
         const movimientos = await componentesService.getMovimientosStock(id);
         
-        // Formatear para mantener compatibilidad con el frontend si es necesario
-        const formatted = movimientos.map(m => ({
-            ...m,
-            equipo_tipo: m.equipos?.grupos_comodidad?.nombre,
-            ine: m.equipos?.ine,
-            serie: m.equipos?.serie
-        }));
-        
-        res.json(formatted);
+        res.json(movimientos);
     } catch (err) {
         next(err);
     }

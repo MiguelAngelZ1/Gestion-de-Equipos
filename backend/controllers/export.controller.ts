@@ -8,11 +8,7 @@ const HEADER_ACCENT = '4f46e5';
 const ALT_ROW_FILL = 'f8fafc';
 const BORDER_COLOR = 'e2e8f0';
 
-const normalizeText = (value = '') => String(value)
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .trim()
-    .toLowerCase();
+const { normalizeText } = require('../utils/helpers');
 
 const specValue = (specMap, aliases) => {
     for (const alias of aliases) {

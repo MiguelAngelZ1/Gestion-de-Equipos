@@ -1,185 +1,102 @@
-const configService = require("../services/config.service");
+const configService = require('../services/config.service');
+const { asyncHandler } = require('../utils/helpers');
 
 // --- GRUPO COMODIDAD ---
-exports.getGruposComodidad = async (req, res, next) => {
-    try {
-        const rows = await configService.getGruposComodidad();
-        res.json(rows);
-    } catch (error) {
-        next(error);
-    }
-};
+exports.getGruposComodidad = asyncHandler(async (req, res) => {
+    res.json(await configService.getGruposComodidad());
+});
 
-exports.createGrupoComodidad = async (req, res, next) => {
-    try {
-        await configService.createGrupoComodidad(req.body.nombre);
-        res.status(201).json({ message: "Grupo Comodidad creado" });
-    } catch (error) {
-        next(error);
-    }
-};
+exports.createGrupoComodidad = asyncHandler(async (req, res) => {
+    await configService.createGrupoComodidad(req.body.nombre);
+    res.status(201).json({ message: 'Grupo Comodidad creado' });
+});
 
-exports.updateGrupoComodidad = async (req, res, next) => {
-    try {
-        await configService.updateGrupoComodidad(req.params.id, req.body.nombre);
-        res.json({ message: "Grupo Comodidad actualizado" });
-    } catch (error) {
-        next(error);
-    }
-};
+exports.updateGrupoComodidad = asyncHandler(async (req, res) => {
+    await configService.updateGrupoComodidad(req.params.id, req.body.nombre);
+    res.json({ message: 'Grupo Comodidad actualizado' });
+});
 
-exports.deleteGrupoComodidad = async (req, res, next) => {
-    try {
-        await configService.deleteGrupoComodidad(req.params.id);
-        res.json({ message: "Grupo Comodidad eliminado" });
-    } catch (error) {
-        next(error);
-    }
-};
+exports.deleteGrupoComodidad = asyncHandler(async (req, res) => {
+    await configService.deleteGrupoComodidad(req.params.id);
+    res.json({ message: 'Grupo Comodidad eliminado' });
+});
 
-exports.deleteBulkGruposComodidad = async (req, res, next) => {
-    try {
-        await configService.deleteBulkGruposComodidad(req.body.ids);
-        res.json({ message: "Grupos Comodidad eliminados" });
-    } catch (error) {
-        next(error);
-    }
-};
+exports.deleteBulkGruposComodidad = asyncHandler(async (req, res) => {
+    await configService.deleteBulkGruposComodidad(req.body.ids);
+    res.json({ message: 'Grupos Comodidad eliminados' });
+});
 
 // --- GRADOS ---
-exports.getGrados = async (req, res, next) => {
-    try {
-        const rows = await configService.getGrados();
-        res.json(rows);
-    } catch (error) {
-        next(error);
-    }
-};
+exports.getGrados = asyncHandler(async (req, res) => {
+    res.json(await configService.getGrados());
+});
 
-exports.createGrado = async (req, res, next) => {
-    try {
-        await configService.createGrado(req.body.abreviatura, req.body.grado_completo);
-        res.status(201).json({ message: "Grado creado" });
-    } catch (error) {
-        next(error);
-    }
-};
+exports.createGrado = asyncHandler(async (req, res) => {
+    await configService.createGrado(req.body.abreviatura, req.body.grado_completo);
+    res.status(201).json({ message: 'Grado creado' });
+});
 
-exports.updateGrado = async (req, res, next) => {
-    try {
-        await configService.updateGrado(req.params.id, req.body.abreviatura, req.body.grado_completo);
-        res.json({ message: "Grado actualizado" });
-    } catch (error) {
-        next(error);
-    }
-};
+exports.updateGrado = asyncHandler(async (req, res) => {
+    await configService.updateGrado(req.params.id, req.body.abreviatura, req.body.grado_completo);
+    res.json({ message: 'Grado actualizado' });
+});
 
-exports.deleteGrado = async (req, res, next) => {
-    try {
-        await configService.deleteGrado(req.params.id);
-        res.json({ message: "Grado eliminado" });
-    } catch (error) {
-        next(error);
-    }
-};
+exports.deleteGrado = asyncHandler(async (req, res) => {
+    await configService.deleteGrado(req.params.id);
+    res.json({ message: 'Grado eliminado' });
+});
 
-exports.deleteBulkGrados = async (req, res, next) => {
-    try {
-        await configService.deleteBulkGrados(req.body.ids);
-        res.json({ message: "Grados eliminados" });
-    } catch (error) {
-        next(error);
-    }
-};
+exports.deleteBulkGrados = asyncHandler(async (req, res) => {
+    await configService.deleteBulkGrados(req.body.ids);
+    res.json({ message: 'Grados eliminados' });
+});
 
 // --- ESTADOS ---
-exports.getEstados = async (req, res, next) => {
-    try {
-        const rows = await configService.getEstados();
-        res.json(rows);
-    } catch (error) {
-        next(error);
-    }
-};
+exports.getEstados = asyncHandler(async (req, res) => {
+    res.json(await configService.getEstados());
+});
 
-exports.createEstado = async (req, res, next) => {
-    try {
-        await configService.createEstado(req.body.nombre, req.body.color_hex);
-        res.status(201).json({ message: "Estado creado" });
-    } catch (error) {
-        next(error);
-    }
-};
+exports.createEstado = asyncHandler(async (req, res) => {
+    await configService.createEstado(req.body.nombre, req.body.color_hex);
+    res.status(201).json({ message: 'Estado creado' });
+});
 
-exports.updateEstado = async (req, res, next) => {
-    try {
-        await configService.updateEstado(req.params.id, req.body.nombre, req.body.color_hex);
-        res.json({ message: "Estado actualizado" });
-    } catch (error) {
-        next(error);
-    }
-};
+exports.updateEstado = asyncHandler(async (req, res) => {
+    await configService.updateEstado(req.params.id, req.body.nombre, req.body.color_hex);
+    res.json({ message: 'Estado actualizado' });
+});
 
-exports.deleteEstado = async (req, res, next) => {
-    try {
-        await configService.deleteEstado(req.params.id);
-        res.json({ message: "Estado eliminado" });
-    } catch (error) {
-        next(error);
-    }
-};
+exports.deleteEstado = asyncHandler(async (req, res) => {
+    await configService.deleteEstado(req.params.id);
+    res.json({ message: 'Estado eliminado' });
+});
 
-exports.deleteBulkEstados = async (req, res, next) => {
-    try {
-        await configService.deleteBulkEstados(req.body.ids);
-        res.json({ message: "Estados eliminados" });
-    } catch (error) {
-        next(error);
-    }
-};
+exports.deleteBulkEstados = asyncHandler(async (req, res) => {
+    await configService.deleteBulkEstados(req.body.ids);
+    res.json({ message: 'Estados eliminados' });
+});
 
 // --- UBICACIONES ---
-exports.getUbicaciones = async (req, res, next) => {
-    try {
-        const rows = await configService.getUbicaciones();
-        res.json(rows);
-    } catch (error) {
-        next(error);
-    }
-};
+exports.getUbicaciones = asyncHandler(async (req, res) => {
+    res.json(await configService.getUbicaciones());
+});
 
-exports.createUbicacion = async (req, res, next) => {
-    try {
-        await configService.createUbicacion(req.body.nombre);
-        res.status(201).json({ message: "Ubicación creada" });
-    } catch (error) {
-        next(error);
-    }
-};
+exports.createUbicacion = asyncHandler(async (req, res) => {
+    await configService.createUbicacion(req.body.nombre);
+    res.status(201).json({ message: 'Ubicación creada' });
+});
 
-exports.updateUbicacion = async (req, res, next) => {
-    try {
-        await configService.updateUbicacion(req.params.id, req.body.nombre);
-        res.json({ message: "Ubicación actualizada" });
-    } catch (error) {
-        next(error);
-    }
-};
+exports.updateUbicacion = asyncHandler(async (req, res) => {
+    await configService.updateUbicacion(req.params.id, req.body.nombre);
+    res.json({ message: 'Ubicación actualizada' });
+});
 
-exports.deleteUbicacion = async (req, res, next) => {
-    try {
-        await configService.deleteUbicacion(req.params.id);
-        res.json({ message: "Ubicación eliminada" });
-    } catch (error) {
-        next(error);
-    }
-};
+exports.deleteUbicacion = asyncHandler(async (req, res) => {
+    await configService.deleteUbicacion(req.params.id);
+    res.json({ message: 'Ubicación eliminado' });
+});
 
-exports.deleteBulkUbicaciones = async (req, res, next) => {
-    try {
-        await configService.deleteBulkUbicaciones(req.body.ids);
-        res.json({ message: "Ubicaciones eliminadas" });
-    } catch (error) {
-        next(error);
-    }
-};
+exports.deleteBulkUbicaciones = asyncHandler(async (req, res) => {
+    await configService.deleteBulkUbicaciones(req.body.ids);
+    res.json({ message: 'Ubicaciones eliminadas' });
+});

@@ -61,14 +61,6 @@ const PERMISOS = {
     }
 };
 
-const ESTADOS_POR_DEFECTO = {
-    SERVICIO: 'En Servicio',
-    TALLER: 'Taller',
-    REPARACION: 'Reparación',
-    BAJA: 'Baja',
-    MALO: 'Malo'
-};
-
 const TIPOS_NOTIFICACION = {
     SISTEMA: 'sistema',
     TALLER: 'taller',
@@ -82,6 +74,5 @@ module.exports = {
     ROLES,
     ROLES_ADMIN,
     PERMISOS,
-    ESTADOS_POR_DEFECTO,
     TIPOS_NOTIFICACION
 };

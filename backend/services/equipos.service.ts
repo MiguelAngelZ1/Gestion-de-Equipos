@@ -269,12 +269,9 @@ class EquiposService {
     }
 
     async deleteEquipo(id) {
-        const isSQLite = !db.isPostgreSQL;
-        const deletedVal = isSQLite ? 1 : true;
-        
         const result = await db.run(
             "UPDATE equipos SET is_deleted = ?, updated_at = ? WHERE id = ?",
-            [deletedVal, new Date().toISOString(), id]
+            [1, new Date().toISOString(), id]
         );
         
         await db.run(
@@ -288,13 +285,11 @@ class EquiposService {
     async deleteBulkEquipos(ids) {
         if (!Array.isArray(ids) || ids.length === 0) return { count: 0 };
         
-        const isSQLite = !db.isPostgreSQL;
-        const deletedVal = isSQLite ? 1 : true;
         const placeholders = ids.map(() => '?').join(',');
         
         const result = await db.run(
             `UPDATE equipos SET is_deleted = ?, updated_at = ? WHERE id IN (${placeholders})`,
-            [deletedVal, new Date().toISOString(), ...ids]
+            [1, new Date().toISOString(), ...ids]
         );
 
         return { count: result.changes };

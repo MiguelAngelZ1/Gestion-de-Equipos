@@ -11,8 +11,6 @@ import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
-import Checkbox from '@mui/material/Checkbox';
-import FormControlLabel from '@mui/material/FormControlLabel';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
@@ -37,13 +35,11 @@ const Login = () => {
   const [usuario, setUsuario] = useState('');
   const [password, setPassword] = useState('');
   const [codigo, setCodigo] = useState('');
-  const [_error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [viewState, setViewState] = useState('login');
   const [successMsg, setSuccessMsg] = useState('');
   const [email, setEmail] = useState('');
   const [newPassword, setNewPassword] = useState('');
-  const [rememberMe, setRememberMe] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState('');
   const [resendCooldown, setResendCooldown] = useState(0);
   const { login } = useAuth();
@@ -64,7 +60,6 @@ const Login = () => {
     if (!usuario || !password) return;
 
     setLoading(true);
-    setError('');
 
     try {
       const data = await login({ usuario, password });
@@ -85,7 +80,6 @@ const Login = () => {
     e.preventDefault();
     if (!email) return;
     setLoading(true);
-    setError('');
     try {
       const data = await apiRequest('/auth/forgot-password', {
         method: 'POST',
@@ -95,7 +89,6 @@ const Login = () => {
         setViewState('recover_code');
         setSuccessMsg('Te hemos enviado un código de seguridad.');
         setResendCooldown(30);
-        setError('');
       }
     } catch (err: any) {
       triggerError(err.message || 'Error al enviar el código');
@@ -445,24 +438,12 @@ const Login = () => {
                       }}
                     />
 
-                    {/* Remember me + forgot password */}
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: -0.5 }}>
-                      <FormControlLabel
-                        control={
-                          <Checkbox
-                            checked={rememberMe}
-                            onChange={(e) => setRememberMe(e.target.checked)}
-                            size="small"
-                          />
-                        }
-                        label="Recordarme"
-                      />
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: -0.5 }}>
                       <Link
                         component="button"
                         type="button"
                         variant="body2"
                         onClick={() => {
-                          setError('');
                           setSuccessMsg('');
                           setViewState('recover_email');
                         }}
@@ -575,7 +556,6 @@ const Login = () => {
                         type="button"
                         variant="body2"
                         onClick={() => {
-                          setError('');
                           setSuccessMsg('');
                           setViewState('login');
                         }}
@@ -805,7 +785,6 @@ const Login = () => {
                         type="button"
                         variant="body2"
                         onClick={() => {
-                          setError('');
                           setSuccessMsg('');
                           setViewState('login');
                         }}

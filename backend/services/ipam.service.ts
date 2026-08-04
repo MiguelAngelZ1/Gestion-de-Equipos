@@ -1,6 +1,6 @@
 const db = require('../db/database');
 const { execFile } = require('child_process');
-const { v4: uuidv4 } = require('uuid');
+const { normalizeText } = require('../utils/helpers');
 const exceljs = require('exceljs');
 const { google } = require('googleapis');
 const { Readable } = require('stream');
@@ -14,14 +14,6 @@ const DEFAULT_AUTO_MASK = '255.255.255.0';
 const MIN_AUTO_CIDR = 24;
 
 class IPAMService {
-    normalizeText(value = '') {
-        return String(value)
-            .normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, '')
-            .trim()
-            .toLowerCase();
-    }
-
     ipToInt(ip) {
         const parsed = this.parseIp(ip);
         if (!parsed) throw new Error(`IP invalida: ${ip}`);
@@ -119,7 +111,7 @@ class IPAMService {
     }
 
     isKeyIn(clave, aliases) {
-        const normalized = this.normalizeText(clave);
+        const normalized = normalizeText(clave);
         return aliases.some(alias => normalized === alias || normalized.includes(alias));
     }
 
@@ -217,7 +209,7 @@ class IPAMService {
         );
         if (duplicated) throw new Error('Ya existe una red manual con ese segmento y mascara.');
 
-        const id = `red_${uuidv4()}`;
+        const id = `red_${crypto.randomUUID()}`;
         await db.run(
             'INSERT INTO redes (id, nombre, segmento, mascara, gateway, dns, vlan) VALUES (?, ?, ?, ?, ?, ?, ?)',
             [id, nombre, meta.segmento, meta.mascara, gateway || null, dns || null, vlan]

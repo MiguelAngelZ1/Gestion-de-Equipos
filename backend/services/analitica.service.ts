@@ -4,8 +4,7 @@ const db = require('../db/database');
 class DashboardService {
     async getDashboardSummary() {
         try {
-            // Detección de valores booleanos/enteros según motor
-            const isDeleted = db.isPostgreSQL ? false : 0;
+            const isDeleted = 0;
 
             const [stats, locations, totalResult, stockBajo, equiposCriticos] = await Promise.all([
                 // Conteo por Estado
