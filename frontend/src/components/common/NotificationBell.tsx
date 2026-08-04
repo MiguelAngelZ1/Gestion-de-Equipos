@@ -158,10 +158,10 @@ const NotificationBell = () => {
 
     const getIcon = (tipo) => {
         switch (tipo) {
-            case 'stock': return <Package className="w-4 h-4 text-amber-400" />;
-            case 'taller': return <Wrench className="w-4 h-4 text-indigo-400" />;
-            case 'tickets': return <MessageSquare className="w-4 h-4 text-purple-400" />;
-            default: return <Info className="w-4 h-4 text-emerald-400" />;
+            case 'stock': return <Package className="w-[18px] h-[18px] sm:w-4 sm:h-4 text-amber-400" />;
+            case 'taller': return <Wrench className="w-[18px] h-[18px] sm:w-4 sm:h-4 text-indigo-400" />;
+            case 'tickets': return <MessageSquare className="w-[18px] h-[18px] sm:w-4 sm:h-4 text-purple-400" />;
+            default: return <Info className="w-[18px] h-[18px] sm:w-4 sm:h-4 text-emerald-400" />;
         }
     };
 
@@ -193,7 +193,11 @@ const NotificationBell = () => {
         if (!isOpen) {
             const rect = dropdownRef.current?.getBoundingClientRect();
             if (rect) {
-                setPos({ top: rect.bottom + 8, right: Math.max(8, window.innerWidth - rect.right) });
+                const isMobile = window.innerWidth < 640;
+                setPos({
+                    top: rect.bottom + 8,
+                    right: isMobile ? 12 : Math.max(8, window.innerWidth - rect.right),
+                });
             }
         }
         setIsOpen(!isOpen);
@@ -220,8 +224,10 @@ const NotificationBell = () => {
                 <div
                     ref={panelRef}
                     style={{ top: pos?.top ?? 8, right: pos?.right ?? 8 }}
-                    className="fixed left-4 z-[100] sm:w-80 flex flex-col overflow-hidden rounded-[2rem] border border-white/10 bg-[#1e293b]/95 backdrop-blur-2xl shadow-2xl max-h-[calc(100dvh-1rem)] notif-drop"
+                    className="fixed z-[100] w-[calc(100vw-1.5rem)] max-w-sm sm:w-80 sm:max-w-none notif-drop"
                 >
+                    <div className="absolute -top-1.5 right-6 h-3 w-3 rotate-45 bg-[#1e293b] border-l border-t border-white/10 hidden sm:block" aria-hidden="true" />
+                    <div className="relative flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#1e293b]/95 backdrop-blur-2xl shadow-2xl max-h-[min(70dvh,32rem)] sm:max-h-[min(80dvh,40rem)]">
                         <div className="p-4 border-b border-white/5 flex flex-col gap-3 bg-white/5">
                             <div className="flex justify-between items-center">
                                 <h3 className="text-white font-black tracking-tight flex items-center gap-2">
@@ -273,20 +279,20 @@ const NotificationBell = () => {
                                             onClick={() => handleNotificationClick(notif)}
                                             onKeyDown={(e) => { if(e.key === 'Enter' || e.key === ' ') handleNotificationClick(notif); }}
                                         >
-                                            <div className={`mt-1 h-8 w-8 rounded-xl flex items-center justify-center shrink-0 ${!notif.leido ? 'bg-indigo-500/20 shadow-[0_0_15px_rgba(99,102,241,0.2)]' : 'bg-white/5'}`}>
+                                            <div className={`mt-1 h-9 w-9 sm:h-8 sm:w-8 rounded-xl flex items-center justify-center shrink-0 ${!notif.leido ? 'bg-indigo-500/20 shadow-[0_0_15px_rgba(99,102,241,0.2)]' : 'bg-white/5'}`}>
                                                 {getIcon(notif.tipo)}
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex justify-between items-start gap-2">
-                                                    <p className={`text-xs font-bold truncate ${!notif.leido ? 'text-white' : 'text-slate-400'}`}>{notif.titulo}</p>
-                                                    <span className="text-[9px] text-slate-500 whitespace-nowrap mt-0.5">
+                                                    <p className={`text-[13px] sm:text-xs font-bold truncate ${!notif.leido ? 'text-white' : 'text-slate-400'}`}>{notif.titulo}</p>
+                                                    <span className="text-[10px] sm:text-[9px] text-slate-500 whitespace-nowrap mt-0.5">
                                                         {new Date(notif.fecha).toLocaleDateString([], { day:'2-digit', month:'short' })}
                                                     </span>
                                                 </div>
-                                                <p className="text-[11px] text-slate-400 mt-0.5 line-clamp-2 leading-relaxed">{notif.mensaje}</p>
+                                                <p className="text-[13px] sm:text-[11px] text-slate-400 mt-0.5 line-clamp-2 leading-relaxed">{notif.mensaje}</p>
                                                 {!notif.leido && (
                                                     <div className="flex justify-end mt-2">
-                                                        <span className="text-[9px] text-indigo-400 font-black uppercase tracking-wider">Nueva</span>
+                                                        <span className="text-[10px] sm:text-[9px] text-indigo-400 font-black uppercase tracking-wider">Nueva</span>
                                                     </div>
                                                 )}
                                             </div>
@@ -296,6 +302,7 @@ const NotificationBell = () => {
                             )}
                         </div>
                     </div>
+                </div>
                 ),
                 document.body
             )}
