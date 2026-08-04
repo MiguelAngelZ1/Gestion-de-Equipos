@@ -15,8 +15,14 @@ const createOrUpdateComponente = async (req, res, next) => {
     try {
         const result = await componentesService.createOrUpdateComponente(req.body);
         
-        // Gatillar revisión de stock inmediata
-        notificationService.checkLowStock().catch(err => logger.error({ err }, "Error en push stock"));
+        // Check stock only for this specific component
+        if (req.body.cantidad !== undefined) {
+            notificationService.checkComponentStock(
+                result.id, 
+                req.body.nombre || 'Repuesto', 
+                req.body.cantidad
+            ).catch(err => logger.error({ err }, "Error checking component stock"));
+        }
 
         res.json({ success: true, id: result.id });
     } catch (err) {
@@ -51,8 +57,17 @@ const instalarComponente = async (req, res, next) => {
 
         const result = await componentesService.instalarComponente(req.body);
 
-        // Gatillar revisión de stock inmediata
-        notificationService.checkLowStock().catch(err => logger.error({ err }, "Error en push stock"));
+        // After installation, check stock for the source component
+        if (req.body.componente_id) {
+            const componente = await componentesService.getComponenteById(req.body.componente_id);
+            if (componente) {
+                notificationService.checkComponentStock(
+                    componente.id,
+                    componente.nombre,
+                    componente.cantidad
+                ).catch(err => logger.error({ err }, "Error checking component stock"));
+            }
+        }
 
         res.json({ success: true, id: result.id });
     } catch (err) {
