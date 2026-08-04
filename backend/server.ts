@@ -87,6 +87,11 @@ server.listen(PORT, async () => {
     notificationService.checkLowStock();
   }, notificationInterval);
 
+  setInterval(async () => {
+    const cleaned = await notificationService.cleanupOldAlerts(30);
+    if (cleaned > 0) logger.info({ count: cleaned }, 'Notificaciones antiguas limpiadas');
+  }, 24 * 60 * 60 * 1000);
+
 });
 
 server.on("error", (error) => {
