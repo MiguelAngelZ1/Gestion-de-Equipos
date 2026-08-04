@@ -16,11 +16,18 @@ const NotificationBell = () => {
         ? import.meta.env.VITE_API_URL.replace('/api', '') 
         : window.location.origin;
 
-    const fetchNotifications = async () => {
+    const fetchNotifications = async (offset = 0) => {
         try {
-            const data = await apiRequest('/notificaciones');
-            setNotifications(data || []);
-            setUnreadCount((data || []).filter(n => !n.leido).length);
+            const response = await apiRequest(`/notificaciones?limit=20&offset=${offset}`);
+            const data = response?.data || response || [];
+            
+            if (offset === 0) {
+                setNotifications(data);
+            } else {
+                setNotifications(prev => [...prev, ...data]);
+            }
+            const allNotifs = offset === 0 ? data : [...notifications, ...data];
+            setUnreadCount(allNotifs.filter(n => !n.leido).length);
         } catch {
             // silent
         }
@@ -57,25 +64,52 @@ const NotificationBell = () => {
 
         let socket = null;
         let cancelled = false;
+        let reconnectAttempts = 0;
+        let reconnectTimer = null;
 
-        import('socket.io-client').then(({ io }) => {
-            if (cancelled) return;
-            socket = io(socketURL, { auth: { token: getAuthToken() } });
+        const connectSocket = () => {
+            import('socket.io-client').then(({ io }) => {
+                if (cancelled) return;
 
-            socket.on('connect', () => {
-                socket.emit('join', userId);
+                socket = io(socketURL, {
+                    auth: { token: getAuthToken() },
+                    reconnection: false,
+                    transports: ['websocket', 'polling']
+                });
+
+                socket.on('connect', () => {
+                    reconnectAttempts = 0;
+                    socket.emit('join', userId);
+                });
+
+                socket.on('new_notification', (newNotif) => {
+                    setNotifications(prev => [newNotif, ...prev]);
+                    setUnreadCount(prev => prev + 1);
+                });
+
+                socket.on('disconnect', () => {
+                    const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 30000);
+                    reconnectAttempts++;
+                    reconnectTimer = setTimeout(connectSocket, delay);
+                });
+
+                socket.on('connect_error', () => {
+                    const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 30000);
+                    reconnectAttempts++;
+                    reconnectTimer = setTimeout(connectSocket, delay);
+                });
             });
+        };
 
-            socket.on('new_notification', (newNotif) => {
-                setNotifications(prev => [newNotif, ...prev]);
-                setUnreadCount(prev => prev + 1);
-            });
-        });
+        connectSocket();
 
         return () => {
             cancelled = true;
+            if (reconnectTimer) clearTimeout(reconnectTimer);
             if (socket) {
                 socket.off('new_notification');
+                socket.off('disconnect');
+                socket.off('connect_error');
                 socket.disconnect();
             }
         };
