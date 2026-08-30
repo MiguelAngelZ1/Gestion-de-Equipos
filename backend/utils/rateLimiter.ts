@@ -39,12 +39,6 @@ const registerLimiter = createLimiter({
   message: 'Demasiadas cuentas creadas desde esta IP. Intenta en 1 hora.',
 });
 
-const backupSyncLimiter = createLimiter({
-  windowMs: 30 * 60 * 1000,
-  max: 10,
-  message: 'Demasiadas operaciones de backup/sync. Intenta en 30 minutos.',
-});
-
 const exportLimiter = createLimiter({
   windowMs: 15 * 60 * 1000,
   max: 20,
@@ -74,7 +68,6 @@ module.exports = {
   forgotPasswordLimiter,
   resetPasswordLimiter,
   registerLimiter,
-  backupSyncLimiter,
   exportLimiter,
   ipamLimiter,
   usuarioWriteLimiter,

@@ -20,7 +20,6 @@ const historialRoutes = require('./routes/historial.routes');
 const componentesRoutes = require('./routes/componentes.routes');
 const soporteRoutes = require('./routes/soporte.routes');
 const mantenimientoRoutes = require('./routes/mantenimiento.routes');
-const backupRoutes = require('./routes/backup.routes');
 const usuariosRoutes = require('./routes/usuarios.routes');
 const notificacionesRoutes = require('./routes/notificaciones.routes');
 const ipamRoutes = require('./routes/ipam.routes');
@@ -166,10 +165,8 @@ if (distExists) {
 
 app.use('/api', apiLimiter);
 
-// Health check endpoint para Render
 app.get('/health', async (req, res) => {
   try {
-    // Verificar conexión a base de datos
     if (db.connected) {
       await db.query('SELECT 1');
     }
@@ -201,7 +198,6 @@ app.use('/api/usuarios', usuariosRoutes);
 app.use('/api/notificaciones', notificacionesRoutes);
 app.use('/api/soporte', soporteRoutes);
 app.use('/api/mantenimiento', mantenimientoRoutes);
-app.use('/api/backup', backupRoutes);
 app.use('/api/prestamos', prestamosRoutes);
 app.use('/api/ipam', ipamRoutes);
 app.use('/api', exportRoutes);

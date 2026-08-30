@@ -3,7 +3,6 @@ import { API_BASE } from '../../services/api';
 import {
     Download,
     UploadCloud,
-    Database,
     FileSpreadsheet,
     RefreshCw
 } from 'lucide-react';
@@ -58,28 +57,6 @@ const BackupPanel = () => {
             }
         } catch (error) {
             showToast("Error de Red", "No se pudo conectar con el servidor para la exportación a la nube.", "error");
-        } finally {
-            setActionLoading(false);
-        }
-    };
-
-    const handleManualSync = async () => {
-        try {
-            setActionLoading(true);
-            const response = await fetch(`${API_BASE}/sync/run`, {
-                method: 'POST',
-                credentials: 'include'
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                showToast("Sincronización Exitosa", "Los datos se han sincronizado correctamente con la nube.", "success");
-            } else {
-                showToast("Error de Sincronización", data.error || 'No se pudo completar la sincronización.', "error");
-            }
-        } catch (error) {
-            showToast("Error de Red", "No se pudo conectar con el servidor para la sincronización.", "error");
         } finally {
             setActionLoading(false);
         }
