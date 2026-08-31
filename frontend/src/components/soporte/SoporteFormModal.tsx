@@ -9,6 +9,14 @@ import Select from '../common/Select';
 import { matchesSearch } from '../../utils/search';
 
 const spring = { type: 'spring' as const, stiffness: 400, damping: 30 };
+const getStatusColor = (n) => {
+  const s = (n || '').toLowerCase().trim();
+  if (s === 'e/s' || s.includes('en servicio') || s.includes('bueno')) return '#22c55e';
+  if (s === 'f/s' || s.includes('fuera') || s.includes('malo')) return '#ef4444';
+  if (s.includes('mant')) return '#eab308';
+  if (s.includes('prest')) return '#f97316';
+  return '#71717a';
+};
 
 const SoporteFormModal = ({ isOpen, initialData, onClose, onSave }) => {
   const { showToast } = useToast();
@@ -142,54 +150,24 @@ const SoporteFormModal = ({ isOpen, initialData, onClose, onSave }) => {
       {createPortal(
         <AnimatePresence>
           {isOpen && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={!isSaving ? onClose : undefined}
-              className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6 bg-black/85 backdrop-blur-md h-[100dvh] pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]"
-            >
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: 0 }}
-                transition={spring}
-                onClick={(e) => e.stopPropagation()}
-                className="bg-[#0b1120] border border-white/20 shadow-[0_0_80px_rgba(0,0,0,0.8)] rounded-2xl sm:rounded-[2rem] w-full max-w-3xl relative overflow-hidden flex flex-col max-h-[calc(100dvh-40px)]"
-              >
-                <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-br from-indigo-600/20 to-transparent pointer-events-none"></div>
-
-                <div className="p-3 sm:p-5 pb-3 border-b border-white/5 shrink-0 relative z-10 flex justify-between items-center">
-                   <div className="flex flex-row items-center gap-2.5 pr-10 sm:pr-0">
-                      <div className="bg-indigo-500/10 p-2 rounded-xl sm:rounded-2xl border border-indigo-500/20 shrink-0">
-                         <Wrench className="w-4 h-4 text-indigo-400" />
-                      </div>
-                      <div>
-                        <h2 className="text-base sm:text-lg font-black text-white tracking-tight leading-tight">
-                            {formData.id ? 'Editar Intervención' : 'Nueva Tarea'}
-                        </h2>
-                        <p className="text-slate-500 text-[10px] sm:text-xs max-w-md font-medium">
-                           Completa los detalles técnicos del mantenimiento.
-                        </p>
-                      </div>
-                   </div>
-                   <button 
-                      onClick={onClose}
-                      disabled={isSaving}
-                      className={`p-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-slate-400 hover:text-white transition-all group ${isSaving ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                   >
-                      <X className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
-                   </button>
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={!isSaving ? onClose : undefined} className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+              <motion.div initial={{ opacity: 0, scale: 0.97, y: 8 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.97, y: 8 }} transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }} onClick={e => e.stopPropagation()} className="bg-[#1C1C1E] border border-white/5 rounded-2xl w-full max-w-3xl overflow-hidden flex flex-col max-h-[90vh] shadow-2xl">
+                <div className="p-4 border-b border-white/5 flex items-center gap-3 shrink-0">
+                  <span className="material-symbols-outlined text-[#e4e2e4] text-[24px]">build</span>
+                  <div className="min-w-0">
+                    <h2 className="text-[16px] font-semibold text-[#e4e2e4] leading-none">{formData.id ? 'Editar Intervención' : 'Nueva Tarea'}</h2>
+                    <p className="text-xs text-[#c4c5d9] mt-0.5">Completa los detalles técnicos del mantenimiento.</p>
+                  </div>
+                  <button onClick={onClose} disabled={isSaving} className="ml-auto w-8 h-8 grid place-items-center rounded-full hover:bg-white/5 text-[#c4c5d9] disabled:opacity-50">
+                    <X className="w-4 h-4" />
+                  </button>
                 </div>
 
-                <div className="p-4 sm:p-5 flex-1 overflow-y-auto custom-scrollbar relative z-10">
+                <div className="p-4 flex-1 overflow-y-auto custom-scrollbar overscroll-contain space-y-4" style={{ overscrollBehavior: 'contain' }}>
                    <form id="soporte-form" onSubmit={handleSubmit} className="space-y-4">
-                      {/* Buscador de Equipo */}
-                      <div className="relative" ref={sugerenciasRef}>
-                         <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-indigo-400/80 mb-2 flex items-center gap-1.5">
-                            <Server className="w-3 h-3" />
-                            Equipo a Intervenir *
-                         </label>
+                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                      <div className="relative lg:col-span-1" ref={sugerenciasRef}>
+                         <label className="block text-xs font-semibold mb-1.5 text-[#c4c5d9]">Equipo a Intervenir <span className="text-[#ffb4ab]">*</span></label>
                           <div className={`relative group ${isSaving ? 'opacity-50' : ''}`}>
                              <SearchInput
                                 disabled={isSaving}
@@ -207,151 +185,60 @@ const SoporteFormModal = ({ isOpen, initialData, onClose, onSave }) => {
                          
                          <AnimatePresence>
                             {!isSaving && showSugerencias && sugerencias.length > 0 && (
-                               <motion.div 
-                                  initial={{ opacity: 0, y: -10 }}
-                                  animate={{ opacity: 1, y: 0 }}
-                                  exit={{ opacity: 0, y: -10 }}
-                                  className="absolute z-50 left-0 right-0 mt-2 bg-[#161f31] border border-white/10 rounded-xl shadow-2xl overflow-hidden backdrop-blur-xl"
-                               >
+                               <motion.div initial={{ opacity: 0, scale: 0.97, y: -6 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.97, y: -6 }} transition={{ duration: 0.15, ease: [0.22, 1, 0.36, 1] }} className="absolute z-50 left-0 mt-3 bg-[#27272A] border border-zinc-700 rounded-2xl shadow-2xl p-2 origin-top-left w-max min-w-full max-w-[min(420px,calc(100vw-32px))]">
+                                  <div className="absolute -top-1 left-6 w-2 h-2 bg-[#27272A] border-l border-t border-zinc-700 rotate-45" />
+                                  <div className="space-y-1">
                                   {sugerencias.map(eq => (
-                                     <button
-                                        key={eq.id}
-                                        type="button"
-                                        onClick={() => seleccionarEquipo(eq)}
-                                        className="w-full px-4 py-3 hover:bg-white/5 flex items-center justify-between text-left transition-colors border-b border-white/5 last:border-0"
-                                     >
-                                        <div>
-                                           <p className="text-white font-bold text-sm">{eq.ine}</p>
-                                           <p className="text-slate-400 text-[11px]">NNE: {eq.nne || 'S/D'} - S/N: {eq.serie || 'S/D'}</p>
-                                        </div>
-                                        <span className="text-[10px] font-bold px-2 py-1 bg-indigo-500/10 text-indigo-400 rounded-lg uppercase tracking-wider">
-                                           Seleccionar
+                                     <button key={eq.id} type="button" onClick={() => seleccionarEquipo(eq)} className="w-full px-3 py-2.5 hover:bg-white/[0.06] rounded-xl text-left transition-colors cursor-pointer flex items-start gap-3">
+                                        <span className="relative shrink-0 mt-0.5">
+                                          <Server className="w-4 h-4 text-zinc-400" />
+                                          <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border border-[#27272A]" style={{ background: getStatusColor(eq.estado) }} />
+                                        </span>
+                                         <span className="min-w-0 flex-1 space-y-0.5">
+                                          <p className="text-[#e4e2e4] font-semibold text-sm leading-none whitespace-nowrap">{eq.ine || 'Sin INE'}</p>
+                                          <p className="text-[#c4c5d9] text-[11px] leading-none break-words">{eq.responsable || 'S/A'}</p>
+                                          <p className="text-[#c4c5d9] text-[11px] leading-none break-words">{eq.ubicacion || 'S/U'}</p>
                                         </span>
                                      </button>
                                   ))}
+                                  </div>
                                </motion.div>
                             )}
                          </AnimatePresence>
 
                          {equipoSeleccionado && (
-                            <motion.div 
-                                initial={{ opacity: 0, height: 0 }}
-                                animate={{ opacity: 1, height: 'auto' }}
-                                className="mt-2.5 p-2.5 bg-emerald-500/5 border border-emerald-500/10 rounded-xl flex items-center gap-2.5"
-                            >
-                               <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-                               <div>
-                                  <p className="text-emerald-400 text-xs font-bold tracking-wide">
-                                     Equipo Seleccionado: {equipoSeleccionado.ine}
-                                  </p>
-                                  <p className="text-emerald-500/80 text-[10px] font-medium mt-0.5 uppercase tracking-wider">
-                                      NNE: {equipoSeleccionado.nne || 'S/D'} / Serie: {equipoSeleccionado.serie || 'S/D'}
-                                  </p>
-                               </div>
+                            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="mt-2.5 flex items-start gap-3">
+                               <span className="relative shrink-0 mt-0.5">
+                                 <Server className="w-4 h-4 text-zinc-400" />
+                                 <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border border-[#1C1C1E]" style={{ background: getStatusColor(equipoSeleccionado.estado) }} />
+                               </span>
+                               <span className="min-w-0 flex-1 space-y-0.5">
+                                 <p className="text-[#e4e2e4] font-semibold text-sm leading-none whitespace-nowrap">{equipoSeleccionado.ine || 'Sin INE'}</p>
+                                 <p className="text-[#c4c5d9] text-[11px] leading-none break-words">{equipoSeleccionado.responsable || equipoSeleccionado.responsable_nombre || 'S/A'}</p>
+                                 <p className="text-[#c4c5d9] text-[11px] leading-none break-words">{equipoSeleccionado.ubicacion || equipoSeleccionado.ubicacion_nombre || 'S/U'}</p>
+                               </span>
                             </motion.div>
                          )}
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                         {/* Técnico */}
+                       </div>
                          <div className={isSaving ? 'opacity-50' : ''}>
-                            <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-indigo-400/80 mb-2 flex items-center gap-1.5">
-                               <User className="w-3 h-3" />
-                               Área Técnica
-                            </label>
-                            <div className="w-full bg-[#1e293b]/20 border border-white/5 text-slate-400 rounded-xl px-4 py-3 font-black uppercase tracking-tighter text-xs">
-                               SERVICIO TÉCNICO
-                            </div>
+                            <label className="block text-xs font-semibold mb-1.5 text-[#c4c5d9]">Fecha de Intervención</label>
+                            <input type="date" name="fecha" required disabled={isSaving} value={formData.fecha} onChange={handleChange} className="w-full bg-[#131315] border border-white/5 text-[#e4e2e4] rounded-xl px-3 py-2.5 focus:outline-none focus:border-[#b8c3ff]/40 text-sm [color-scheme:dark]" />
                          </div>
-
-                         {/* Fecha */}
                          <div className={isSaving ? 'opacity-50' : ''}>
-                            <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-indigo-400/80 mb-2 flex items-center gap-1.5">
-                               <Calendar className="w-3 h-3" />
-                               Fecha de Intervención
-                            </label>
-                            <input
-                               type="date"
-                               name="fecha"
-                               required
-                               disabled={isSaving}
-                               value={formData.fecha}
-                               onChange={handleChange}
-                               className="w-full bg-[#1e293b]/40 border border-white/10 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-500/50 transition-all font-medium text-sm [color-scheme:dark]"
-                            />
+                            <label className="block text-xs font-semibold mb-1.5 text-[#c4c5d9]">Tipo de Tarea</label>
+                            <Select name="tipo_falla" disabled={isSaving} value={formData.tipo_falla} onChange={handleChange} options={[{ value: "PREVENTIVO", label: "Mantenimiento Preventivo" },{ value: "CORRECTIVO", label: "Mantenimiento Correctivo" },{ value: "INSTALACION", label: "Instalación / Configuración" },{ value: "REPARACION", label: "Reparación Crítica" },{ value: "ACTUALIZACION", label: "Actualización de Hardware" }]} />
                          </div>
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                         {/* Tipo de Falla */}
-                         <div className={`md:col-span-2 ${isSaving ? 'opacity-50' : ''}`}>
-                            <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-indigo-400/80 mb-2 flex items-center gap-1.5">
-                               <AlertCircle className="w-3 h-3" />
-                               Tipo de Tarea
-                            </label>
-                            <Select
-                               name="tipo_falla"
-                               disabled={isSaving}
-                               value={formData.tipo_falla}
-                               onChange={handleChange}
-                               options={[
-                                  { value: "PREVENTIVO", label: "Mantenimiento Preventivo" },
-                                  { value: "CORRECTIVO", label: "Mantenimiento Correctivo" },
-                                  { value: "INSTALACION", label: "Instalación / Configuración" },
-                                  { value: "REPARACION", label: "Reparación Crítica" },
-                                  { value: "ACTUALIZACION", label: "Actualización de Hardware" }
-                               ]}
-                            />
-                         </div>
-                      </div>
-
-                      {/* Tarea Realizada */}
                       <div className={isSaving ? 'opacity-50' : ''}>
-                         <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-indigo-400/80 mb-2 flex items-center gap-1.5">
-                            <ClipboardList className="w-3 h-3" />
-                            Detalle del Trabajo Realizado *
-                         </label>
-                         <textarea
-                            name="tarea_realizada"
-                            required
-                            disabled={isSaving}
-                            rows={4}
-                            placeholder="Describe detalladamente el trabajo técnico realizado..."
-                            value={formData.tarea_realizada}
-                            onChange={handleChange}
-                            className="w-full bg-[#1e293b]/40 border border-white/10 text-white placeholder:text-slate-600 rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-500/50 transition-all font-medium resize-none min-h-[100px] text-sm"
-                         ></textarea>
+                         <label className="block text-xs font-semibold mb-1.5 text-[#c4c5d9]">Detalle del Trabajo Realizado <span className="text-[#ffb4ab]">*</span></label>
+                         <textarea name="tarea_realizada" required disabled={isSaving} rows={4} placeholder="Describe detalladamente el trabajo..." value={formData.tarea_realizada} onChange={handleChange} className="w-full bg-[#131315] border border-white/5 text-[#e4e2e4] placeholder:text-zinc-600 rounded-xl px-3 py-2.5 focus:outline-none focus:border-[#b8c3ff]/40 resize-none min-h-[100px] text-sm" />
                       </div>
                    </form>
                 </div>
-
-                <div className="p-3 sm:p-4 border-t border-white/5 shrink-0 bg-[#0b1120] z-20 flex flex-row justify-end gap-2.5">
-                   <button 
-                      type="button"
-                      onClick={onClose}
-                      disabled={isSaving}
-                      className={`bg-white/5 hover:bg-white/10 text-slate-300 font-bold px-5 py-2.5 rounded-xl transition-all border border-white/10 hover:border-white/20 text-xs ${isSaving ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                   >
-                      Cancelar
-                   </button>
-                   <button 
-                      type="submit"
-                      form="soporte-form"
-                      disabled={isSaving}
-                      className={`bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-6 py-2.5 rounded-xl transition-all shadow-[0_0_20px_rgba(79,70,229,0.3)] flex items-center justify-center gap-2 text-xs ${isSaving ? 'opacity-80 cursor-not-allowed' : 'cursor-pointer'}`}
-                   >
-                      {isSaving ? (
-                         <>
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                            Procesando...
-                         </>
-                      ) : (
-                         <>
-                            <Save className="w-4 h-4" />
-                            {formData.id ? 'Guardar Cambios' : 'Registrar'}
-                         </>
-                      )}
-                   </button>
+                <div className="p-4 border-t border-white/5 flex justify-end gap-2 shrink-0">
+                   <button type="button" onClick={onClose} disabled={isSaving} className="px-4 py-2 text-sm font-semibold text-[#c4c5d9] hover:text-white disabled:opacity-50">Cancelar</button>
+                   <button type="submit" form="soporte-form" disabled={isSaving} className="px-4 py-2 text-sm font-semibold text-white inline-flex items-center gap-2 disabled:opacity-50">{isSaving ? <><Loader2 className="w-4 h-4 animate-spin" />Procesando...</> : <><Save className="w-4 h-4" />{formData.id ? 'Guardar Cambios' : 'Registrar'}</>}</button>
                 </div>
 
               </motion.div>

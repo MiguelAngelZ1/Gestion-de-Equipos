@@ -22,7 +22,7 @@ function validateOrigin(req, res, next) {
     }
   }
 
-  const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:3000,http://localhost:5173,http://localhost:5300').split(',');
+  const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:3000,http://localhost:5173,http://localhost:5300,http://127.0.0.1:5300').split(',');
 
   if (origin && !allowedOrigins.some(o => origin.startsWith(o.trim()))) {
     logger.warn({ origin }, "[CSRF] Origen no permitido");

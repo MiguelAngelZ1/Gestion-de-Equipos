@@ -65,32 +65,32 @@ const ConfirmModal = ({ isOpen, title, message, children, onConfirm, onClose, co
 
   const colors = {
     danger: {
-      bg: "bg-rose-500/10",
-      border: "border-rose-500/20",
-      icon: "text-rose-500",
-      button: "bg-rose-600 hover:bg-rose-500 shadow-[0_0_20px_rgba(225,29,72,0.3)]",
-      gradient: "from-rose-900/20"
+      bg: "bg-white/5",
+      border: "border-white/5",
+      icon: "text-white",
+      button: "text-red-400 hover:text-red-300",
+      gradient: "from-white/5"
     },
     success: {
-      bg: "bg-emerald-500/10",
-      border: "border-emerald-500/20",
-      icon: "text-emerald-500",
-      button: "bg-emerald-600 hover:bg-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.3)]",
-      gradient: "from-emerald-900/20"
+      bg: "bg-white/5",
+      border: "border-white/5",
+      icon: "text-white",
+      button: "text-white hover:text-white",
+      gradient: "from-white/5"
     },
     warning: {
-      bg: "bg-amber-500/10",
-      border: "border-amber-500/20",
-      icon: "text-amber-500",
-      button: "bg-amber-600 hover:bg-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.3)]",
-      gradient: "from-amber-900/20"
+      bg: "bg-white/5",
+      border: "border-white/5",
+      icon: "text-white",
+      button: "text-white hover:text-white",
+      gradient: "from-white/5"
     },
     info: {
-      bg: "bg-indigo-500/10",
-      border: "border-indigo-500/20",
-      icon: "text-indigo-500",
-      button: "bg-indigo-600 hover:bg-indigo-500 shadow-[0_0_20px_rgba(79,70,229,0.3)]",
-      gradient: "from-indigo-900/20"
+      bg: "bg-white/5",
+      border: "border-white/5",
+      icon: "text-white",
+      button: "text-white hover:text-white",
+      gradient: "from-white/5"
     }
   };
 
@@ -114,15 +114,13 @@ const ConfirmModal = ({ isOpen, title, message, children, onConfirm, onClose, co
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             onClick={(e) => e.stopPropagation()}
-            className={`bg-[#0f1523] border ${style.border} shadow-2xl rounded-3xl w-full max-w-sm relative overflow-hidden flex flex-col max-h-[calc(100dvh-40px)]`}
+            className={`bg-[#1C1C1E] border border-white/5 shadow-2xl rounded-2xl w-full max-w-xs relative overflow-hidden flex flex-col max-h-[calc(100dvh-40px)]`}
           >
-            <div className={`absolute top-0 left-0 right-0 h-32 bg-gradient-to-br ${style.gradient} to-transparent pointer-events-none`}></div>
-            <div className="p-5 sm:p-8 relative z-10 flex flex-col items-center text-center">
-               <div className={`${style.bg} p-3 sm:p-4 rounded-2xl sm:rounded-3xl border ${style.border} mb-4 sm:mb-5`}>
-                  <AlertTriangle className={`w-8 h-8 sm:w-10 sm:h-10 ${style.icon}`} />
-               </div>
-               <h3 ref={titleRef} id={titleId} className="text-xl sm:text-2xl font-black text-white tracking-tight mb-2 sm:mb-3 font-outfit">{title}</h3>
-               <div className="w-full mb-6 sm:mb-8">
+            <div className={`absolute top-0 left-0 right-0 h-24 bg-gradient-to-br ${style.gradient} to-transparent pointer-events-none`}></div>
+            <div className="p-5 relative z-10 flex flex-col items-start text-left">
+                <AlertTriangle className="w-5 h-5 text-zinc-500 absolute top-5 left-5" />
+                <h3 ref={titleRef} id={titleId} className="text-lg font-bold text-white tracking-tight mb-2 font-outfit pt-6">{title}</h3>
+               <div className="w-full mb-6 sm:mb-8 text-left">
                 {children || (
                   <p className="text-slate-400 text-sm leading-relaxed">
                     {message}
@@ -133,14 +131,14 @@ const ConfirmModal = ({ isOpen, title, message, children, onConfirm, onClose, co
                 <button 
                   onClick={onClose}
                   disabled={isLoading}
-                  className={`flex-1 bg-white/5 hover:bg-white/10 text-white font-bold py-2.5 rounded-xl transition-all border border-white/10 hover:border-white/20 text-sm ${isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                  className={`flex-1 bg-transparent text-[#c4c5d9] hover:text-white font-bold py-2.5 transition-colors text-sm ${isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                 >
                   {cancelText}
                 </button>
                 <button 
                   onClick={handleConfirm}
                   disabled={isLoading}
-                  className={`flex-1 ${style.button} text-white font-bold py-2.5 rounded-xl transition-all text-sm flex items-center justify-center gap-2 ${isLoading ? 'opacity-80 cursor-not-allowed' : 'cursor-pointer'}`}
+                  className={`flex-1 bg-transparent ${style.button} font-bold py-2.5 transition-colors text-sm flex items-center justify-center gap-2 ${isLoading ? 'opacity-80 cursor-not-allowed' : 'cursor-pointer'}`}
                 >
                   {isLoading ? (
                     <>

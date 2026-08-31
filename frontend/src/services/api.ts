@@ -75,7 +75,7 @@ export async function apiRequest(endpoint: string, options: Record<string, any> 
         }
 
         if (retries > 0 && !error.message.includes('No autorizado') && !error.message.includes('Acceso denegado')) {
-            const delay = Math.min(1000 * Math.pow(2, MAX_RETRIES - retries), 4000);
+            const delay = Math.min(1000 * Math.pow(2, MAX_RETRIES - retries), 4000) * (0.5 + Math.random() * 0.5);
             await new Promise(r => setTimeout(r, delay));
             return apiRequest(endpoint, options, retries - 1);
         }

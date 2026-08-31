@@ -1,81 +1,24 @@
 @import "tailwindcss";
 
-:root {
-  --glass-bg: rgba(255, 255, 255, 0.03);
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-glow: rgba(99, 102, 241, 0.15);
-  --accent-primary: #818cf8;
-  --accent-secondary: #6366f1;
-  --bg-deep: #0b1120;
-}
+* { box-sizing: border-box; }
 
-body {
+html, body {
   margin: 0;
-  font-family: 'Outfit', sans-serif;
-  background: radial-gradient(circle at top left, #1e293b 0%, #0b1120 100%);
-  background-attachment: fixed;
-  color: white;
+  font-family: 'Inter', system-ui, sans-serif;
+  background: #09090B;
+  color: #FAFAFA;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
 }
 
-/* Glassmorphism Classes */
-.glass-panel {
-  background: var(--glass-bg);
-  backdrop-filter: blur(20px);
-  border: 1px solid var(--glass-border);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-}
+.custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: transparent; border-radius: 999px; }
+.custom-scrollbar:hover::-webkit-scrollbar-thumb { background: #27272A; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar { scrollbar-width: thin; scrollbar-color: transparent transparent; }
+.custom-scrollbar:hover { scrollbar-color: #27272A transparent; }
+.safe-pb { padding-bottom: env(safe-area-inset-bottom); }
 
-/* Custom Scrollbar Premium */
-.custom-scrollbar::-webkit-scrollbar {
-  width: 3px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 20px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: var(--accent-primary);
-}
-
-/* Toast animations */
-@keyframes toast-enter {
-  from {
-    opacity: 0;
-    transform: translateX(50px) scale(0.9);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0) scale(1);
-  }
-}
-
-.animate-toast-enter {
-  animation: toast-enter 0.3s ease-out;
-}
-
-@keyframes toast-progress {
-  from { width: 100%; }
-  to { width: 0%; }
-}
-
-.animate-toast-progress {
-  animation: toast-progress 4.5s linear forwards;
-}
-
-/* Notification dropdown enter */
-@keyframes notif-open {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-.notif-drop {
-  animation: notif-open 0.2s ease-out;
-}
+button, a, [role="button"], select { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+button:disabled, a:disabled, select:disabled { cursor: not-allowed; }
+select { cursor: pointer; }

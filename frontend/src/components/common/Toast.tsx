@@ -11,28 +11,28 @@ const Toast = ({ title, message, type, onClose }) => {
 
   const configs = {
     success: {
-      bg: "bg-emerald-500/10",
-      border: "border-emerald-500/20",
-      icon: <CheckCircle2 className="w-5 h-5 text-emerald-500" />,
-      accent: "bg-emerald-500"
+      bg: "bg-white/5",
+      border: "border-white/5",
+      icon: <CheckCircle2 className="w-5 h-5 text-white" />,
+      accent: "bg-white"
     },
     error: {
-      bg: "bg-rose-500/10",
-      border: "border-rose-500/20",
-      icon: <AlertCircle className="w-5 h-5 text-rose-500" />,
-      accent: "bg-rose-500"
+      bg: "bg-white/5",
+      border: "border-white/5",
+      icon: <AlertCircle className="w-5 h-5 text-white" />,
+      accent: "bg-white"
     },
     warning: {
-      bg: "bg-amber-500/10",
-      border: "border-amber-500/20",
-      icon: <AlertCircle className="w-5 h-5 text-amber-500" />,
-      accent: "bg-amber-500"
+      bg: "bg-white/5",
+      border: "border-white/5",
+      icon: <AlertCircle className="w-5 h-5 text-white" />,
+      accent: "bg-white"
     },
     info: {
-      bg: "bg-indigo-500/10",
-      border: "border-indigo-500/20",
-      icon: <Info className="w-5 h-5 text-indigo-400" />,
-      accent: "bg-indigo-500"
+      bg: "bg-white/5",
+      border: "border-white/5",
+      icon: <Info className="w-5 h-5 text-white" />,
+      accent: "bg-white"
     }
   };
 
@@ -40,7 +40,7 @@ const Toast = ({ title, message, type, onClose }) => {
 
   return (
     <div
-      className={`pointer-events-auto w-full bg-[#1e293b]/90 backdrop-blur-xl border ${config.border} rounded-2xl shadow-2xl flex relative overflow-hidden group animate-toast-enter`}
+      className={`pointer-events-auto w-full bg-[#1C1C1E] border ${config.border} rounded-2xl shadow-2xl flex relative overflow-hidden group animate-toast-enter`}
     >
       <div 
         className={`absolute bottom-0 left-0 h-0.5 ${config.accent} opacity-50 animate-toast-progress`}
@@ -52,15 +52,15 @@ const Toast = ({ title, message, type, onClose }) => {
         </div>
         
         <div className="flex-1 min-w-0 pr-6">
-          <h4 className="text-white font-black text-sm tracking-tight">{title}</h4>
-          <p className="text-slate-400 text-xs font-medium leading-relaxed truncate">
+          <h4 className="text-white font-semibold text-sm tracking-tight">{title}</h4>
+          <p className="text-[#c4c5d9] text-xs font-medium leading-relaxed truncate">
             {message}
           </p>
         </div>
 
         <button 
           onClick={onClose}
-          className="absolute top-4 right-4 text-slate-500 hover:text-white transition-colors"
+          className="absolute top-4 right-4 text-[#c4c5d9] hover:text-white transition-colors"
         >
           <X className="w-4 h-4" />
         </button>

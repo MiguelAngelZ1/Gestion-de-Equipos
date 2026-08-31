@@ -1,92 +1,40 @@
 import { useEffect, useState } from 'react';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
-import { motion } from 'framer-motion';
 
-const COLORS = ['#818cf8', '#4ade80', '#fbbf24', '#f87171', '#c084fc', '#60a5fa', '#f472b6', '#2dd4bf', '#fb923c'];
+const COLORS = ['#FAFAFA', '#A1A1AA', '#52525B', '#27272A', '#3F3F46', '#71717A', '#E4E4E7', '#D4D4D8'];
 
-const spring = { type: 'spring' as const, stiffness: 400, damping: 30 };
-
-const LocationChart = ({ chartData = [], loading = false, total = 0 }) => {
+export default function LocationChart({ chartData = [], loading = false, total = 0 }: any) {
   const [ready, setReady] = useState(false);
-  useEffect(() => { setReady(true); }, []);
-
+  useEffect(() => setReady(true), []);
+  if (loading) return <div className="h-[240px] grid place-items-center"><div className="w-5 h-5 rounded-full border-2 border-zinc-800 border-t-zinc-400 animate-spin" /></div>;
+  if (chartData.length === 0) return <p className="text-xs text-zinc-500 py-12 text-center">Sin datos</p>;
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ ...spring, delay: 0.25 }}
-      className="bg-white/[0.04] border border-white/[0.06] rounded-2xl p-4 flex flex-col h-full overflow-hidden"
-    >
-      <div className="flex items-center gap-2 mb-3">
-        <div className="flex items-center justify-center w-6 h-6 rounded-lg bg-indigo-500/10">
-          <div className="w-3 h-3 rounded-full border-2 border-indigo-400" />
-        </div>
-        <p className="text-sm font-bold text-white tracking-tight">Ubicaciones</p>
-      </div>
-
-      <div className="flex-1 flex flex-col items-center justify-start min-h-0">
-        {loading ? (
-          <div className="flex items-center justify-center h-20">
-            <div className="w-6 h-6 border-2 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin" />
-          </div>
-        ) : chartData.length === 0 ? (
-          <p className="text-[11px] text-slate-500 font-bold uppercase tracking-wider">Sin datos</p>
-        ) : (
-          <div className="w-full h-full flex flex-col items-center">
-            <div className="w-full h-[180px] relative">
-              {ready && (
-                <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-                  <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
-                    <defs>
-                      {chartData.map((_, i) => (
-                        <linearGradient key={i} id={`g${i}`} x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor={COLORS[i % COLORS.length]} stopOpacity={0.7} />
-                          <stop offset="100%" stopColor={COLORS[i % COLORS.length]} stopOpacity={1} />
-                        </linearGradient>
-                      ))}
-                    </defs>
-                    <Pie data={chartData} cx="50%" cy="80%" startAngle={180} endAngle={0}
-                      innerRadius="70%" outerRadius="100%" paddingAngle={3} dataKey="value"
-                      stroke="none" animationDuration={1200} animationBegin={200} cornerRadius={4} minAngle={3}>
-                      {chartData.map((_, i) => <Cell key={i} fill={`url(#g${i})`} />)}
-                    </Pie>
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: 'rgba(15,23,42,0.95)',
-                        border: '1px solid rgba(255,255,255,0.1)',
-                        borderRadius: '0.75rem',
-                        padding: '8px 12px',
-                        backdropFilter: 'blur(12px)',
-                      }}
-                      itemStyle={{ color: '#fff', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase' }}
-                      cursor={{ fill: 'transparent' }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              )}
-              <div className="absolute left-1/2 -translate-x-1/2 bottom-[10%] text-center pointer-events-none">
-                <p className="text-2xl font-black text-white leading-none tabular-nums">{total}</p>
-                <p className="text-[9px] text-indigo-400/80 font-bold uppercase tracking-wider mt-1">Total</p>
-              </div>
-            </div>
-
-            {/* Legend */}
-            <div className="w-full mt-auto pt-3 border-t border-white/[0.06]">
-              <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
-                {chartData.map((entry, i) => (
-                  <div key={i} className="flex items-center gap-2 py-0.5">
-                    <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
-                    <span className="text-[11px] text-slate-300 font-medium truncate">{entry.name}</span>
-                    <span className="text-[10px] text-indigo-400/80 font-bold ml-auto tabular-nums">{entry.value}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+    <div className="w-full overflow-hidden">
+      <div className="w-full h-[200px] relative">
+        {ready && (
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie data={chartData} cx="50%" cy="78%" startAngle={180} endAngle={0} innerRadius="68%" outerRadius="92%" dataKey="value" stroke="none">
+                {chartData.map((_: any, i: number) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+              </Pie>
+              <Tooltip contentStyle={{ background: '#18181B', border: '1px solid #27272A', borderRadius: 8 }} itemStyle={{ color: '#FAFAFA', fontSize: 12 }} />
+            </PieChart>
+          </ResponsiveContainer>
         )}
+        <div className="absolute left-1/2 -translate-x-1/2 bottom-[14%] text-center pointer-events-none">
+          <p className="text-2xl font-bold leading-none tabular-nums">{total}</p>
+          <p className="text-[10px] tracking-widest font-bold text-zinc-500">TOTAL</p>
+        </div>
       </div>
-    </motion.div>
+      <div className="mt-3 pt-3 border-t border-zinc-800 grid grid-cols-2 gap-2">
+        {chartData.map((e: any, i: number) => (
+          <div key={i} className="flex items-center gap-2 min-w-0">
+            <span className="w-2 h-2 rounded-full shrink-0" style={{ background: COLORS[i % COLORS.length] }} />
+            <span className="text-xs text-zinc-400 truncate flex-1 min-w-0">{e.name}</span>
+            <span className="text-xs font-semibold shrink-0">{e.value}</span>
+          </div>
+        ))}
+      </div>
+    </div>
   );
-};
-
-export default LocationChart;
+}

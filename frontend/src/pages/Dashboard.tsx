@@ -1,220 +1,180 @@
-import { useEffect, useState, lazy, Suspense } from 'react';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { apiRequest } from '../services/api';
 import { ROLES } from '../config/constants';
-import { Database, CheckCircle2, XCircle, Wrench, AlertTriangle, Package, MapPin, User, AlertCircle, Calendar } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from '../context/ToastContext';
+import EquipoDetalleModal from '../components/equipos/EquipoDetalleModal';
 
-const LocationChart = lazy(() => import('../components/componentes/LocationChart'));
-
-/* ─── Spring config (premium feel) ─── */
-const spring = { type: 'spring' as const, stiffness: 400, damping: 30 };
-const stagger = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.06 } } };
-const fadeUp = { hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0, transition: spring } };
-
-/* ─── Stat Card ─── */
-const StatCard = ({ title, value, icon: Icon, color, loading = false, accent = false }) => (
-  <motion.div
-    variants={fadeUp}
-    className={`relative rounded-2xl border px-3 py-3 text-center overflow-hidden transition-colors ${
-      accent
-        ? 'bg-indigo-500/[0.08] border-indigo-500/20'
-        : 'bg-white/[0.04] border-white/[0.06] hover:border-white/[0.12]'
-    }`}
-  >
-    {accent && <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/[0.06] to-transparent pointer-events-none" />}
-    <Icon className={`w-5 h-5 ${color} shrink-0 mx-auto mb-1.5 relative`} />
-    <p className="text-xl font-black text-white leading-none tabular-nums relative">
-      {loading ? <span className="opacity-20 animate-pulse">--</span> : value}
-    </p>
-    <p className="text-[10px] font-bold tracking-widest uppercase mt-1.5 leading-none text-slate-500 relative">{title}</p>
-  </motion.div>
-);
-
-/* ─── Alert Item ─── */
-const AlertItem = ({ eq, idx }) => (
-  <motion.div
-    variants={fadeUp}
-    className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-3 hover:bg-white/[0.06] hover:border-white/[0.1] transition-all duration-200"
-  >
-    <div className="flex items-start gap-2.5">
-      <div className="w-0.5 h-8 rounded-full shrink-0 mt-0.5" style={{ backgroundColor: eq.color_hex || '#ef4444' }} />
-      <div className="flex-1 min-w-0">
-        <div className="flex justify-between items-start gap-2">
-          <h4 className="text-white font-bold text-sm tracking-tight uppercase truncate" title={eq.ine}>{eq.ine || 'N/A'}</h4>
-          <span className="text-[9px] font-bold px-2 py-0.5 rounded-md border uppercase shrink-0"
-            style={{ backgroundColor: `${(eq.color_hex || '#ef4444')}15`, color: eq.color_hex || '#ef4444', borderColor: `${(eq.color_hex || '#ef4444')}25` }}>
-            {eq.estado || 'Falla'}
-          </span>
-        </div>
-        <p className="text-indigo-400/80 text-[10px] font-bold uppercase tracking-wider mt-0.5">{eq.categoria}</p>
-        <div className="flex gap-3 mt-1.5">
-          <span className="flex items-center gap-1 text-[11px] text-slate-400 font-medium truncate">
-            <MapPin className="w-3 h-3 shrink-0 opacity-60" />{eq.ubicacion || 'N/A'}
-          </span>
-          <span className="flex items-center gap-1 text-[11px] text-slate-400 font-medium truncate">
-            <User className="w-3 h-3 shrink-0 opacity-60" />{eq.responsable_actual || 'N/A'}
-          </span>
-        </div>
-        {eq.falla && (
-          <div className="mt-2 pt-2 border-t border-white/5 flex items-start gap-1.5">
-            <AlertCircle className="w-3 h-3 text-rose-500/60 mt-0.5 shrink-0" />
-            <p className="text-slate-400/80 text-[11px] italic leading-relaxed">"{eq.falla}"</p>
-          </div>
-        )}
-      </div>
-    </div>
-  </motion.div>
-);
-
-/* ─── Stock Item ─── */
-const StockItem = ({ comp, idx }) => (
-  <motion.div
-    variants={fadeUp}
-    className="bg-rose-500/[0.04] border border-rose-500/10 rounded-xl p-3 hover:bg-rose-500/[0.08] hover:border-rose-500/20 transition-all duration-200"
-  >
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-2 min-w-0">
-        <Package className="w-4 h-4 text-rose-400/80 shrink-0" />
-        <h4 className="text-white font-bold text-sm tracking-tight truncate">{comp.nombre}</h4>
-      </div>
-      <div className="text-right shrink-0">
-        <p className="text-lg font-black text-white leading-none tabular-nums">{comp.cantidad || 0}</p>
-        <p className="text-[8px] text-slate-500 font-bold uppercase">uds</p>
-      </div>
-    </div>
-  </motion.div>
-);
-
-/* ─── Skeleton Loader ─── */
-const SkeletonCard = ({ accent = false }) => (
-  <div className={`rounded-2xl border px-3 py-3 text-center animate-pulse ${
-    accent ? 'bg-indigo-500/[0.05] border-indigo-500/10' : 'bg-white/[0.03] border-white/[0.04]'
-  }`}>
-    <div className="w-5 h-5 rounded-full bg-white/5 mx-auto mb-1.5" />
-    <div className="w-10 h-5 rounded bg-white/10 mx-auto mb-1.5" />
-    <div className="w-12 h-2 rounded bg-white/5 mx-auto" />
-  </div>
-);
-
-/* ─── Dashboard ─── */
-const Dashboard = () => {
+export default function Dashboard() {
   const { showToast } = useToast();
-  const [stats, setStats] = useState({ total: 0, servicio: 0, fuera: 0, reparacion: 0, prestamo: 0 });
-  const [criticalEquipos, setCriticalEquipos] = useState([]);
-  const [lowStockComponentes, setLowStockComponentes] = useState([]);
-  const [chartData, setChartData] = useState([]);
+  const navigate = useNavigate();
+  const [stats, setStats] = useState({ total: 0, servicio: 0, fuera: 0, prestamo: 0 });
+  const [critical, setCritical] = useState<any[]>([]);
+  const [lowStock, setLowStock] = useState<any[]>([]);
+  const [chartData, setChartData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedEquipo, setSelectedEquipo] = useState<any>(null);
+  const [estados, setEstados] = useState<any[]>([]);
 
   useEffect(() => {
-    const fetchStats = async () => {
-      const userData = JSON.parse(localStorage.getItem("equipos_user_data") || "{}");
-      const userRole = (userData.rol || ROLES.USER).toUpperCase();
-      if (userRole !== ROLES.ADMIN) { setLoading(false); return; }
+    (async () => {
+      const u = JSON.parse(localStorage.getItem("equipos_user_data") || "{}");
+      if ((u.rol || ROLES.USER).toUpperCase() !== ROLES.ADMIN) { setLoading(false); return; }
       try {
-        const data = await apiRequest('/dashboard/summary');
-        const find = (arr, ...terms) => arr.find(s => terms.some(t => s.name.toLowerCase().includes(t)))?.value || 0;
-        const statsArr = data.stats || [];
+        const [data, estadosData] = await Promise.all([
+          apiRequest('/dashboard/summary'),
+          apiRequest('/config/estados').catch(() => [])
+        ]);
+        const find = (arr: any[], ...t: string[]) => arr.find((s: any) => t.some(x => s.name.toLowerCase().includes(x)))?.value || 0;
         setStats({
-          total: data.total,
-          servicio: find(statsArr, 'buena', 'en servicio', 'e/s'),
-          fuera: find(statsArr, 'mala', 'fuera de servicio', 'f/s'),
-          reparacion: find(statsArr, 'taller', 'reparaci', 'mantenimiento', 'mant'),
-          prestamo: find(statsArr, 'prestamo', 'préstamo')
+          total: data.total || 0,
+          servicio: find(data.stats || [], 'buena', 'en servicio', 'e/s'),
+          fuera: find(data.stats || [], 'mala', 'fuera', 'f/s'),
+          prestamo: find(data.stats || [], 'prestamo', 'préstamo'),
         });
-        setCriticalEquipos(data.criticalEquipos || []);
-        setLowStockComponentes(data.alerts?.lowStock || []);
-        setChartData((data.locations || []).map(loc => ({ ...loc, value: Number(loc.value) })));
-      } catch {
-        showToast("Error", "No se pudo cargar el resumen del sistema.", "error");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchStats();
+        setCritical(data.criticalEquipos || []);
+        setLowStock(data.alerts?.lowStock || []);
+        setChartData((data.locations || []).map((l: any) => ({ ...l, value: Number(l.value) })));
+        setEstados(estadosData);
+      } catch { showToast("Error", "No se pudo cargar el resumen.", "error"); }
+      finally { setLoading(false); }
+    })();
   }, [showToast]);
 
-  const hasAlerts = criticalEquipos.length > 0 || lowStockComponentes.length > 0;
-  const alertCount = criticalEquipos.length + lowStockComponentes.length;
+  const maxChart = Math.max(1, ...chartData.map(c => c.value));
 
   return (
-    <div className="flex flex-col gap-3 w-full min-h-screen overflow-x-hidden">
+    <div className="w-full max-w-full flex flex-col flex-1 min-h-0 overflow-hidden gap-6">
+      <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Hanken+Grotesk:wght@100..900&display=swap" rel="stylesheet" />
+      <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+      <style>{`
+        .card-glass { background-color: #1C1C1E; border: 1px solid rgba(255,255,255,0.08); transition: all 0.2s ease-in-out; }
+        .card-glass:hover { border-color: rgba(255,255,255,0.18); }
+        .font-display { font-family: 'Hanken Grotesk', sans-serif; }
+        .font-geist { font-family: 'Geist', sans-serif; }
+      `}</style>
 
-      {/* ─── Stat Cards ─── */}
-      {/* Pirámide: Total arriba, 4 cards en 2 columnas abajo */}
-      <motion.div variants={stagger} initial="hidden" animate="visible" className="flex flex-col gap-2 shrink-0">
-        <StatCard title="Total" value={stats.total} icon={Database} color="text-indigo-400" loading={loading} accent />
-        <div className="grid grid-cols-2 gap-2">
-          <StatCard title="E/S" value={stats.servicio} icon={CheckCircle2} color="text-emerald-400" loading={loading} />
-          <StatCard title="F/S" value={stats.fuera} icon={XCircle} color="text-rose-400" loading={loading} />
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-6 shrink-0 w-full auto-rows-min">
+        <div className="col-span-12 md:col-span-3 card-glass p-4 rounded-xl flex flex-col items-center justify-center text-center gap-2 py-5">
+          <div className="flex items-center justify-center gap-2">
+            <span className="material-symbols-outlined text-[#b8c3ff] text-[20px]">devices</span>
+            <p className="font-geist text-[11px] font-semibold tracking-wide text-[#c4c5d9] uppercase">Total Inventario</p>
+          </div>
+          <h3 className="font-display text-[32px] leading-none font-bold tracking-tight text-[#e4e2e4]">{loading ? '—' : stats.total}</h3>
         </div>
-        <div className="grid grid-cols-2 gap-2">
-          <StatCard title="Mant." value={stats.reparacion} icon={Wrench} color="text-amber-400" loading={loading} />
-          <StatCard title="Prestamo" value={stats.prestamo} icon={Calendar} color="text-blue-400" loading={loading} />
+
+        <div className="col-span-12 md:col-span-3 card-glass p-4 rounded-xl flex flex-col items-center justify-center text-center gap-2 py-5">
+          <div className="flex items-center justify-center gap-2">
+            <span className="material-symbols-outlined text-[#42e355] text-[20px]">check_circle</span>
+            <p className="font-geist text-[11px] font-semibold tracking-wide text-[#c4c5d9] uppercase">En Servicio</p>
+          </div>
+          <h3 className="font-display text-[32px] leading-none font-bold tracking-tight text-[#e4e2e4]">{loading ? '—' : stats.servicio}</h3>
         </div>
-      </motion.div>
 
-      {/* ─── Bottom Grid: Alerts + Chart ─── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 flex-1">
+        <div className="col-span-12 md:col-span-3 card-glass p-4 rounded-xl flex flex-col items-center justify-center text-center gap-2 py-5">
+          <div className="flex items-center justify-center gap-2">
+            <span className="material-symbols-outlined text-[#ffb4ab] text-[20px]">warning</span>
+            <p className="font-geist text-[11px] font-semibold tracking-wide text-[#c4c5d9] uppercase">Fuera de Servicio</p>
+          </div>
+          <h3 className="font-display text-[32px] leading-none font-bold tracking-tight text-[#ffb4ab]">{loading ? '—' : stats.fuera}</h3>
+        </div>
 
-        {/* Alertas */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ ...spring, delay: 0.2 }}
-          className="bg-white/[0.04] border border-white/[0.06] rounded-2xl p-4 flex flex-col min-h-[180px] overflow-hidden"
-        >
-          <div className="flex items-center gap-2 mb-3">
-            <div className="flex items-center justify-center w-6 h-6 rounded-lg bg-rose-500/10">
-              <AlertTriangle className="w-3.5 h-3.5 text-rose-400" />
-            </div>
-            <h2 className="text-sm font-bold text-white tracking-tight">Alertas</h2>
-            {hasAlerts && (
-              <span className="text-[10px] font-bold px-2 py-0.5 bg-rose-500/15 text-rose-400 rounded-full border border-rose-500/20">
-                {alertCount}
-              </span>
+        <div className="col-span-12 md:col-span-3 card-glass p-4 rounded-xl flex flex-col items-center justify-center text-center gap-2 py-5">
+          <div className="flex items-center justify-center gap-2">
+            <span className="material-symbols-outlined text-[#ffb59b] text-[20px]">transfer_within_a_station</span>
+            <p className="font-geist text-[11px] font-semibold tracking-wide text-[#c4c5d9] uppercase">En Préstamo</p>
+          </div>
+          <h3 className="font-display text-[32px] leading-none font-bold tracking-tight text-[#e4e2e4]">{loading ? '—' : stats.prestamo}</h3>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-6 flex-1 min-h-0 items-stretch">
+        <div className="col-span-12 md:col-span-4 card-glass p-0 rounded-2xl flex flex-col overflow-hidden min-h-0 h-full max-h-[calc(100vh-200px)]">
+          <div className="p-6 flex items-center justify-between shrink-0">
+            <h3 className="font-display text-[20px] font-semibold text-[#e4e2e4] flex items-center gap-2">
+              <span className="material-symbols-outlined text-[#ffb4ab]">campaign</span> Alertas Críticas
+            </h3>
+            <span className="bg-[#ffb4ab]/20 text-[#ffb4ab] font-geist text-[13px] font-medium px-2 py-1 rounded-md">{critical.length + lowStock.length} Nuevas</span>
+          </div>
+          <div className="flex-1 overflow-y-auto p-2 custom-scrollbar min-h-0">
+            {loading ? (
+              <div className="p-8 grid place-items-center"><div className="w-6 h-6 rounded-full border-2 border-white/10 border-t-[#b8c3ff] animate-spin" /></div>
+            ) : critical.length === 0 && lowStock.length === 0 ? (
+              <div className="p-8 text-center">
+                <p className="font-geist text-sm text-[#c4c5d9]">Sin alertas — todo operativo</p>
+              </div>
+            ) : (
+              <>
+                {critical.slice(0, 4).map((eq: any) => {
+                  const d = eq.updated_at || eq.fecha_actualizacion || eq.updatedAt || eq.created_at || eq.fecha;
+                  const fechaHora = d ? new Date(d).toLocaleString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) : '';
+                  return (
+                    <div key={eq.id} onClick={async () => {
+                      try {
+                        const full = await apiRequest(`/equipos/${eq.id}`);
+                        setSelectedEquipo(full?.data || full);
+                      } catch { setSelectedEquipo(eq); }
+                    }} className="p-4 m-2 rounded-xl bg-[#ffb4ab]/5 border border-[#ffb4ab]/10 hover:bg-[#ffb4ab]/10 hover:border-[#ffb4ab]/20 transition-colors cursor-pointer active:scale-[0.98]">
+                      <p className="font-geist text-[12px] font-bold tracking-wide text-[#ffb4ab] uppercase leading-tight break-words whitespace-normal">{eq.ine || 'SIN INE'}</p>
+                      <div className="space-y-1 text-[13px] leading-5 mt-2">
+                        <p className="text-[#e4e2e4]"><span className="text-[#c4c5d9] text-xs">Responsable:</span> <span className="font-medium">{eq.responsable_actual || eq.responsable || 'Sin responsable'}</span></p>
+                        <p className="text-[#e4e2e4]"><span className="text-[#c4c5d9] text-xs">Ubicación:</span> <span className="font-medium">{eq.ubicacion || 'Sin ubicación'}</span></p>
+                        <p className="text-[#e4e2e4]"><span className="text-[#c4c5d9] text-xs">Detalle:</span> <span className="font-medium">{eq.falla || eq.estado || 'Requiere atención'}</span></p>
+                      </div>
+                      {fechaHora && <p className="font-geist text-[11px] text-[#c4c5d9]/70 mt-3 text-right flex items-center justify-end gap-1.5"><span className="material-symbols-outlined text-[14px]">schedule</span>{fechaHora}</p>}
+                    </div>
+                  );
+                })}
+                {lowStock.slice(0, 2).map((c: any) => (
+                  <div key={c.id} className="p-4 m-2 rounded-xl bg-[#2C2C2E] border border-white/5 hover:bg-[#353437] transition-colors cursor-pointer">
+                    <div className="flex justify-between items-start mb-1">
+                      <span className="font-geist text-[13px] font-medium text-[#ffb59b]">{c.nombre?.slice(0, 12).toUpperCase()}</span>
+                      <span className="font-geist text-[12px] font-semibold tracking-wide text-[#c4c5d9]">Hace 2h</span>
+                    </div>
+                    <p className="font-display text-[15px] leading-5 text-[#e4e2e4] mb-2">Stock crítico — {c.cantidad} uds restantes.</p>
+                    <button className="font-display text-sm font-semibold text-[#ffb59b] hover:text-white transition-colors">Gestionar →</button>
+                  </div>
+                ))}
+              </>
             )}
           </div>
+        </div>
 
-          <div className="flex-1 overflow-y-auto pr-1 space-y-2 custom-scrollbar">
-            <AnimatePresence mode="popLayout">
-              {loading ? (
-                <div className="space-y-2">
-                  {[1, 2].map(i => (
-                    <div key={i} className="h-16 rounded-xl bg-white/[0.03] border border-white/[0.04] animate-pulse" />
-                  ))}
-                </div>
-              ) : !hasAlerts ? (
-                <motion.div variants={fadeUp} initial="hidden" animate="visible"
-                  className="flex items-center gap-2 py-3 px-3 bg-emerald-500/[0.06] rounded-xl border border-emerald-500/10">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                  <p className="text-xs font-bold text-emerald-300">Todo OK — sin alertas activas</p>
-                </motion.div>
-              ) : (
-                <motion.div variants={stagger} initial="hidden" animate="visible" className="space-y-2">
-                  {criticalEquipos.map((eq, idx) => (
-                    <AlertItem key={eq.id} eq={eq} idx={idx} />
-                  ))}
-                  {lowStockComponentes.map((comp, idx) => (
-                    <StockItem key={`c-${comp.id}`} comp={comp} idx={idx} />
-                  ))}
-                </motion.div>
-              )}
-            </AnimatePresence>
+        <div className="col-span-12 md:col-span-8 card-glass p-6 rounded-2xl flex flex-col overflow-hidden min-h-0 h-full max-h-[calc(100vh-200px)]">
+          <div className="flex items-start justify-between mb-6 shrink-0">
+            <h3 className="font-display text-[20px] font-semibold text-[#e4e2e4]">Distribución por Ubicaciones</h3>
           </div>
-        </motion.div>
-
-        {/* Chart */}
-        <Suspense fallback={
-          <div className="bg-white/[0.04] border border-white/[0.06] rounded-2xl p-4 flex items-center justify-center min-h-[180px]">
-            <div className="w-6 h-6 border-2 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin" />
+          <div className="flex-1 min-h-0 rounded-xl border border-white/5 bg-[#131315] p-6 flex flex-col overflow-hidden">
+            {loading ? (
+              <div className="flex-1 grid place-items-center"><div className="w-6 h-6 rounded-full border-2 border-white/10 border-t-[#b8c3ff] animate-spin" /></div>
+            ) : chartData.length === 0 ? (
+              <p className="font-geist text-sm text-[#c4c5d9] text-center py-12">Sin datos de ubicaciones</p>
+            ) : (
+              <div className="flex flex-col gap-4 overflow-y-auto flex-1 min-h-0 custom-scrollbar pr-1">
+                {chartData.map((loc: any) => {
+                  const pct = Math.round((loc.value / maxChart) * 100);
+                  return (
+                    <div key={loc.name} className="group">
+                      <div className="flex items-center justify-between gap-2 mb-2">
+                        <span className="font-display text-[15px] font-semibold text-[#e4e2e4] truncate flex-1 min-w-0">{loc.name}</span>
+                        <button onClick={() => navigate(`/equipos?ubicacion=${encodeURIComponent(loc.name)}`)} className="inline-flex items-center gap-1 text-[#b8c3ff] hover:text-white transition-colors shrink-0">
+                          <span className="font-geist text-[12px] font-semibold">{'Ver ->'}</span>
+                        </button>
+                        <span className="font-geist text-[13px] font-medium text-[#b8c3ff] shrink-0 ml-1">{loc.value} Equipos</span>
+                      </div>
+                      <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden">
+                        <div className="bg-gradient-to-r from-[#b8c3ff]/40 to-[#b8c3ff] h-full rounded-full transition-all duration-700 group-hover:brightness-125" style={{ width: `${pct}%` }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
-        }>
-          <LocationChart chartData={chartData} loading={loading} total={stats.total} />
-        </Suspense>
+        </div>
       </div>
+
+      <EquipoDetalleModal isOpen={!!selectedEquipo} equipo={selectedEquipo} estados={estados} onClose={() => setSelectedEquipo(null)} onEquipoUpdated={() => {}} />
     </div>
   );
-};
-
-export default Dashboard;
+}

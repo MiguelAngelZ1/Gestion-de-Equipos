@@ -4,7 +4,7 @@ import { Bell, Package, Wrench, Info, CheckCheck, Trash2, MessageSquare, Zap, Sp
 import { createPortal } from 'react-dom';
 import { apiRequest, getUserData, getAuthToken } from '../../services/api';
 
-const NotificationBell = () => {
+const NotificationBell = ({ plain = false }: { plain?: boolean } = {}) => {
     const [isOpen, setIsOpen] = useState(false);
     const [notifications, setNotifications] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
@@ -207,12 +207,12 @@ const NotificationBell = () => {
         <div className="relative" ref={dropdownRef}>
             <button
                 onClick={toggleOpen}
-                className="relative p-2.5 rounded-2xl bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-all cursor-pointer active:scale-95"
+                className={plain ? "relative p-2 text-[#c4c5d9] hover:text-white transition-colors" : "relative p-2.5 rounded-2xl bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-all cursor-pointer active:scale-95"}
                 aria-label={`Notificaciones ${unreadCount > 0 ? `(${unreadCount} sin leer)` : ''}`}
                 aria-haspopup="true"
                 aria-expanded={isOpen}
             >
-                <Bell className="w-6 h-6" aria-hidden="true" />
+                {plain ? <span className="material-symbols-outlined text-[20px]">notifications</span> : <Bell className="w-6 h-6" aria-hidden="true" />}
                 {unreadCount > 0 && (
                     <span className="absolute top-2 right-2 min-w-[16px] h-4 bg-rose-500 text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-[#1e293b] animate-pulse px-1">
                         {unreadCount > 9 ? '+9' : unreadCount}
@@ -226,15 +226,15 @@ const NotificationBell = () => {
                     style={{ top: pos?.top ?? 8, right: pos?.right ?? 8 }}
                     className="fixed z-[100] w-[calc(100vw-1.5rem)] max-w-sm sm:w-80 sm:max-w-none notif-drop"
                 >
-                    <div className="absolute -top-1.5 right-6 h-3 w-3 rotate-45 bg-[#1e293b] border-l border-t border-white/10 hidden sm:block" aria-hidden="true" />
-                    <div className="relative flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#1e293b]/95 backdrop-blur-2xl shadow-2xl max-h-[min(70dvh,32rem)] sm:max-h-[min(80dvh,40rem)]">
-                        <div className="p-4 border-b border-white/5 flex flex-col gap-3 bg-white/5">
+                    <div className="absolute -top-1.5 right-6 h-3 w-3 rotate-45 bg-[#1C1C1E] border-l border-t border-white/5 hidden sm:block" aria-hidden="true" />
+                    <div className="relative flex flex-col overflow-hidden rounded-2xl border border-white/5 bg-[#1C1C1E] shadow-2xl max-h-[min(70dvh,32rem)] sm:max-h-[min(80dvh,40rem)]">
+                        <div className="p-4 border-b border-white/5 flex flex-col gap-3">
                             <div className="flex justify-between items-center">
-                                <h3 className="text-white font-black tracking-tight flex items-center gap-2">
-                                    <Bell className="w-4 h-4 text-indigo-400" />
+                                <h3 className="text-[#e4e2e4] font-display text-[15px] font-semibold flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-[18px] text-[#b8c3ff]">notifications</span>
                                     Notificaciones
                                 </h3>
-                                {unreadCount > 0 && <span className="text-[10px] bg-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded-full font-bold">{unreadCount} nuevas</span>}
+                                {unreadCount > 0 && <span className="text-[11px] bg-[#b8c3ff]/15 text-[#b8c3ff] px-2 py-0.5 rounded-full font-bold">{unreadCount} nuevas</span>}
                             </div>
                             
                             {notifications.length > 0 && (
@@ -242,7 +242,7 @@ const NotificationBell = () => {
                                     <button 
                                         onClick={handleMarkAllAsRead}
                                         disabled={unreadCount === 0}
-                                        className="text-[10px] flex items-center gap-1 font-bold uppercase tracking-widest text-indigo-400 hover:text-indigo-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                        className="text-[11px] flex items-center gap-1 font-semibold text-[#b8c3ff] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                     >
                                         <CheckCheck className="w-3 h-3" />
                                         Leer Todas
@@ -250,7 +250,7 @@ const NotificationBell = () => {
                                     <button 
                                         onClick={handleClearRead}
                                         disabled={notifications.filter(n => n.leido).length === 0}
-                                        className="text-[10px] flex items-center gap-1 font-bold uppercase tracking-widest text-slate-400 hover:text-rose-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                        className="text-[11px] flex items-center gap-1 font-semibold text-[#c4c5d9] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                     >
                                         <Trash2 className="w-3 h-3" />
                                         Limpiar Leídas
@@ -259,13 +259,13 @@ const NotificationBell = () => {
                             )}
                         </div>
 
-                        <div className="flex-1 overflow-y-auto custom-scrollbar min-h-0">
+                        <div className="flex-1 overflow-y-auto custom-scrollbar min-h-0 bg-black">
                             {notifications.length === 0 ? (
                                 <div className="py-12 flex flex-col items-center justify-center text-center px-6">
                                     <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mb-3">
-                                        <Bell className="w-6 h-6 text-slate-700" />
+                                        <span className="material-symbols-outlined text-[#6b7280] text-[24px]">notifications_off</span>
                                     </div>
-                                    <p className="text-slate-500 text-sm font-medium italic">No tienes notificaciones por ahora</p>
+                                    <p className="text-[#c4c5d9] text-sm font-geist">No tienes notificaciones por ahora</p>
                                 </div>
                             ) : (
                                 <div className="divide-y divide-white/5">

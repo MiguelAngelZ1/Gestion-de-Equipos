@@ -15,53 +15,16 @@ function createLimiter(options) {
   });
 }
 
-const authLimiter = createLimiter({
-  windowMs: 15 * 60 * 1000,
-  max: 10,
-  message: 'Demasiados intentos de login. Intenta mas tarde.',
-});
+const W15M = 15 * 60 * 1000;
 
-const forgotPasswordLimiter = createLimiter({
-  windowMs: 15 * 60 * 1000,
-  max: 5,
-  message: 'Demasiados intentos de envío de código. Intenta de nuevo en 15 minutos.',
-});
-
-const resetPasswordLimiter = createLimiter({
-  windowMs: 15 * 60 * 1000,
-  max: 3,
-  message: 'Demasiados intentos de restablecimiento de contraseña. Intenta de nuevo en 15 minutos.',
-});
-
-const registerLimiter = createLimiter({
-  windowMs: 60 * 60 * 1000,
-  max: 5,
-  message: 'Demasiadas cuentas creadas desde esta IP. Intenta en 1 hora.',
-});
-
-const exportLimiter = createLimiter({
-  windowMs: 15 * 60 * 1000,
-  max: 20,
-  message: 'Demasiadas exportaciones. Intenta en 15 minutos.',
-});
-
-const ipamLimiter = createLimiter({
-  windowMs: 15 * 60 * 1000,
-  max: 50,
-  message: 'Demasiadas operaciones IPAM. Intenta en 15 minutos.',
-});
-
-const usuarioWriteLimiter = createLimiter({
-  windowMs: 15 * 60 * 1000,
-  max: 30,
-  message: 'Demasiadas operaciones de usuario. Intenta en 15 minutos.',
-});
-
-const apiLimiter = createLimiter({
-  windowMs: 15 * 60 * 1000,
-  max: 2000,
-  message: 'Demasiadas peticiones. Intenta mas tarde.',
-});
+const authLimiter = createLimiter({ windowMs: W15M, max: 10, message: 'Demasiados intentos de login. Intenta mas tarde.' });
+const forgotPasswordLimiter = createLimiter({ windowMs: W15M, max: 5, message: 'Demasiados intentos de envío de código. Intenta de nuevo en 15 minutos.' });
+const resetPasswordLimiter = createLimiter({ windowMs: W15M, max: 3, message: 'Demasiados intentos de restablecimiento de contraseña. Intenta de nuevo en 15 minutos.' });
+const registerLimiter = createLimiter({ windowMs: 60 * 60 * 1000, max: 5, message: 'Demasiadas cuentas creadas desde esta IP. Intenta en 1 hora.' });
+const exportLimiter = createLimiter({ windowMs: W15M, max: 20, message: 'Demasiadas exportaciones. Intenta en 15 minutos.' });
+const ipamLimiter = createLimiter({ windowMs: W15M, max: 50, message: 'Demasiadas operaciones IPAM. Intenta en 15 minutos.' });
+const usuarioWriteLimiter = createLimiter({ windowMs: W15M, max: 30, message: 'Demasiadas operaciones de usuario. Intenta en 15 minutos.' });
+const apiLimiter = createLimiter({ windowMs: W15M, max: 2000, message: 'Demasiadas peticiones. Intenta mas tarde.' });
 
 module.exports = {
   authLimiter,

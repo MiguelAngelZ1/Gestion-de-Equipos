@@ -101,55 +101,31 @@ const Soporte = () => {
   const filteredTareas = tareas.filter(t => matchesSearch(t, search));
 
   return (
-    <div className="flex flex-col gap-3 w-full overflow-x-hidden">
+    <div className="flex flex-col gap-3 w-full overflow-x-hidden flex-1 min-h-0">
 
       {/* ─── Search Bar Row ─── */}
-      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={spring} className="flex items-center gap-2">
-        <div className="flex-1 min-w-0">
-          <SearchInput
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar por Equipo o Responsable..."
-          />
-        </div>
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={spring} className="flex flex-col sm:flex-row gap-2">
+        <div className="min-w-0 w-auto max-w-full"><SearchInput value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar por Equipo o Responsable..." /></div>
         {userRole === ROLES.ADMIN && (
-          <button
-            onClick={() => { setFormData({}); setIsFormOpen(true); }}
-            className="bg-indigo-600 hover:bg-indigo-500 text-white w-11 h-11 rounded-xl font-bold shadow-[0_0_16px_rgba(79,70,229,0.25)] transition-all flex items-center justify-center cursor-pointer shrink-0"
-          >
-            <Plus className="w-5 h-5" />
+          <button onClick={() => { setFormData({}); setIsFormOpen(true); }} className="inline-flex items-center justify-center gap-2 px-2 py-2.5 text-sm font-semibold text-[#c4c5d9] hover:text-white transition-colors shrink-0">
+            <Plus className="w-4 h-4" /> <span className="hidden sm:inline">Nuevo</span><span className="sm:hidden">Nuevo</span>
           </button>
         )}
       </motion.div>
 
-      {/* ─── Select All + Counter ─── */}
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }} className="flex items-center gap-3 px-1">
-        <div className="h-px bg-white/[0.06] flex-1" />
-        <div className="flex items-center gap-3">
-          {userRole === ROLES.ADMIN && filteredTareas.length > 0 && (
-            <button
-              onClick={toggleAll}
-              className="flex items-center gap-1.5 text-[9px] font-bold text-indigo-400 uppercase tracking-widest hover:text-white transition-colors cursor-pointer group"
-            >
-              <div className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${
-                filteredTareas.every(t => selectedIds.includes(t.id))
-                  ? 'bg-indigo-600 border-indigo-500'
-                  : 'border-white/20 group-hover:border-indigo-500/50'
-              }`}>
-                {filteredTareas.every(t => selectedIds.includes(t.id)) && <Check className="w-3 h-3 text-white" />}
-              </div>
-              Todo
-            </button>
-          )}
-          <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">
-            Tareas: <span className="text-indigo-400">{filteredTareas.length}</span>
-          </span>
+      {userRole === ROLES.ADMIN && filteredTareas.length > 0 && (
+        <div className="flex items-center gap-2 px-1">
+          <button onClick={toggleAll} className="flex items-center gap-1.5 text-[10px] font-semibold text-[#c4c5d9] uppercase tracking-wide hover:text-white transition-colors group">
+            <span className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${filteredTareas.every(t => selectedIds.includes(t.id)) ? 'bg-white border-white text-zinc-900' : 'border-white/15 group-hover:border-white/25'}`}>
+              {filteredTareas.every(t => selectedIds.includes(t.id)) && <Check className="w-3 h-3" />}
+            </span>
+            Todo
+          </button>
         </div>
-        <div className="h-px bg-white/[0.06] flex-1" />
-      </motion.div>
+      )}
 
       {/* ─── Grid de Tarjetas ─── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 flex-1">
         {loading ? (
           <>
             {[1, 2, 3].map(i => (
@@ -170,10 +146,9 @@ const Soporte = () => {
           </>
         ) : filteredTareas.length === 0 ? (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-            className="col-span-full flex flex-col items-center justify-center py-16 bg-white/[0.03] rounded-2xl border border-dashed border-white/[0.06]">
-            <ClipboardList className="w-10 h-10 text-slate-500 mb-3 opacity-20" />
-            <h3 className="text-lg font-bold text-white">Sin resultados</h3>
-            <p className="text-slate-400 text-xs mt-1">Prueba con otros filtros.</p>
+            className="col-span-full flex-1 min-h-[calc(100vh-280px)] flex flex-col items-center justify-center bg-zinc-900 border border-zinc-800 rounded-xl py-16">
+            <ClipboardList className="w-8 h-8 text-zinc-600 mb-3" />
+            <p className="font-semibold text-zinc-100">Sin resultados</p>
           </motion.div>
         ) : (
           <AnimatePresence>
@@ -197,27 +172,13 @@ const Soporte = () => {
                   isSelected={selectedIds.includes(tarea.id)}
                   onSelect={() => toggleSelect(tarea.id)}
                 >
-                  <p className="text-indigo-400/80 text-[10px] font-black tracking-widest uppercase mb-2">
-                    Ticket: {tarea.ticket_id}
-                  </p>
-
+                  <p className="text-[#c4c5d9] text-[10px] font-semibold tracking-wide uppercase mb-2">Ticket: {tarea.ticket_id}</p>
                   <div className="space-y-1.5">
-                    <div className="flex items-center gap-2 text-slate-300 text-[11px]">
-                      <MapPin className="w-3 h-3 text-indigo-400 shrink-0 opacity-70" />
-                      <span className="font-bold truncate opacity-90">{tarea.equipo_ubicacion || 'Central'}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-slate-300 text-[11px]">
-                      <Calendar className="w-3 h-3 text-indigo-400 shrink-0 opacity-70" />
-                      <span className="font-bold">{new Date(tarea.fecha.split('T')[0] + 'T12:00:00').toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-slate-300 text-[11px]">
-                      <User className="w-3 h-3 text-indigo-400 shrink-0 opacity-70" />
-                      <span className="font-bold truncate opacity-90">{tarea.responsable}</span>
-                    </div>
-                    <div className="mt-2 p-2.5 bg-white/[0.03] border border-white/[0.06] rounded-xl">
-                      <p className="text-slate-400 text-[11px] leading-relaxed line-clamp-2 italic font-medium">
-                        &quot;{tarea.tarea_realizada}&quot;
-                      </p>
+                    <div className="flex items-center gap-2 text-[#e4e2e4] text-[11px]"><MapPin className="w-3 h-3 text-zinc-500 shrink-0" /><span className="font-medium truncate">{tarea.equipo_ubicacion || 'Central'}</span></div>
+                    <div className="flex items-center gap-2 text-[#e4e2e4] text-[11px]"><Calendar className="w-3 h-3 text-zinc-500 shrink-0" /><span className="font-medium">{new Date(tarea.fecha.split('T')[0] + 'T12:00:00').toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })}</span></div>
+                    <div className="flex items-center gap-2 text-[#e4e2e4] text-[11px]"><User className="w-3 h-3 text-zinc-500 shrink-0" /><span className="font-medium truncate">{tarea.responsable}</span></div>
+                    <div className="mt-2 p-2.5 bg-[#131315] border border-white/5 rounded-xl">
+                      <p className="text-zinc-400 text-[11px] leading-relaxed line-clamp-2 italic">&quot;{tarea.tarea_realizada}&quot;</p>
                     </div>
                   </div>
                 </CommonCard>
@@ -236,14 +197,14 @@ const Soporte = () => {
             exit={{ y: 100, opacity: 0 }}
             className="fixed bottom-20 sm:bottom-8 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-md"
           >
-            <div className="bg-slate-900/90 backdrop-blur-xl border border-white/10 p-3 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex items-center justify-between gap-3">
+            <div className="bg-[#1C1C1E] border border-white/5 p-3 rounded-2xl shadow-2xl flex items-center justify-between gap-3">
               <div className="flex items-center gap-3 px-1">
-                <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(79,70,229,0.4)]">
-                  <CheckCircle className="w-5 h-5 text-white" />
+                <div className="w-8 h-8 bg-white text-zinc-900 rounded-lg flex items-center justify-center">
+                  <CheckCircle className="w-4 h-4" />
                 </div>
                 <div>
-                  <h4 className="text-white font-black text-sm">{selectedIds.length} seleccionados</h4>
-                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Acciones masivas</p>
+                  <h4 className="text-[#e4e2e4] font-semibold text-sm">{selectedIds.length} seleccionados</h4>
+                  <p className="text-[10px] font-semibold text-[#c4c5d9] uppercase tracking-wide">Acciones masivas</p>
                 </div>
               </div>
 
@@ -254,12 +215,8 @@ const Soporte = () => {
                 >
                   Cancelar
                 </button>
-                <button
-                  onClick={() => setIsBulkDeleteOpen(true)}
-                  className="bg-rose-600 hover:bg-rose-500 text-white px-4 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all flex items-center gap-1.5 shadow-lg shadow-rose-600/20 cursor-pointer"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                  Eliminar
+                <button onClick={() => setIsBulkDeleteOpen(true)} className="px-4 py-2 rounded-xl bg-white text-zinc-900 text-xs font-semibold hover:bg-zinc-100 inline-flex items-center gap-1.5">
+                  <Trash2 className="w-3.5 h-3.5" /> Eliminar
                 </button>
               </div>
             </div>
