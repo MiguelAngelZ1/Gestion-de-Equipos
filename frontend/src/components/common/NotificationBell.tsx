@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell, Package, Wrench, Info, CheckCheck, Trash2, MessageSquare, Zap, Sparkles } from 'lucide-react';
+import { Bell, BellOff, Package, Wrench, Info, CheckCheck, Trash2, MessageSquare } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { apiRequest, getUserData, getAuthToken } from '../../services/api';
 
@@ -158,10 +158,10 @@ const NotificationBell = ({ plain = false }: { plain?: boolean } = {}) => {
 
     const getIcon = (tipo) => {
         switch (tipo) {
-            case 'stock': return <Package className="w-[18px] h-[18px] sm:w-4 sm:h-4 text-amber-400" />;
-            case 'taller': return <Wrench className="w-[18px] h-[18px] sm:w-4 sm:h-4 text-indigo-400" />;
-            case 'tickets': return <MessageSquare className="w-[18px] h-[18px] sm:w-4 sm:h-4 text-purple-400" />;
-            default: return <Info className="w-[18px] h-[18px] sm:w-4 sm:h-4 text-emerald-400" />;
+            case 'stock': return <Package className="w-4 h-4 text-zinc-300" />;
+            case 'taller': return <Wrench className="w-4 h-4 text-zinc-300" />;
+            case 'tickets': return <MessageSquare className="w-4 h-4 text-zinc-300" />;
+            default: return <Info className="w-4 h-4 text-zinc-300" />;
         }
     };
 
@@ -214,7 +214,7 @@ const NotificationBell = ({ plain = false }: { plain?: boolean } = {}) => {
             >
                 {plain ? <span className="material-symbols-outlined text-[20px]">notifications</span> : <Bell className="w-6 h-6" aria-hidden="true" />}
                 {unreadCount > 0 && (
-                    <span className="absolute top-2 right-2 min-w-[16px] h-4 bg-rose-500 text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-[#1e293b] animate-pulse px-1">
+                    <span className="absolute top-1.5 right-1.5 min-w-[16px] h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center px-1">
                         {unreadCount > 9 ? '+9' : unreadCount}
                     </span>
                 )}
@@ -226,15 +226,15 @@ const NotificationBell = ({ plain = false }: { plain?: boolean } = {}) => {
                     style={{ top: pos?.top ?? 8, right: pos?.right ?? 8 }}
                     className="fixed z-[100] w-[calc(100vw-1.5rem)] max-w-sm sm:w-80 sm:max-w-none notif-drop"
                 >
-                    <div className="absolute -top-1.5 right-6 h-3 w-3 rotate-45 bg-[#1C1C1E] border-l border-t border-white/5 hidden sm:block" aria-hidden="true" />
-                    <div className="relative flex flex-col overflow-hidden rounded-2xl border border-white/5 bg-[#1C1C1E] shadow-2xl max-h-[min(70dvh,32rem)] sm:max-h-[min(80dvh,40rem)]">
-                        <div className="p-4 border-b border-white/5 flex flex-col gap-3">
+                    <div className="absolute -top-1.5 right-6 h-3 w-3 rotate-45 bg-zinc-900 border-l border-t border-zinc-800 hidden sm:block" aria-hidden="true" />
+                    <div className="relative flex flex-col overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900 shadow-2xl max-h-[min(70dvh,32rem)] sm:max-h-[min(80dvh,40rem)]">
+                        <div className="p-4 border-b border-zinc-800 flex flex-col gap-3">
                             <div className="flex justify-between items-center">
-                                <h3 className="text-[#e4e2e4] font-display text-[15px] font-semibold flex items-center gap-2">
-                                    <span className="material-symbols-outlined text-[18px] text-[#b8c3ff]">notifications</span>
+                                <h3 className="text-zinc-50 text-sm font-semibold flex items-center gap-2">
+                                    <Bell className="w-4 h-4 text-zinc-400" />
                                     Notificaciones
                                 </h3>
-                                {unreadCount > 0 && <span className="text-[11px] bg-[#b8c3ff]/15 text-[#b8c3ff] px-2 py-0.5 rounded-full font-bold">{unreadCount} nuevas</span>}
+                                {unreadCount > 0 && <span className="text-[10px] text-zinc-400 border border-zinc-700 px-2 py-0.5 rounded-full font-semibold">{unreadCount} nuevas</span>}
                             </div>
                             
                             {notifications.length > 0 && (
@@ -242,57 +242,56 @@ const NotificationBell = ({ plain = false }: { plain?: boolean } = {}) => {
                                     <button 
                                         onClick={handleMarkAllAsRead}
                                         disabled={unreadCount === 0}
-                                        className="text-[11px] flex items-center gap-1 font-semibold text-[#b8c3ff] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                        className="text-[11px] flex items-center gap-1.5 font-semibold text-[#c4c5d9] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                     >
-                                        <CheckCheck className="w-3 h-3" />
+                                        <CheckCheck className="w-3.5 h-3.5" />
                                         Leer Todas
                                     </button>
                                     <button 
                                         onClick={handleClearRead}
                                         disabled={notifications.filter(n => n.leido).length === 0}
-                                        className="text-[11px] flex items-center gap-1 font-semibold text-[#c4c5d9] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                        className="text-[11px] flex items-center gap-1.5 font-semibold text-[#c4c5d9] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                     >
-                                        <Trash2 className="w-3 h-3" />
+                                        <Trash2 className="w-3.5 h-3.5" />
                                         Limpiar Leídas
                                     </button>
                                 </div>
                             )}
                         </div>
 
-                        <div className="flex-1 overflow-y-auto custom-scrollbar min-h-0 bg-black">
+                        <div className="flex-1 overflow-y-auto custom-scrollbar min-h-0">
                             {notifications.length === 0 ? (
                                 <div className="py-12 flex flex-col items-center justify-center text-center px-6">
-                                    <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mb-3">
-                                        <span className="material-symbols-outlined text-[#6b7280] text-[24px]">notifications_off</span>
-                                    </div>
-                                    <p className="text-[#c4c5d9] text-sm font-geist">No tienes notificaciones por ahora</p>
+                                    <BellOff className="w-8 h-8 text-zinc-600 mb-3" />
+                                    <p className="font-semibold text-zinc-50 text-sm">Sin notificaciones</p>
+                                    <p className="text-xs text-zinc-500 mt-1">No tienes notificaciones por ahora</p>
                                 </div>
                             ) : (
-                                <div className="divide-y divide-white/5">
+                                <div className="divide-y divide-zinc-800">
                                     {notifications.map((notif) => (
                                         <div 
                                             key={notif.id} 
                                             role="button"
                                             tabIndex={0}
                                             aria-label={`${notif.titulo}: ${notif.mensaje}`}
-                                            className={`p-4 flex gap-3 transition-colors hover:bg-white/[0.02] cursor-pointer ${!notif.leido ? 'bg-indigo-500/[0.03]' : ''}`}
+                                            className={`p-4 flex gap-3 transition-colors hover:bg-zinc-800/40 cursor-pointer ${!notif.leido ? 'bg-zinc-800/20' : ''}`}
                                             onClick={() => handleNotificationClick(notif)}
                                             onKeyDown={(e) => { if(e.key === 'Enter' || e.key === ' ') handleNotificationClick(notif); }}
                                         >
-                                            <div className={`mt-1 h-9 w-9 sm:h-8 sm:w-8 rounded-xl flex items-center justify-center shrink-0 ${!notif.leido ? 'bg-indigo-500/20 shadow-[0_0_15px_rgba(99,102,241,0.2)]' : 'bg-white/5'}`}>
+                                            <div className="mt-0.5 h-8 w-8 rounded-xl bg-[#131315] border border-white/5 flex items-center justify-center shrink-0">
                                                 {getIcon(notif.tipo)}
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex justify-between items-start gap-2">
-                                                    <p className={`text-[13px] sm:text-xs font-bold truncate ${!notif.leido ? 'text-white' : 'text-slate-400'}`}>{notif.titulo}</p>
-                                                    <span className="text-[10px] sm:text-[9px] text-slate-500 whitespace-nowrap mt-0.5">
+                                                    <p className={`text-xs font-semibold truncate ${!notif.leido ? 'text-zinc-50' : 'text-zinc-400'}`}>{notif.titulo}</p>
+                                                    <span className="text-[10px] text-zinc-500 whitespace-nowrap mt-0.5">
                                                         {new Date(notif.fecha).toLocaleDateString([], { day:'2-digit', month:'short' })}
                                                     </span>
                                                 </div>
-                                                <p className="text-[13px] sm:text-[11px] text-slate-400 mt-0.5 line-clamp-2 leading-relaxed">{notif.mensaje}</p>
+                                                <p className="text-[11px] text-zinc-400 mt-0.5 line-clamp-2 leading-relaxed">{notif.mensaje}</p>
                                                 {!notif.leido && (
                                                     <div className="flex justify-end mt-2">
-                                                        <span className="text-[10px] sm:text-[9px] text-indigo-400 font-black uppercase tracking-wider">Nueva</span>
+                                                        <span className="text-[9px] text-zinc-500 font-semibold uppercase tracking-wider">Nueva</span>
                                                     </div>
                                                 )}
                                             </div>

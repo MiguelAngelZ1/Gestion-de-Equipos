@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { apiRequest } from '../services/api';
 import { ROLES } from '../config/constants';
-import { Package, Plus, Calendar, Trash2, Boxes, CheckCircle, Check } from 'lucide-react';
+import { Package, Plus, Calendar, Trash2, Boxes, Check, Tag } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { matchesSearch } from '../utils/search';
 import CommonCard from '../components/common/CommonCard';
@@ -12,14 +12,7 @@ import ComponenteDetalleModal from '../components/componentes/ComponenteDetalleM
 import MovimientosStockModal from '../components/componentes/MovimientosStockModal';
 import { useToast } from '../context/ToastContext';
 
-const ItemSkeleton = ({ i }: { i: number }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 10 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ delay: i * 0.05, ...{ type: 'spring' as const, stiffness: 400, damping: 30 } }}
-    className="bg-white/[0.02] rounded-2xl h-48 animate-pulse border border-white/[0.04]"
-  />
-);
+const spring = { type: 'spring' as const, stiffness: 400, damping: 30 };
 
 const Componentes = () => {
     const { showToast } = useToast();
@@ -145,76 +138,69 @@ const Componentes = () => {
     const filtered = componentes.filter(c => matchesSearch(c, search));
 
     return (
-        <div className="space-y-4">
-            <div className="flex items-center gap-2">
-                <div className="flex-1 min-w-0">
+        <div className="flex-1 min-h-0 flex flex-col space-y-4 w-full max-w-full overflow-hidden">
+            <div className="flex flex-col sm:flex-row gap-2">
+                <div className="min-w-0 w-auto max-w-full">
                     <SearchInput
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder="Buscar por Nombre, NNE o Serie..."
                     />
                 </div>
-                <button
-                    onClick={() => setIsFormOpen(true)}
-                    className="bg-indigo-600 hover:bg-indigo-500 text-white w-11 h-11 rounded-xl font-bold shadow-[0_0_16px_rgba(79,70,229,0.25)] transition-all flex items-center justify-center cursor-pointer shrink-0"
-                >
-                    <Plus className="w-5 h-5" />
-                </button>
-            </div>
-
-            <div className="flex items-center gap-3 px-1">
-               <div className="h-px bg-white/[0.08] flex-1" />
-               <div className="flex items-center gap-4">
-                  {userRole === ROLES.ADMIN && filtered.length > 0 && (
-                    <button
-                      onClick={toggleAll}
-                      className="flex items-center gap-1.5 text-[10px] font-black text-indigo-400 uppercase tracking-widest hover:text-white transition-colors cursor-pointer group"
-                    >
-                      <div className={`w-3.5 h-3.5 rounded border flex items-center justify-center transition-all ${
-                        filtered.every(c => selectedIds.includes(c.id))
-                          ? 'bg-indigo-600 border-indigo-500'
-                          : 'border-white/20 group-hover:border-indigo-500/50'
-                      }`}>
-                         {filtered.every(c => selectedIds.includes(c.id)) && <Check className="w-2.5 h-2.5 text-white" />}
-                      </div>
-                      Seleccionar Todo
-                    </button>
-                  )}
-                  <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
-                    <span className="text-indigo-400/60">|</span>
-                    {filtered.length} {filtered.length === 1 ? 'repuesto' : 'repuestos'}
-                    <span className="text-indigo-400/60">|</span>
-                  </span>
-               </div>
-               <div className="h-px bg-white/[0.08] flex-1" />
+                {userRole === ROLES.ADMIN && (
+                    <div className="flex gap-2 shrink-0">
+                        <button
+                            onClick={() => { setFormData({}); setIsFormOpen(true); }}
+                            className="inline-flex items-center justify-center gap-2 px-2 py-2.5 text-sm font-semibold text-[#c4c5d9] hover:text-white transition-colors"
+                        >
+                            <Plus className="w-4 h-4" /> Nuevo
+                        </button>
+                    </div>
+                )}
             </div>
 
             {loading && componentes.length === 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {[1,2,3].map(i => <ItemSkeleton key={i} i={i} />)}
+                <div className="flex-1 min-h-[calc(100vh-280px)] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 content-start overflow-y-auto custom-scrollbar pr-1">
+                    {[1,2,3,4,5,6].map(i => <div key={i} className="h-44 rounded-xl bg-zinc-900 border border-zinc-800 animate-pulse" />)}
                 </div>
             ) : filtered.length === 0 ? (
-                <div className="py-16 bg-white/[0.02] border border-dashed border-white/[0.06] rounded-2xl flex flex-col items-center justify-center text-center px-6">
-                    <Boxes className="w-12 h-12 text-slate-700 mb-4 opacity-30" />
-                    <h3 className="text-lg font-black text-white">No hay repuestos registrados</h3>
-                    <p className="text-slate-500 max-w-xs text-sm mt-1">Pulsa "Cargar Repuesto" para iniciar tu inventario de piezas técnicas.</p>
+                <div className="flex-1 min-h-[calc(100vh-280px)] flex flex-col items-center justify-center bg-zinc-900 border border-zinc-800 rounded-xl">
+                    <Boxes className="w-8 h-8 text-zinc-600 mb-3" />
+                    <p className="font-semibold">Sin resultados</p>
+                    <p className="text-sm text-zinc-500 mt-1">{search ? `No hay repuestos para "${search}"` : 'No hay repuestos registrados'}</p>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              <div className="flex-1 min-h-0 flex flex-col space-y-3 overflow-hidden">
+                <div className="flex items-center gap-3 text-xs text-zinc-500">
+                  <div className="h-px flex-1 bg-zinc-800" />
+                  <span className="flex items-center gap-3">
+                    {userRole === ROLES.ADMIN && (
+                      <button onClick={toggleAll} className="inline-flex items-center gap-1.5 font-semibold hover:text-zinc-300">
+                        <span className={`w-4 h-4 rounded border grid place-items-center ${filtered.every(c => selectedIds.includes(c.id)) ? 'bg-white border-white text-zinc-900' : 'border-zinc-700'}`}>
+                          {filtered.every(c => selectedIds.includes(c.id)) && <Check className="w-3 h-3" />}
+                        </span> Seleccionar todo
+                      </button>
+                    )}
+                    <span>{filtered.length} {filtered.length === 1 ? 'repuesto' : 'repuestos'}</span>
+                  </span>
+                  <div className="h-px flex-1 bg-zinc-800" />
+                </div>
+
+                <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar pr-1">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 content-start">
                     <AnimatePresence>
                         {filtered.map((comp, idx) => (
                             <motion.div
                                 key={comp.id}
                                 initial={{ opacity: 0, y: 12 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: idx * 0.03, ...{ type: 'spring' as const, stiffness: 400, damping: 30 } }}
+                                transition={{ delay: idx * 0.02, ...spring }}
                             >
                                 <CommonCard
                                     layoutId={`comp-${comp.id}`}
                                     title={comp.nombre}
                                     badge={`${comp.cantidad} unids`}
-                                    badgeAbsolute={true}
-                                    badgeColor={comp.cantidad > 0 ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-rose-500/10 text-rose-400 border-rose-500/20"}
+                                    badgeColor={comp.cantidad > 0 ? '#22c55e' : '#ef4444'}
                                     icon={Package}
                                     onView={() => setSelectedComponente(comp)}
                                     onEdit={userRole === ROLES.ADMIN ? () => { setFormData(comp); setIsFormOpen(true); } : null}
@@ -224,69 +210,32 @@ const Componentes = () => {
                                     onSelect={() => toggleSelect(comp.id)}
                                     onHistory={() => { setComponenteForHistory(comp); setIsHistoryOpen(true); }}
                                 >
-                                    <div className="space-y-2">
-                                        <div className="grid grid-cols-2 gap-2">
-                                            <div className="bg-white/[0.03] p-2 rounded-xl border border-white/[0.04]">
-                                                <p className="text-[10px] text-slate-500 font-black uppercase tracking-tighter">NNE</p>
-                                                <p className="text-xs text-white font-bold truncate">{comp.nne || '-'}</p>
-                                            </div>
-                                            <div className="bg-white/[0.03] p-2 rounded-xl border border-white/[0.04]">
-                                                <p className="text-[10px] text-slate-500 font-black uppercase tracking-tighter">Serie</p>
-                                                <p className="text-xs text-white font-bold truncate">{comp.serie || '-'}</p>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center gap-1.5 text-slate-400 text-[11px]">
-                                            <Calendar className="w-3 h-3" />
-                                            <span>{new Date(comp.fecha_ingreso).toLocaleDateString()}</span>
-                                            <span className="text-white/10 mx-1">|</span>
-                                            <Boxes className="w-3 h-3" />
-                                            <span className="text-white font-semibold">{comp.total_ingresado || comp.cantidad}</span>
-                                        </div>
+                                    <div className="flex flex-col gap-1.5">
+                                        <div className="flex items-center gap-1.5 text-xs text-zinc-400"><Package className="w-3 h-3 text-zinc-500 shrink-0" /><span className="truncate">NNE: {comp.nne || '-'}</span></div>
+                                        <div className="flex items-center gap-1.5 text-xs text-zinc-300"><Tag className="w-3 h-3 text-zinc-500 shrink-0" /><span className="truncate font-medium">Serie: {comp.serie || '-'}</span></div>
+                                        <div className="flex items-center gap-1.5 text-xs text-zinc-400"><Calendar className="w-3 h-3 text-zinc-500 shrink-0" /><span className="truncate">{new Date(comp.fecha_ingreso).toLocaleDateString()}</span></div>
+                                        <div className="flex items-center gap-1.5 text-xs text-zinc-400"><Boxes className="w-3 h-3 text-zinc-500 shrink-0" /><span className="truncate">{comp.cantidad} en stock · {comp.total_ingresado || comp.cantidad} ingresados</span></div>
                                     </div>
                                 </CommonCard>
                             </motion.div>
                         ))}
                     </AnimatePresence>
                 </div>
+                </div>
+              </div>
             )}
 
-            <AnimatePresence>
-                {selectedIds.length > 0 && (
-                    <motion.div
-                        initial={{ y: 100, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        exit={{ y: 100, opacity: 0 }}
-                        className="fixed bottom-20 sm:bottom-8 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-lg"
-                    >
-                        <div className="bg-slate-900/90 backdrop-blur-xl border border-white/10 p-3 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex items-center justify-between gap-3">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(79,70,229,0.4)]">
-                                    <CheckCircle className="w-5 h-5 text-white" />
-                                </div>
-                                <div>
-                                    <h4 className="text-white font-black text-sm">{selectedIds.length} seleccionados</h4>
-                                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Inventario masivo</p>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <button
-                                    onClick={() => setSelectedIds([])}
-                                    className="px-3 py-2 text-slate-400 hover:text-white font-black text-[10px] uppercase tracking-widest transition-colors cursor-pointer"
-                                >
-                                    Cancelar
-                                </button>
-                                <button
-                                    onClick={() => setIsBulkDeleteOpen(true)}
-                                    className="bg-rose-600 hover:bg-rose-500 text-white px-4 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all flex items-center gap-1.5 shadow-lg shadow-rose-600/20 cursor-pointer"
-                                >
-                                    <Trash2 className="w-3.5 h-3.5" />
-                                    Eliminar
-                                </button>
-                            </div>
+            {selectedIds.length > 0 && (
+                <div className="fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 z-40 w-[calc(100%-16px)] max-w-md">
+                    <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-3 flex items-center justify-between shadow-xl">
+                        <span className="flex items-center gap-2 text-sm font-semibold"><span className="w-8 h-8 rounded-full bg-white text-zinc-900 grid place-items-center font-bold text-xs">{selectedIds.length}</span> seleccionados</span>
+                        <div className="flex gap-2">
+                            <button onClick={() => setSelectedIds([])} className="px-3 py-2 text-sm font-medium text-zinc-400">Cancelar</button>
+                            <button onClick={() => setIsBulkDeleteOpen(true)} className="px-4 py-2 rounded-full bg-red-600 text-white text-sm font-semibold inline-flex items-center gap-1.5"><Trash2 className="w-4 h-4" /> Eliminar</button>
                         </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                    </div>
+                </div>
+            )}
 
             <ConfirmModal
                 isOpen={isBulkDeleteOpen}
