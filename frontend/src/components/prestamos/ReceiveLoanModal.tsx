@@ -131,7 +131,7 @@ const ReceiveLoanModal = ({ isOpen, onClose, prestamo, onConfirm }) => {
               <button
                 onClick={handleConfirm}
                 disabled={submitting || !selectedEstadoId}
-                className="px-4 py-2 rounded-lg bg-white text-zinc-900 text-sm font-semibold hover:bg-zinc-100 disabled:opacity-50 inline-flex items-center gap-2"
+                className="px-4 py-2 text-sm font-semibold text-white inline-flex items-center gap-2 disabled:opacity-50"
               >
                 {submitting ? <><Loader2 className="w-4 h-4 animate-spin" />Procesando...</> : <><CheckCircle2 className="w-4 h-4" />Confirmar</>}
               </button>

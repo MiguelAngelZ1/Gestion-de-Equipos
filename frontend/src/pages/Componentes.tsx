@@ -231,7 +231,7 @@ const Componentes = () => {
                         <span className="flex items-center gap-2 text-sm font-semibold"><span className="w-8 h-8 rounded-full bg-white text-zinc-900 grid place-items-center font-bold text-xs">{selectedIds.length}</span> seleccionados</span>
                         <div className="flex gap-2">
                             <button onClick={() => setSelectedIds([])} className="px-3 py-2 text-sm font-medium text-zinc-400">Cancelar</button>
-                            <button onClick={() => setIsBulkDeleteOpen(true)} className="px-4 py-2 rounded-full bg-red-600 text-white text-sm font-semibold inline-flex items-center gap-1.5"><Trash2 className="w-4 h-4" /> Eliminar</button>
+                            <button onClick={() => setIsBulkDeleteOpen(true)} className="px-4 py-2 text-sm font-semibold text-red-400 hover:text-red-300 inline-flex items-center gap-1.5"><Trash2 className="w-4 h-4" /> Eliminar</button>
                         </div>
                     </div>
                 </div>

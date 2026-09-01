@@ -75,7 +75,7 @@ const ComponenteDetalleModal = ({ isOpen, onClose, componente, onViewHistory, on
                                             <button
                                                 onClick={handleQuickAdd}
                                                 disabled={isSaving}
-                                                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-white text-zinc-900 text-xs font-semibold hover:bg-zinc-100 disabled:opacity-50"
+                                                className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white hover:text-zinc-200 disabled:opacity-50"
                                             >
                                                 <Plus className="w-3.5 h-3.5" /> Sumar
                                             </button>
