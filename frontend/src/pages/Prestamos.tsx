@@ -2,21 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { apiRequest } from '../services/api';
 import { ROLES } from '../config/constants';
 import { useToast } from '../context/ToastContext';
-import { Calendar, User, FileText, CheckCircle, Clock, AlertCircle, RotateCcw, CheckSquare, Square, Trash2, Check } from 'lucide-react';
+import { Calendar, User, FileText, CheckCircle, Clock, AlertCircle, RotateCcw, CheckSquare, Square, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ConfirmModal from '../components/common/ConfirmModal';
 import ReceiveLoanModal from '../components/prestamos/ReceiveLoanModal';
 
 const spring = { type: 'spring' as const, stiffness: 400, damping: 30 };
 
-const ItemSkeleton = ({ i }: { i: number }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 8 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ delay: i * 0.05, ...spring }}
-    className="bg-white/[0.02] rounded-2xl h-28 animate-pulse border border-white/[0.04]"
-  />
-);
 
 const Prestamos = () => {
   const { showToast } = useToast();
@@ -139,8 +131,11 @@ const Prestamos = () => {
     fetchData();
   }, []);
 
+  const allActiveSelected = activeLoans.length > 0 && activeLoans.every(p => selectedIds.includes(p.id));
+  const allPastSelected = pastLoans.length > 0 && pastLoans.every(p => selectedHistoryIds.includes(p.id));
+
   return (
-    <div className="flex flex-col flex-1 h-full overflow-y-auto lg:overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-700">
+    <div className="flex-1 min-h-0 flex flex-col space-y-4 w-full max-w-full overflow-y-auto lg:overflow-hidden">
 
       <ReceiveLoanModal
         isOpen={returnConfirm.isOpen}
@@ -153,262 +148,180 @@ const Prestamos = () => {
       <ConfirmModal isOpen={isBulkReturnOpen} title="¿Recibir Equipos Seleccionados?" message={`Estás a punto de marcar ${selectedIds.length} equipos como devueltos.`} onConfirm={handleBulkReturn} onClose={() => setIsBulkReturnOpen(false)} type="success" isLoading={isProcessingBulkReturn} />
       <ConfirmModal isOpen={isBulkDeleteOpen} title="¿Eliminar del Historial?" message={`¿Estás seguro de que quieres borrar estos ${selectedHistoryIds.length} registros del historial? Esta acción no se puede deshacer.`} onConfirm={handleBulkDeleteHistory} onClose={() => setIsBulkDeleteOpen(false)} type="danger" isLoading={isProcessingBulkDelete} />
 
-      {/* Counter */}
-      <div className="flex items-center gap-3 mb-6 shrink-0 px-1">
-        <div className="h-px bg-white/[0.08] flex-1" />
-        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={spring}>
-          <div className="bg-indigo-500/10 border border-indigo-500/30 px-4 py-2 rounded-xl flex items-center gap-2.5 shadow-[0_0_16px_rgba(99,102,241,0.08)]">
-            <Clock className="w-4 h-4 text-indigo-400" />
-            <span className="text-xl font-black text-white tabular-nums">{activeLoans.length}</span>
-            <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest">Activos</span>
-          </div>
-        </motion.div>
-        <div className="h-px bg-white/[0.08] flex-1" />
-      </div>
+      <div className="flex flex-col lg:grid lg:grid-cols-2 gap-4 flex-1 min-h-0 lg:overflow-hidden">
 
-      {/* Two columns */}
-      <div className="flex flex-col lg:grid lg:grid-cols-2 gap-3 lg:gap-4 flex-1 lg:h-[calc(100vh-220px)] min-h-[300px] md:min-h-[500px] lg:min-h-0 sm:px-1 lg:overflow-hidden">
-
-        {/* Active Loans */}
-        <section className="flex flex-col min-h-[300px] lg:min-h-0 bg-transparent lg:bg-white/[0.02] lg:rounded-2xl sm:rounded-3xl border-transparent lg:border-white/[0.04] sm:p-3 lg:p-4 lg:backdrop-blur-sm lg:overflow-hidden relative">
-          <div className="flex items-center justify-between mb-3 shrink-0">
-            <div className="flex items-center gap-2.5">
-              <div className="p-2 bg-indigo-500/10 rounded-xl">
-                <Calendar className="w-4 h-4 text-indigo-400" />
-              </div>
-              <h2 className="text-base font-black text-white tracking-tight">Equipos en Préstamo</h2>
-            </div>
+        <section className="flex flex-col min-h-[300px] lg:min-h-0 lg:overflow-hidden">
+          <div className="flex items-center gap-3 text-xs text-zinc-500 mb-3 shrink-0">
+            <span className="inline-flex items-center gap-2 text-zinc-300 font-semibold">
+              <Calendar className="w-4 h-4 text-zinc-400" /> En Préstamo
+            </span>
+            <div className="h-px flex-1 bg-zinc-800" />
+            <span>{activeLoans.length} activos</span>
             {userRole === ROLES.ADMIN && activeLoans.length > 0 && (
               <button
                 onClick={() => {
-                  const allActiveIds = activeLoans.map(p => p.id);
-                  const allSelected = allActiveIds.every(id => selectedIds.includes(id));
-                  if (allSelected) {
-                    setSelectedIds(prev => prev.filter(id => !allActiveIds.includes(id)));
-                  } else {
-                    setSelectedIds(prev => [...new Set([...prev, ...allActiveIds])]);
-                  }
+                  const ids = activeLoans.map(p => p.id);
+                  setSelectedIds(prev => allActiveSelected ? prev.filter(id => !ids.includes(id)) : [...new Set([...prev, ...ids])]);
                 }}
-                className="text-[10px] font-black text-indigo-400 uppercase tracking-widest hover:text-white transition-colors cursor-pointer"
+                className="font-semibold hover:text-zinc-300"
               >
-                {activeLoans.every((id: any) => selectedIds.includes(id.id)) ? 'Desmarcar' : 'Seleccionar Todo'}
+                {allActiveSelected ? 'Desmarcar' : 'Seleccionar todo'}
               </button>
             )}
           </div>
 
-          <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar [mask-image:linear-gradient(to_bottom,transparent_0%,black_5%,black_95%,transparent_100%)] pb-6 pt-2">
+          <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar pr-1">
             {loading ? (
-              <div className="space-y-2">{[1,2,3].map(i => <ItemSkeleton key={i} i={i} />)}</div>
+              <div className="space-y-3">{[1,2,3].map(i => <div key={i} className="h-36 rounded-xl bg-zinc-900 border border-zinc-800 animate-pulse" />)}</div>
             ) : activeLoans.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 bg-white/[0.02] rounded-2xl border border-dashed border-white/[0.06]">
-                <CheckCircle className="w-10 h-10 text-emerald-500/20 mb-3" />
-                <p className="text-slate-400 font-medium text-sm">No hay activos</p>
+              <div className="min-h-[240px] h-full flex flex-col items-center justify-center bg-zinc-900 border border-zinc-800 rounded-xl">
+                <CheckCircle className="w-8 h-8 text-zinc-600 mb-3" />
+                <p className="font-semibold">Sin préstamos activos</p>
+                <p className="text-sm text-zinc-500 mt-1">Todos los equipos están en su lugar</p>
               </div>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <AnimatePresence>
-                  {activeLoans.map((p, idx) => (
+                  {activeLoans.map((p, idx) => {
+                    const isSelected = selectedIds.includes(p.id);
+                    return (
                     <motion.div
                       key={p.id}
                       initial={{ opacity: 0, y: 8 }}
                       animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                      transition={{ delay: idx * 0.03, ...spring }}
+                      exit={{ opacity: 0, scale: 0.97 }}
+                      transition={{ delay: idx * 0.02, ...spring }}
                     >
-                      <div className={`bg-white/[0.03] border border-white/[0.04] rounded-2xl p-3 sm:p-4 hover:bg-white/[0.06] transition-all group relative overflow-hidden ${selectedIds.includes(p.id) ? 'ring-2 ring-indigo-500/50 bg-white/[0.05]' : ''}`}>
-                        {userRole === ROLES.ADMIN && (
-                          <div
-                            onClick={(e) => { e.stopPropagation(); toggleSelect(p.id); }}
-                            className="absolute top-3 right-3 cursor-pointer z-10"
-                          >
-                            <div className={`p-1 rounded-lg transition-all ${selectedIds.includes(p.id) ? 'bg-indigo-600 text-white shadow-[0_0_10px_rgba(79,70,229,0.4)]' : 'bg-white/5 text-slate-500 hover:text-indigo-400'}`}>
-                              {selectedIds.includes(p.id) ? <CheckSquare className="w-3.5 h-3.5" /> : <Square className="w-3.5 h-3.5" />}
+                      <div className={`rounded-xl border p-4 flex flex-col gap-3 transition-colors ${isSelected ? 'bg-white border-white text-zinc-900' : 'bg-zinc-900 border-zinc-800 hover:border-zinc-700'}`}>
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="relative shrink-0 grid place-items-center">
+                              <Calendar className={`w-5 h-5 ${isSelected ? 'text-zinc-900' : 'text-zinc-400'}`} />
+                              <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2" style={{ background: '#f97316', borderColor: isSelected ? '#fff' : '#18181b' }} />
                             </div>
+                            <h3 className={`text-sm font-semibold truncate ${isSelected ? 'text-zinc-900' : 'text-zinc-50'}`}>{p.equipos?.ine}</h3>
                           </div>
-                        )}
-
-                        <div className="flex items-start gap-3 mb-2.5">
-                          <div className="p-2 bg-indigo-500/20 rounded-xl group-hover:bg-indigo-500 transition-colors duration-300 shrink-0">
-                            <Calendar className="w-4 h-4 text-indigo-400 group-hover:text-white transition-colors" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h3 className="text-sm font-black text-white tracking-tight truncate">{p.equipos?.ine}</h3>
-                            <div className="flex items-center gap-1.5 text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-0.5">
-                              <User className="w-3 h-3 text-indigo-400" /> {p.solicitante}
-                            </div>
-                          </div>
+                          {userRole === ROLES.ADMIN && (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); toggleSelect(p.id); }}
+                              className={`w-7 h-7 grid place-items-center shrink-0 ${isSelected ? 'text-zinc-900' : 'text-zinc-500 hover:text-zinc-300'}`}
+                            >
+                              {isSelected ? <CheckSquare className="w-5 h-5" /> : <Square className="w-5 h-5" />}
+                            </button>
+                          )}
                         </div>
 
-                        <div className="bg-white/[0.03] rounded-xl p-2.5 mb-2.5 border border-white/[0.04]">
-                          <div className="flex items-start gap-2">
-                            <FileText className="w-3 h-3 text-indigo-400 shrink-0 mt-0.5" />
-                            <p className="text-slate-400 text-[11px] italic leading-relaxed line-clamp-2">"{p.motivo}"</p>
-                          </div>
+                        <div className={`flex flex-col gap-1.5 text-sm ${isSelected ? 'text-zinc-600' : 'text-zinc-400'}`}>
+                          <div className="flex items-center gap-1.5 text-xs"><User className="w-3 h-3 text-zinc-500 shrink-0" /><span className="truncate font-medium">{p.solicitante}</span></div>
+                          <div className="flex items-center gap-1.5 text-xs"><Clock className="w-3 h-3 text-zinc-500 shrink-0" /><span className="truncate">Salida: {new Date(p.fecha_prestamo).toLocaleDateString()}</span></div>
+                          {p.fecha_devolucion_estimada && (
+                            <div className="flex items-center gap-1.5 text-xs"><Calendar className="w-3 h-3 text-zinc-500 shrink-0" /><span className="truncate">Estimada: {new Date(p.fecha_devolucion_estimada).toLocaleDateString()}</span></div>
+                          )}
+                          {!isSelected && (
+                            <div className="mt-1 p-2.5 bg-[#131315] border border-white/5 rounded-xl flex items-start gap-2">
+                              <FileText className="w-3 h-3 text-zinc-500 shrink-0 mt-0.5" />
+                              <p className="text-zinc-400 text-[11px] leading-relaxed line-clamp-2 italic">&quot;{p.motivo || 'Sin motivo'}&quot;</p>
+                            </div>
+                          )}
                         </div>
 
-                        <div className="flex items-center justify-between">
-                          <div className="flex gap-4">
-                            <div className="flex flex-col gap-0.5">
-                              <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Salida</span>
-                              <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-300">
-                                <Clock className="w-3 h-3 text-indigo-400" />
-                                {new Date(p.fecha_prestamo).toLocaleDateString()}
-                              </div>
-                            </div>
-                            {p.fecha_devolucion_estimada && (
-                              <div className="flex flex-col gap-0.5">
-                                <span className="text-[8px] font-black text-indigo-500/50 uppercase tracking-widest">Estimada</span>
-                                <div className="flex items-center gap-1.5 text-[11px] font-bold text-indigo-400">
-                                  <Calendar className="w-3 h-3" />
-                                  {new Date(p.fecha_devolucion_estimada).toLocaleDateString()}
-                                </div>
-                              </div>
-                            )}
-                          </div>
+                        <div className={`pt-3 border-t flex items-center justify-end ${isSelected ? 'border-zinc-200' : 'border-zinc-800'}`}>
                           <button
                             onClick={() => setReturnConfirm({ isOpen: true, prestamo: p })}
-                            className="bg-emerald-600/10 hover:bg-emerald-500 text-emerald-400 hover:text-white px-3 py-2 rounded-xl font-black text-[9px] uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 border border-emerald-500/20 hover:shadow-emerald-500/20 group/btn cursor-pointer shrink-0"
+                            className={`inline-flex items-center gap-1.5 text-xs font-semibold ${isSelected ? 'text-zinc-900' : 'text-[#c4c5d9] hover:text-white'}`}
                           >
-                            <RotateCcw className="w-3 h-3 group-hover/btn:rotate-180 transition-transform duration-500" />
-                            <span className="hidden sm:inline">Recibir</span>
+                            <RotateCcw className="w-3.5 h-3.5" /> Recibir
                           </button>
                         </div>
-
-                        <div className="absolute left-0 top-4 bottom-4 w-0.5 bg-indigo-500 rounded-full" />
                       </div>
                     </motion.div>
-                  ))}
+                    );
+                  })}
                 </AnimatePresence>
               </div>
             )}
           </div>
         </section>
 
-        {/* History */}
-        <section className="flex flex-col min-h-[300px] lg:min-h-0 bg-transparent lg:bg-white/[0.01] lg:rounded-2xl sm:rounded-3xl border-transparent lg:border-white/[0.04] sm:p-3 lg:p-4 lg:backdrop-blur-sm lg:overflow-hidden relative">
-          <div className="flex items-center justify-between mb-3 shrink-0 gap-3">
-            <div className="flex items-center gap-2.5">
-              <div className="p-2 bg-slate-500/10 rounded-xl">
-                <RotateCcw className="w-4 h-4 text-slate-500" />
-              </div>
-              <h2 className="text-base font-black text-white tracking-tight">Historial</h2>
-            </div>
-            <div className="flex items-center gap-1.5">
-              {userRole === ROLES.ADMIN && pastLoans.length > 0 && (
-                <button
-                  onClick={() => {
-                    const allPastIds = pastLoans.map(p => p.id);
-                    const allSelected = allPastIds.every(id => selectedHistoryIds.includes(id));
-                    if (allSelected) {
-                      setSelectedHistoryIds(prev => prev.filter(id => !allPastIds.includes(id)));
-                    } else {
-                      setSelectedHistoryIds(prev => [...new Set([...prev, ...allPastIds])]);
-                    }
-                  }}
-                  className="text-[10px] font-black text-slate-500 uppercase tracking-widest hover:text-white transition-colors cursor-pointer"
-                >
-                  {pastLoans.length > 0 && pastLoans.every(p => selectedHistoryIds.includes(p.id)) ? 'Desmarcar' : 'Todo'}
-                </button>
-              )}
-              {pastLoans.length > 0 && (
-                <button
-                  onClick={() => setCleanupConfirm(true)}
-                  className="px-2.5 py-1.5 bg-rose-500/5 hover:bg-rose-500/20 text-rose-500/60 hover:text-rose-500 text-[8px] sm:text-[9px] font-black uppercase tracking-widest rounded-lg border border-rose-500/10 hover:border-rose-500/30 transition-all cursor-pointer"
-                >
-                  Limpiar
-                </button>
-              )}
-            </div>
+        <section className="flex flex-col min-h-[300px] lg:min-h-0 lg:overflow-hidden">
+          <div className="flex items-center gap-3 text-xs text-zinc-500 mb-3 shrink-0">
+            <span className="inline-flex items-center gap-2 text-zinc-300 font-semibold">
+              <RotateCcw className="w-4 h-4 text-zinc-400" /> Historial
+            </span>
+            <div className="h-px flex-1 bg-zinc-800" />
+            {userRole === ROLES.ADMIN && pastLoans.length > 0 && (
+              <button
+                onClick={() => {
+                  const ids = pastLoans.map(p => p.id);
+                  setSelectedHistoryIds(prev => allPastSelected ? prev.filter(id => !ids.includes(id)) : [...new Set([...prev, ...ids])]);
+                }}
+                className="font-semibold hover:text-zinc-300"
+              >
+                {allPastSelected ? 'Desmarcar' : 'Seleccionar todo'}
+              </button>
+            )}
+            {pastLoans.length > 0 && (
+              <button onClick={() => setCleanupConfirm(true)} className="font-semibold text-red-400 hover:text-red-300">Limpiar</button>
+            )}
           </div>
 
-          <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar [mask-image:linear-gradient(to_bottom,transparent_0%,black_5%,black_95%,transparent_100%)] pb-6 pt-2">
+          <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar pr-1">
             {pastLoans.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 border border-dashed border-white/[0.04] rounded-2xl opacity-30">
-                <AlertCircle className="w-8 h-8 text-slate-600 mb-2" />
-                <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest">Sin registros</p>
+              <div className="min-h-[240px] h-full flex flex-col items-center justify-center bg-zinc-900 border border-zinc-800 rounded-xl">
+                <AlertCircle className="w-8 h-8 text-zinc-600 mb-3" />
+                <p className="font-semibold">Sin registros</p>
+                <p className="text-sm text-zinc-500 mt-1">Aún no hay devoluciones</p>
               </div>
             ) : (
-              <div className="space-y-1.5">
-                {pastLoans.map(p => (
-                  <div
-                    key={p.id}
-                    onClick={() => userRole === ROLES.ADMIN && toggleSelectHistory(p.id)}
-                    className={`bg-white/[0.02] border border-white/[0.04] rounded-xl p-3 flex items-center justify-between hover:bg-white/[0.06] transition-all group gap-2 cursor-pointer ${selectedHistoryIds.includes(p.id) ? 'ring-2 ring-rose-500/50' : ''}`}
-                  >
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      {userRole === ROLES.ADMIN && (
-                        <div className={`w-1 h-6 rounded-full transition-all ${selectedHistoryIds.includes(p.id) ? 'bg-rose-500 scale-y-125' : 'bg-emerald-500/30 group-hover:bg-emerald-500 group-hover:scale-y-110'}`} />
-                      )}
+              <div className="space-y-2">
+                {pastLoans.map(p => {
+                  const isSelected = selectedHistoryIds.includes(p.id);
+                  return (
+                    <div
+                      key={p.id}
+                      onClick={() => userRole === ROLES.ADMIN && toggleSelectHistory(p.id)}
+                      className={`rounded-xl border p-3 flex items-center justify-between gap-3 cursor-pointer transition-colors ${isSelected ? 'bg-white border-white text-zinc-900' : 'bg-zinc-900 border-zinc-800 hover:border-zinc-700'}`}
+                    >
                       <div className="min-w-0">
-                        <h4 className="text-white font-bold text-xs truncate tracking-tight">{p.equipos?.ine}</h4>
-                        <p className="text-slate-500 text-[10px] font-medium truncate italic">{p.solicitante}</p>
+                        <h4 className={`text-sm font-semibold truncate ${isSelected ? 'text-zinc-900' : 'text-zinc-50'}`}>{p.equipos?.ine}</h4>
+                        <p className={`text-xs truncate ${isSelected ? 'text-zinc-600' : 'text-zinc-400'}`}>{p.solicitante}</p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className={`text-[10px] uppercase tracking-wide ${isSelected ? 'text-zinc-600' : 'text-zinc-500'}`}>Devuelto</p>
+                        <span className={`text-xs font-medium ${isSelected ? 'text-zinc-900' : 'text-zinc-300'}`}>{new Date(p.fecha_devolucion_real).toLocaleDateString()}</span>
                       </div>
                     </div>
-                    <div className="text-right shrink-0">
-                      <p className="text-[9px] font-black text-slate-600 uppercase tracking-tighter">Devuelto</p>
-                      <span className="text-[11px] font-bold text-slate-400">{new Date(p.fecha_devolucion_real).toLocaleDateString()}</span>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
         </section>
       </div>
 
-      {/* Floating Bulk Return Bar */}
-      <AnimatePresence>
-        {selectedIds.length > 0 && (
-          <motion.div
-            initial={{ y: 100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 100, opacity: 0 }}
-            className="fixed bottom-20 sm:bottom-8 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-sm"
-          >
-            <div className="bg-slate-900/90 backdrop-blur-xl border border-white/10 p-3 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center shadow-[0_0_16px_rgba(79,70,229,0.4)]">
-                  <RotateCcw className="w-4 h-4 text-white" />
-                </div>
-                <span className="text-white font-black text-xs tabular-nums">{selectedIds.length}</span>
-              </div>
-              <button
-                onClick={() => setIsBulkReturnOpen(true)}
-                className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all cursor-pointer"
-              >
-                Recibir Todo
-              </button>
+      {selectedIds.length > 0 && (
+        <div className="fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 z-40 w-[calc(100%-16px)] max-w-md">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-3 flex items-center justify-between shadow-xl">
+            <span className="flex items-center gap-2 text-sm font-semibold"><span className="w-8 h-8 rounded-full bg-white text-zinc-900 grid place-items-center font-bold text-xs">{selectedIds.length}</span> seleccionados</span>
+            <div className="flex gap-2">
+              <button onClick={() => setSelectedIds([])} className="px-3 py-2 text-sm font-medium text-zinc-400">Cancelar</button>
+              <button onClick={() => setIsBulkReturnOpen(true)} className="px-4 py-2 rounded-full bg-white text-zinc-900 text-sm font-semibold inline-flex items-center gap-1.5"><RotateCcw className="w-4 h-4" /> Recibir</button>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          </div>
+        </div>
+      )}
 
-      {/* Floating Bulk Delete Bar */}
-      <AnimatePresence>
-        {selectedHistoryIds.length > 0 && (
-          <motion.div
-            initial={{ y: 100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 100, opacity: 0 }}
-            className="fixed bottom-20 sm:bottom-8 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-sm"
-          >
-            <div className="bg-slate-900/90 backdrop-blur-xl border border-white/10 p-3 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 bg-rose-600 rounded-xl flex items-center justify-center shadow-[0_0_16px_rgba(225,29,72,0.4)]">
-                  <Trash2 className="w-4 h-4 text-white" />
-                </div>
-                <span className="text-white font-black text-xs tabular-nums">{selectedHistoryIds.length}</span>
-              </div>
-              <button
-                onClick={() => setIsBulkDeleteOpen(true)}
-                className="bg-rose-600 hover:bg-rose-500 text-white px-4 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all cursor-pointer"
-              >
-                Eliminar
-              </button>
+      {selectedHistoryIds.length > 0 && (
+        <div className="fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 z-40 w-[calc(100%-16px)] max-w-md">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-3 flex items-center justify-between shadow-xl">
+            <span className="flex items-center gap-2 text-sm font-semibold"><span className="w-8 h-8 rounded-full bg-white text-zinc-900 grid place-items-center font-bold text-xs">{selectedHistoryIds.length}</span> seleccionados</span>
+            <div className="flex gap-2">
+              <button onClick={() => setSelectedHistoryIds([])} className="px-3 py-2 text-sm font-medium text-zinc-400">Cancelar</button>
+              <button onClick={() => setIsBulkDeleteOpen(true)} className="px-4 py-2 rounded-full bg-red-600 text-white text-sm font-semibold inline-flex items-center gap-1.5"><Trash2 className="w-4 h-4" /> Eliminar</button>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
