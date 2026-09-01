@@ -110,11 +110,11 @@ const ConfirmModal = ({ isOpen, title, message, children, onConfirm, onClose, co
           className="fixed inset-0 z-[200] flex items-center justify-center p-6 sm:p-6 bg-black/85 backdrop-blur-md h-[100dvh] pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]"
         >
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            initial={{ opacity: 0, scale: 0.95, y: 12 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            exit={{ opacity: 0, scale: 0.95, y: 12 }}
             onClick={(e) => e.stopPropagation()}
-            className={`bg-[#1C1C1E] border border-white/5 shadow-2xl rounded-2xl w-full max-w-xs relative overflow-hidden flex flex-col max-h-[calc(100dvh-40px)]`}
+            className={`bg-zinc-900 border border-zinc-800 shadow-2xl rounded-xl w-auto min-w-[300px] max-w-[420px] relative overflow-hidden flex flex-col h-auto`}
           >
             <div className={`absolute top-0 left-0 right-0 h-24 bg-gradient-to-br ${style.gradient} to-transparent pointer-events-none`}></div>
             <div className="p-5 relative z-10 flex flex-col items-start text-left">

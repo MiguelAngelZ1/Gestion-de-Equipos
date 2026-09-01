@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { apiRequest } from '../../services/api';
-import { Users, Plus, Edit2, Trash2, X, AlertCircle, Shield, Mail, User as UserIcon, MessageSquare, Lock, Send, Loader2, Clock } from 'lucide-react';
+import { Users, Plus, Edit2, Trash2, X, Shield, Mail, User as UserIcon, Lock, Loader2, Eye } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from '../../context/ToastContext';
 import ConfirmModal from '../common/ConfirmModal';
@@ -115,62 +116,57 @@ const UserManagementPanel = () => {
     const filteredUsuarios = usuarios.filter(user => matchesSearch(user, searchTerm));
 
     return (
-        <div className="flex flex-col lg:h-full">
-        <div className="flex flex-col sm:flex-row justify-start items-stretch sm:items-center gap-2.5 sm:gap-4 mb-4 sm:mb-6">
-            <div className="flex-1">
+        <div className="flex flex-col flex-1 min-h-0 gap-4">
+        <div className="flex items-center gap-2 shrink-0">
               <SearchInput
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Buscar por usuario o rol..."
               />
-            </div>
             <button
                 onClick={() => handleOpenModal()}
-                className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 sm:px-6 py-2.5 rounded-xl text-[10px] sm:text-xs font-bold flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg shadow-indigo-600/20 cursor-pointer w-full sm:w-auto shrink-0"
+                className="inline-flex items-center gap-1.5 bg-transparent hover:bg-white/5 text-zinc-400 hover:text-white px-3 py-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer shrink-0"
             >
                 <Plus className="w-4 h-4" /> Nuevo Usuario
             </button>
         </div>
 
-            <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar sm:bg-black/20 sm:rounded-2xl sm:border border-white/5 py-2 sm:p-4">
+            <div className="flex-1 min-h-0 overflow-y-auto pr-1 custom-scrollbar">
                 {loading ? (
-                    <div className="flex flex-col items-center justify-center py-20 opacity-50">
-                        <Loader2 className="w-10 h-10 animate-spin text-indigo-400 mb-4" />
-                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Cargando Usuarios...</span>
+                    <div className="flex flex-col items-center justify-center py-16">
+                        <div className="w-6 h-6 rounded-full border-2 border-zinc-800 border-t-white animate-spin mb-3" />
+                        <span className="text-xs font-semibold text-zinc-500">Cargando usuarios...</span>
                     </div>
                 ) : usuarios.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-20 bg-white/[0.02] border border-dashed border-white/10 rounded-[2.5rem]">
-                        <Users className="w-12 h-12 text-slate-700 mb-4" />
-                        <p className="text-slate-500 italic font-medium">No hay usuarios registrados.</p>
+                    <div className="flex flex-col items-center justify-center py-16 bg-zinc-900 border border-dashed border-zinc-800 rounded-xl">
+                        <Users className="w-8 h-8 text-zinc-600 mb-3" />
+                        <p className="text-sm text-zinc-500">No hay usuarios registrados.</p>
                     </div>
                 ) : (
                     <div className="flex flex-col h-full gap-3 pb-6">
                         {filteredUsuarios.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center p-12 bg-white/[0.02] border border-dashed border-white/10 rounded-[2.5rem]">
-                                <SearchInput value="" onChange={() => {}} className="w-10 h-10 text-slate-600 mb-4" />
-                                <p className="text-slate-500 font-medium text-sm">No se encontraron usuarios que coincidan con la búsqueda.</p>
+                            <div className="flex flex-col items-center justify-center py-16 bg-zinc-900 border border-dashed border-zinc-800 rounded-xl">
+                                <p className="text-sm text-zinc-500">Sin resultados para la búsqueda.</p>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-3">
+                            <div className="grid grid-cols-[repeat(auto-fill,minmax(180px,210px))] justify-start gap-3 auto-rows-min content-start">
                                 <AnimatePresence mode="popLayout">
                                     {filteredUsuarios.map(user => {
-                                const roleLower = (user.rol || '').toLowerCase();
-                                const isAdmin = roleLower === 'admin';
-                                
+                                const isAdmin = (user.rol || '').toLowerCase() === 'admin';
                                 return (
-                                    <CommonCard
-                                        key={user.id}
-                                        layoutId={`user-${user.id}`}
-                                        title={user.usuario}
-                                        icon={UserIcon}
-                                        badge={user.rol}
-                                        badgeAbsolute={false}
-                                        badgeColor={isAdmin ? "bg-amber-500/10 text-amber-500 border-amber-500/20" : "bg-[#1e293b] text-slate-400 border-white/5"}
-                                        onView={() => { setDetailsUser(user); setIsDetailsOpen(true); }}
-                                        onEdit={() => handleOpenModal(user)}
-                                        onDelete={() => { setUserToDelete(user); setIsDeleteOpen(true); }}
-                                        compact={true}
-                                    />
+                                    <motion.div key={user.id} layout initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.97 }} className="bg-zinc-900 border border-zinc-800 rounded-xl p-3 flex flex-col gap-2.5 hover:border-zinc-700 transition-colors h-fit">
+                                        <div className="flex items-center gap-2 min-w-0">
+                                            <UserIcon className="w-4 h-4 text-zinc-500 shrink-0" />
+                                            <span className="text-sm font-semibold text-white truncate">{user.usuario}</span>
+                                            <span className={`ml-auto text-[10px] font-bold uppercase tracking-widest shrink-0 ${isAdmin ? 'text-amber-400' : 'text-zinc-500'}`}>{user.rol}</span>
+                                        </div>
+                                        <div className="flex items-center gap-1 pt-2.5 border-t border-zinc-800">
+                                            <button onClick={() => { setDetailsUser(user); setIsDetailsOpen(true); }} className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-transparent hover:bg-white/5 text-zinc-400 hover:text-white text-xs font-medium transition-colors cursor-pointer"><Eye className="w-3.5 h-3.5" /> Ver</button>
+                                            <div className="flex-1" />
+                                            <button onClick={() => handleOpenModal(user)} className="w-7 h-7 grid place-items-center rounded-lg bg-transparent hover:bg-white/5 text-zinc-400 hover:text-white transition-colors cursor-pointer"><Edit2 className="w-3.5 h-3.5" /></button>
+                                            <button onClick={() => { setUserToDelete(user); setIsDeleteOpen(true); }} className="w-7 h-7 grid place-items-center rounded-lg bg-transparent hover:bg-white/5 text-zinc-500 hover:text-red-400 transition-colors cursor-pointer"><Trash2 className="w-3.5 h-3.5" /></button>
+                                        </div>
+                                    </motion.div>
                                 );
                             })}
                         </AnimatePresence>
@@ -181,70 +177,62 @@ const UserManagementPanel = () => {
             </div>
 
             {/* Modal de Create/Edit */}
+            {typeof document !== 'undefined' && createPortal(
             <AnimatePresence>
                 {isModalOpen && (
-                    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
                         <motion.div
-                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            initial={{ opacity: 0, scale: 0.95, y: 12 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            className="bg-slate-900 border border-white/10 w-full max-w-md rounded-2xl sm:rounded-[2.5rem] shadow-2xl overflow-hidden"
+                            exit={{ opacity: 0, scale: 0.95, y: 12 }}
+                            className="bg-zinc-900 border border-zinc-800 w-auto min-w-[340px] max-w-md rounded-xl shadow-2xl overflow-hidden h-auto"
                         >
-                            <form onSubmit={handleSave} className={`p-5 sm:p-8 space-y-4 sm:space-y-5 ${isSaving ? 'opacity-50' : ''}`}>
-                                <div className="flex items-center justify-between mb-1 sm:mb-2">
-                                    <h3 className="text-lg sm:text-xl font-black text-white">{editingUser ? 'Editar Usuario' : 'Nuevo Usuario'}</h3>
-                                    <button type="button" disabled={isSaving} onClick={() => setIsModalOpen(false)} className="text-slate-500 hover:text-white transition-colors cursor-pointer">
-                                        <X className="w-6 h-6" />
+                            <form onSubmit={handleSave} className={`p-5 space-y-4 ${isSaving ? 'opacity-50' : ''}`}>
+                                <div className="flex items-center justify-between">
+                                    <h3 className="text-sm font-bold text-white">{editingUser ? 'Editar Usuario' : 'Nuevo Usuario'}</h3>
+                                    <button type="button" disabled={isSaving} onClick={() => setIsModalOpen(false)} className="text-zinc-500 hover:text-white transition-colors cursor-pointer">
+                                        <X className="w-5 h-5" />
                                     </button>
                                 </div>
 
-                                <div className="space-y-4">
+                                <div className="space-y-3">
                                     <div className="space-y-1.5">
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Username</label>
-                                        <div className="relative group">
-                                            <UserIcon className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-400 transition-colors" />
+                                        <label className="text-[10px] font-semibold uppercase tracking-widest text-zinc-500 ml-1">Username</label>
                                             <input
                                                 type="text"
                                                 disabled={isSaving}
                                                 value={formData.usuario}
                                                 onChange={e => setFormData({ ...formData, usuario: e.target.value })}
-                                                className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-2xl text-sm text-white focus:border-indigo-500/50 outline-none transition-all"
+                                                className="w-full px-4 py-2.5 bg-zinc-800 border border-zinc-700 rounded-xl text-sm text-white placeholder:text-zinc-500 focus:border-zinc-600 outline-none transition-colors"
                                                 required
                                                 placeholder="Ej: mimperio"
                                             />
-                                        </div>
                                     </div>
 
                                     <div className="space-y-1.5">
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Email</label>
-                                        <div className="relative group">
-                                            <Mail className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-400 transition-colors" />
+                                        <label className="text-[10px] font-semibold uppercase tracking-widest text-zinc-500 ml-1">Email</label>
                                             <input
                                                 type="email"
                                                 disabled={isSaving}
                                                 value={formData.email}
                                                 onChange={e => setFormData({ ...formData, email: e.target.value })}
-                                                className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-2xl text-sm text-white focus:border-indigo-500/50 outline-none transition-all"
+                                                className="w-full px-4 py-2.5 bg-zinc-800 border border-zinc-700 rounded-xl text-sm text-white placeholder:text-zinc-500 focus:border-zinc-600 outline-none transition-colors"
                                                 required
                                                 placeholder="usuario@ejemplo.com"
                                             />
-                                        </div>
                                     </div>
 
                                     <div className="space-y-1.5">
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Password {editingUser && '(Opcional)'}</label>
-                                        <div className="relative group">
-                                            <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-400 transition-colors" />
+                                        <label className="text-[10px] font-semibold uppercase tracking-widest text-zinc-500 ml-1">Password {editingUser && '(Opcional)'}</label>
                                             <input
                                                 type="password"
                                                 disabled={isSaving}
                                                 value={formData.password}
                                                 onChange={e => setFormData({ ...formData, password: e.target.value })}
-                                                className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-2xl text-sm text-white focus:border-indigo-500/50 outline-none transition-all"
+                                                className="w-full px-4 py-2.5 bg-zinc-800 border border-zinc-700 rounded-xl text-sm text-white placeholder:text-zinc-500 focus:border-zinc-600 outline-none transition-colors"
                                                 required={!editingUser}
                                                 placeholder={editingUser ? "Dejar en blanco para no cambiar" : "••••••••"}
                                             />
-                                        </div>
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-4">
@@ -265,10 +253,10 @@ const UserManagementPanel = () => {
                                 <button
                                     type="submit"
                                     disabled={isSaving}
-                                    className={`w-full bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl py-4 font-bold transition-all shadow-[0_10px_20px_rgba(79,70,229,0.3)] flex items-center justify-center gap-2 ${isSaving ? 'opacity-80 cursor-not-allowed' : 'active:scale-95 cursor-pointer'}`}
+                                    className={`w-full bg-transparent hover:bg-white/5 text-zinc-400 hover:text-white border border-transparent rounded-xl py-2.5 text-sm font-semibold transition-colors flex items-center justify-center gap-2 ${isSaving ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                                 >
                                     {isSaving ? (
-                                        <><Loader2 className="w-5 h-5 animate-spin" /> Procesando...</>
+                                        <><Loader2 className="w-4 h-4 animate-spin" /> Procesando...</>
                                     ) : (
                                         editingUser ? 'Guardar Cambios' : 'Crear Usuario'
                                     )}
@@ -277,7 +265,7 @@ const UserManagementPanel = () => {
                         </motion.div>
                     </div>
                 )}
-            </AnimatePresence>
+            </AnimatePresence>, document.body)}
 
             <ConfirmModal
                 isOpen={isDeleteOpen}
@@ -289,79 +277,61 @@ const UserManagementPanel = () => {
             />
 
             {/* Modal de Detalles */}
+            {typeof document !== 'undefined' && createPortal(
             <AnimatePresence>
                 {isDetailsOpen && detailsUser && (
-                    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
                         <motion.div
-                            initial={{ opacity: 0, scale: 0.9, y: 30 }}
+                            initial={{ opacity: 0, scale: 0.95, y: 12 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.9, y: 30 }}
-                            className="bg-[#0f1523] border border-white/10 w-full max-w-lg rounded-2xl sm:rounded-[2.5rem] shadow-2xl overflow-hidden"
+                            exit={{ opacity: 0, scale: 0.95, y: 12 }}
+                            className="bg-zinc-900 border border-zinc-800 w-auto min-w-[340px] max-w-md rounded-xl shadow-2xl overflow-hidden h-auto"
                         >
-                            <div className="p-5 sm:p-8 space-y-5 sm:space-y-8">
+                            <div className="p-5 space-y-4">
                                 <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-5">
-                                        <div className="w-14 h-14 bg-indigo-500/10 rounded-2xl flex items-center justify-center border border-indigo-500/20">
-                                            <UserIcon className="w-7 h-7 text-indigo-400" />
-                                        </div>
+                                    <div className="flex items-center gap-3">
+                                        <UserIcon className="w-5 h-5 text-zinc-500" />
                                         <div>
-                                            <h3 className="text-2xl font-black text-white">{detailsUser.usuario}</h3>
-                                            <div className="mt-1 flex items-center gap-2">
-                                                <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border ${(detailsUser.rol || '').toLowerCase() === 'admin' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' : 'bg-slate-500/10 text-slate-400 border-white/10'}`}>
-                                                    {detailsUser.rol}
-                                                </span>
-                                            </div>
+                                            <h3 className="text-sm font-bold text-white">{detailsUser.usuario}</h3>
+                                            <span className={`text-xs font-semibold ${(detailsUser.rol || '').toLowerCase() === 'admin' ? 'text-amber-400' : 'text-zinc-500'}`}>{detailsUser.rol}</span>
                                         </div>
                                     </div>
                                     <button 
                                         onClick={() => setIsDetailsOpen(false)}
-                                        className="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-500 hover:text-white transition-all shadow-lg cursor-pointer"
+                                        className="w-8 h-8 grid place-items-center rounded-lg bg-transparent hover:bg-white/5 text-zinc-500 hover:text-white transition-colors cursor-pointer"
                                     >
-                                        <X className="w-5 h-5" />
+                                        <X className="w-4 h-4" />
                                     </button>
                                 </div>
 
-                                <div className="space-y-6">
-                                    <div className="grid grid-cols-1 gap-4">
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Información de Contacto</label>
-                                            <div className="bg-black/20 rounded-3xl border border-white/5 overflow-hidden divide-y divide-white/5">
-                                                <div className="p-4 flex items-center gap-4 group">
-                                                    <div className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center group-hover:bg-indigo-500/10 transition-colors">
-                                                        <Mail className="w-4 h-4 text-slate-400 group-hover:text-indigo-400" />
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-[9px] font-bold text-slate-600 uppercase tracking-wider">Email</p>
-                                                        <p className="text-sm text-slate-200">{detailsUser.email}</p>
-                                                    </div>
-                                                </div>
-
-
-                                            </div>
-                                        </div>
+                                <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-3 flex items-center gap-3">
+                                    <Mail className="w-4 h-4 text-zinc-500 shrink-0" />
+                                    <div className="min-w-0">
+                                        <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-500">Email</p>
+                                        <p className="text-sm text-zinc-200 truncate">{detailsUser.email}</p>
                                     </div>
+                                </div>
 
-                                    <div className="flex gap-3 pt-2">
-                                        <button 
-                                            onClick={() => { handleOpenModal(detailsUser); setIsDetailsOpen(false); }}
-                                            className="flex-1 bg-white/5 hover:bg-white/10 text-white font-bold py-4 rounded-2xl transition-all flex items-center justify-center gap-2 active:scale-95 border border-white/5 cursor-pointer"
-                                        >
-                                            <Edit2 className="w-4 h-4 text-slate-400" />
-                                            Editar Usuario
-                                        </button>
-                                        <button 
-                                            onClick={() => { setIsDetailsOpen(false); }}
-                                            className="px-8 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 rounded-2xl transition-all active:scale-95 shadow-lg shadow-indigo-600/20 cursor-pointer"
-                                        >
-                                            Cerrar
-                                        </button>
-                                    </div>
+                                <div className="flex gap-2 pt-2">
+                                    <button 
+                                        onClick={() => { handleOpenModal(detailsUser); setIsDetailsOpen(false); }}
+                                        className="flex-1 bg-transparent hover:bg-white/5 text-zinc-400 hover:text-white text-sm font-semibold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                                    >
+                                        <Edit2 className="w-4 h-4" />
+                                        Editar
+                                    </button>
+                                    <button 
+                                        onClick={() => { setIsDetailsOpen(false); }}
+                                        className="px-6 bg-transparent hover:bg-white/5 text-zinc-400 hover:text-white text-sm font-semibold py-2.5 rounded-xl transition-colors cursor-pointer"
+                                    >
+                                        Cerrar
+                                    </button>
                                 </div>
                             </div>
                         </motion.div>
                     </div>
                 )}
-            </AnimatePresence>
+            </AnimatePresence>, document.body)}
         </div>
     );
 };
