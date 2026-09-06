@@ -1,4 +1,4 @@
-import { Eye, Edit2, Trash2, Square, CheckSquare, History, Calendar } from 'lucide-react';
+import { Eye, Edit2, Trash2, Square, CheckSquare, History, Calendar, Network } from 'lucide-react';
 
 interface Props {
   icon?: any;
@@ -15,12 +15,13 @@ interface Props {
   onSelect?: () => void;
   onHistory?: () => void;
   onLoan?: () => void;
+  onGraph?: () => void;
   layoutId?: string;
   badgeAbsolute?: boolean;
   compact?: boolean;
 }
 
-export default function CommonCard({ icon: Icon, title, badge, badgeColor, children, onView, onEdit, onDelete, onClick, selectable, isSelected, onSelect, onHistory, onLoan }: Props) {
+export default function CommonCard({ icon: Icon, title, badge, badgeColor, children, onView, onEdit, onDelete, onClick, selectable, isSelected, onSelect, onHistory, onLoan, onGraph }: Props) {
   return (
     <div onClick={onClick} className={`rounded-xl border p-4 flex flex-col gap-3 cursor-pointer transition-colors ${isSelected ? 'bg-white border-white text-zinc-900' : 'bg-zinc-900 border-zinc-800 hover:border-zinc-700'}`}>
       <div className="flex items-start justify-between gap-3">
@@ -39,6 +40,7 @@ export default function CommonCard({ icon: Icon, title, badge, badgeColor, child
         <div className="flex items-center gap-3">
           {onView ? <button onClick={e => { e.stopPropagation(); onView(); }} className={`inline-flex items-center gap-1.5 text-xs font-semibold ${isSelected ? 'text-zinc-900' : 'text-[#c4c5d9] hover:text-white'}`}><Eye className="w-3.5 h-3.5" /> Ver</button> : <span />}
           {onLoan && <button onClick={e => { e.stopPropagation(); onLoan(); }} className={`inline-flex items-center gap-1.5 text-xs font-semibold ${isSelected ? 'text-zinc-700' : 'text-[#c4c5d9] hover:text-white'}`}><Calendar className="w-3.5 h-3.5" /> Prestar</button>}
+          {onGraph && <button onClick={e => { e.stopPropagation(); onGraph(); }} className={`inline-flex items-center gap-1.5 text-xs font-semibold ${isSelected ? 'text-zinc-700' : 'text-[#c4c5d9] hover:text-white'}`}><Network className="w-3.5 h-3.5" /> Graficar</button>}
         </div>
         <div className="flex items-center gap-1">
           {onHistory && <button onClick={e => { e.stopPropagation(); onHistory(); }} className={`w-8 h-8 grid place-items-center ${isSelected ? 'text-zinc-700' : 'text-[#c4c5d9] hover:text-white'}`}><History className="w-4 h-4" /></button>}

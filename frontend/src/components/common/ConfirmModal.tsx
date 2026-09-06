@@ -118,8 +118,10 @@ const ConfirmModal = ({ isOpen, title, message, children, onConfirm, onClose, co
           >
             <div className={`absolute top-0 left-0 right-0 h-24 bg-gradient-to-br ${style.gradient} to-transparent pointer-events-none`}></div>
             <div className="p-5 relative z-10 flex flex-col items-start text-left">
-                <AlertTriangle className="w-5 h-5 text-zinc-500 absolute top-5 left-5" />
-                <h3 ref={titleRef} id={titleId} className="text-lg font-bold text-white tracking-tight mb-2 font-outfit pt-6">{title}</h3>
+                <div className="flex items-center gap-2.5 mb-2">
+                  <AlertTriangle className="w-5 h-5 text-zinc-500 shrink-0" />
+                  <h3 ref={titleRef} id={titleId} className="text-lg font-bold text-white tracking-tight font-outfit">{title}</h3>
+                </div>
                <div className="w-full mb-6 sm:mb-8 text-left">
                 {children || (
                   <p className="text-slate-400 text-sm leading-relaxed">
@@ -141,10 +143,7 @@ const ConfirmModal = ({ isOpen, title, message, children, onConfirm, onClose, co
                   className={`flex-1 bg-transparent ${style.button} font-bold py-2.5 transition-colors text-sm flex items-center justify-center gap-2 ${isLoading ? 'opacity-80 cursor-not-allowed' : 'cursor-pointer'}`}
                 >
                   {isLoading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      ...
-                    </>
+                    <Loader2 className="w-4 h-4 animate-spin" />
                   ) : confirmText}
                 </button>
               </div>

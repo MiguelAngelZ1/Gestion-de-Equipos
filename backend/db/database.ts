@@ -16,8 +16,37 @@ class Database {
   async connect() {
     if (this.connected) return;
     if (this.connecting) return this.connecting;
-    this.connecting = this._connectSQLite();
+    this.connecting = process.env.DATABASE_URL
+      ? this._connectPostgreSQL()
+      : this._connectSQLite();
     return this.connecting;
+  }
+
+  async _connectPostgreSQL() {
+    try {
+      const { Pool } = require("pg");
+      const pool = new Pool({
+        connectionString: process.env.DATABASE_URL,
+        max: 20,
+        idleTimeoutMillis: 30000,
+        connectionTimeoutMillis: 5000,
+      });
+
+      // Validar conexión inicial
+      const testClient = await pool.connect();
+      testClient.release();
+
+      this.client = { pool };
+      this.connected = true;
+      logger.info("[DB] Conexión establecida con PostgreSQL");
+
+      await this._runMigrations();
+    } catch (error: any) {
+      this.connected = false;
+      this.connecting = null;
+      logger.error({ err: error?.message || error }, "[DB] Error conectando a PostgreSQL");
+      throw error;
+    }
   }
 
   async _connectSQLite() {
@@ -28,7 +57,7 @@ class Database {
         : path.resolve(__dirname, "../equipos.db");
 
       await new Promise<void>((resolve, reject) => {
-        this.client = new sqlite3.Database(dbPath, (err) => {
+        this.client = new sqlite3.Database(dbPath, (err: any) => {
           if (err) {
             logger.error({ err: err.message }, "[DB] Error abriendo SQLite");
             reject(err);
@@ -63,22 +92,44 @@ class Database {
     }
   }
 
+  private convertPlaceholders(sql: string): string {
+    let index = 1;
+    return sql.replace(/\?/g, () => `$${index++}`);
+  }
+
   async query(sql: string, params: any[] = []): Promise<{ rows: any[]; changes: number; lastID?: number }> {
     if (!this.connected) await this.connect();
 
+    // 1. Motor PostgreSQL
+    if (this.client?.pool) {
+      const pgSql = this.convertPlaceholders(sql);
+      try {
+        const res = await this.client.pool.query(pgSql, params);
+        return {
+          rows: res.rows || [],
+          changes: res.rowCount || 0,
+          lastID: res.rows?.[0]?.id
+        };
+      } catch (err: any) {
+        logger.error({ err: err.message, sql: pgSql }, "[DB] Error en PostgreSQL query");
+        throw err;
+      }
+    }
+
+    // 2. Motor SQLite
     return new Promise((resolve, reject) => {
       const isQuery = sql.trim().toUpperCase().startsWith("SELECT") ||
         sql.trim().toUpperCase().startsWith("PRAGMA");
 
       if (isQuery) {
-        this.client.all(sql, params, (err, rows) => {
+        this.client.all(sql, params, (err: any, rows: any[]) => {
           if (err) reject(err);
           else resolve({ rows, changes: 0 });
         });
       } else {
         // eslint-disable-next-line @typescript-eslint/no-this-alias
         const self = this;
-        this.client.run(sql, params, async function (this: any, err) {
+        this.client.run(sql, params, async function (this: any, err: any) {
           if (err) {
             logger.error({ err: err.message }, "[DB] SQLite Error en RUN");
             reject(err);
@@ -87,7 +138,7 @@ class Database {
             if (!lid && sql.trim().toUpperCase().startsWith("INSERT")) {
               try {
                 const row: any = await new Promise((res) => {
-                  self.client.get("SELECT last_insert_rowid() as id", (err, row) => res(row));
+                  self.client.get("SELECT last_insert_rowid() as id", (err: any, row: any) => res(row));
                 });
                 if (row) lid = row.id;
               } catch (e) {
@@ -125,7 +176,7 @@ class Database {
   }
 
   async beginTransaction() {
-    await this.run("BEGIN TRANSACTION");
+    await this.run("BEGIN");
   }
 
   async commit() {

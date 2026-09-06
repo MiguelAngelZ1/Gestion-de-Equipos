@@ -31,9 +31,12 @@ const io = new Server(server, {
   }
 });
 
+app.set('io', io);
 notificationService.setIO(io);
+const { NetworkMonitorEngine } = require('./services/network/monitor.engine');
+NetworkMonitorEngine.setIO(io);
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 
 const jwtSecret = process.env.JWT_SECRET || '';
 const adminPassword = process.env.ADMIN_PASSWORD || '';
@@ -53,6 +56,9 @@ process.on('SIGINT', shutdown);
 
 async function shutdown() {
   logger.info('Apagando servidor gracefulmente...');
+  try {
+    NetworkMonitorEngine.stop();
+  } catch (_) {}
   server.close(async () => {
     try {
       if (db.client) {
@@ -85,6 +91,8 @@ server.listen(PORT, async () => {
 
   try {
     await db.connect();
+    // Iniciar monitorización continua una vez conectada la BD
+    NetworkMonitorEngine.start(30000);
   } catch (error) {
     logger.error({ err: error }, "Error critico conectando a la base de datos");
   }
@@ -133,4 +141,15 @@ io.on('connection', (socket) => {
     }
   });
 
+  socket.on('network:subscribe', (data) => {
+    if (data?.redId) {
+      socket.join(`network:${data.redId}`);
+    }
+  });
+
+  socket.on('network:unsubscribe', (data) => {
+    if (data?.redId) {
+      socket.leave(`network:${data.redId}`);
+    }
+  });
 });
