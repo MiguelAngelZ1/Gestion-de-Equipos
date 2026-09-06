@@ -176,11 +176,9 @@ export default function EquipoFormModal({ isOpen, initialData, onClose, onSave, 
                       ))}
                     </div>
                   )}
-                  <div className="sticky bottom-0 mt-3 -mx-1 px-1 py-2 bg-[#1C1C1E]/95 backdrop-blur supports-[backdrop-filter]:bg-[#1C1C1E]/80 border-t border-white/5 flex justify-end">
-                    <button type="button" onClick={addEspecificacion} disabled={isSaving} className="inline-flex items-center gap-1.5 text-xs font-semibold bg-white text-zinc-900 hover:bg-zinc-100 disabled:opacity-50 rounded-xl px-3 py-2">
-                      <Plus className="w-3.5 h-3.5" /> Agregar especificación
-                    </button>
-                  </div>
+                  <button type="button" onClick={addEspecificacion} disabled={isSaving} className="mt-3 ml-auto flex items-center gap-1.5 text-xs font-semibold bg-white text-zinc-900 hover:bg-zinc-100 disabled:opacity-50 rounded-xl px-3 py-2">
+                    <Plus className="w-3.5 h-3.5" /> Agregar especificación
+                  </button>
                 </div>
               </div>
             </div>
