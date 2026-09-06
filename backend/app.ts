@@ -188,6 +188,16 @@ app.get('/health', async (req, res) => {
   }
 });
 
+app.post('/internal/shutdown', async (req, res) => {
+  const remote = req.socket.remoteAddress || '';
+  const isLocal = remote.includes('127.0.0.1') || remote.includes('::1') || remote.includes('::ffff:127.0.0.1');
+  if (!isLocal) {
+    return res.status(403).json({ error: 'Forbidden: solo localhost' });
+  }
+  res.json({ status: 'shutting down' });
+  setTimeout(() => process.emit('SIGTERM' as any), 100);
+});
+
 const dashboardController = require('./controllers/dashboard.controller');
 app.use('/api/auth', authRoutes);
 app.get('/api/dashboard/summary', verificarAutenticacion, dashboardController.getDashboardSummary);

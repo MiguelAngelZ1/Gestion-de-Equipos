@@ -1,5 +1,7 @@
+use std::io::{Read, Write};
 use std::process::{Child, Command};
 use std::sync::Mutex;
+use std::time::Duration;
 use tauri::Manager;
 
 #[tauri::command]
@@ -8,6 +10,21 @@ fn greet(name: &str) -> String {
 }
 
 struct BackendChild(Mutex<Option<Child>>);
+
+fn try_graceful_shutdown() -> bool {
+    if let Ok(mut stream) = std::net::TcpStream::connect("127.0.0.1:3001") {
+        let _ = stream.set_write_timeout(Some(Duration::from_secs(2)));
+        let _ = stream.set_read_timeout(Some(Duration::from_secs(2)));
+        let req = "POST /internal/shutdown HTTP/1.1\r\nHost: localhost:3001\r\nContent-Length: 0\r\nConnection: close\r\n\r\n";
+        if stream.write_all(req.as_bytes()).is_ok() {
+            let mut buf = [0u8; 512];
+            let _ = stream.read(&mut buf);
+            let resp = String::from_utf8_lossy(&buf);
+            return resp.contains("200") || resp.contains("shutting down");
+        }
+    }
+    false
+}
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -44,8 +61,26 @@ pub fn run() {
                 if let Some(state) = window.app_handle().try_state::<BackendChild>() {
                     let mut guard = state.0.lock().unwrap();
                     if let Some(mut child) = guard.take() {
-                        println!("[TAURI] Cerrando backend sidecar PID: {}", child.id());
-                        let _ = child.kill();
+                        println!("[TAURI] Cierre ordenado backend PID: {}", child.id());
+                        let graceful = try_graceful_shutdown();
+                        if graceful {
+                            println!("[TAURI] Shutdown ordenado solicitado, esperando 4s...");
+                            std::thread::sleep(Duration::from_secs(4));
+                            match child.try_wait() {
+                                Ok(Some(status)) => println!("[TAURI] Backend salio ordenado: {}", status),
+                                Ok(None) => {
+                                    println!("[TAURI] Backend no salio a tiempo, forzando kill");
+                                    let _ = child.kill();
+                                }
+                                Err(e) => {
+                                    eprintln!("[TAURI] try_wait error: {}", e);
+                                    let _ = child.kill();
+                                }
+                            }
+                        } else {
+                            println!("[TAURI] Graceful fallo, kill directo PID: {}", child.id());
+                            let _ = child.kill();
+                        }
                     }
                 }
             }
