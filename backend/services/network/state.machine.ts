@@ -37,15 +37,14 @@ export class NetworkStateMachine {
       };
     }
 
-    // 2. Caso Positivo: Al menos una evidencia afirmativa válida observada
-    if (evidenceSet.positiveCount > 0) {
+    if (evidenceSet.hasL3Response || evidenceSet.hasL4Activity) {
       const stateChanged = currentState !== 'ONLINE';
       return {
         previousState: currentState,
         nextState: 'ONLINE',
         consecutiveFailures: 0,
         stateChanged,
-        reason: `Evidencia afirmativa confirmada: ${evidenceSet.summary}`,
+        reason: `Evidencia L3/L4 confirmada: ${evidenceSet.summary}`,
         eventToEmit: stateChanged && currentState !== 'UNKNOWN'
           ? {
               type: 'RECUPERACION',
@@ -58,6 +57,15 @@ export class NetworkStateMachine {
               }
             }
           : undefined
+      };
+    }
+    if (evidenceSet.hasL2Presence && evidenceSet.positiveCount > 0) {
+      return {
+        previousState: currentState,
+        nextState: currentState === 'ONLINE' ? currentState : 'WARNING',
+        consecutiveFailures: 0,
+        stateChanged: false,
+        reason: `Solo presencia L2 (ARP) sin respuesta L3/L4: se mantiene estado, no se confirma ONLINE`
       };
     }
 

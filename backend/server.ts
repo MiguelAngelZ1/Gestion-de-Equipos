@@ -91,8 +91,7 @@ server.listen(PORT, async () => {
 
   try {
     await db.connect();
-    // Iniciar monitorización continua una vez conectada la BD
-    NetworkMonitorEngine.start(30000);
+    NetworkMonitorEngine.start(10000);
   } catch (error) {
     logger.error({ err: error }, "Error critico conectando a la base de datos");
   }

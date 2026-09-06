@@ -12,16 +12,13 @@ import { RawProbeResult } from './probes/types';
 export class NetworkMonitorEngine {
   private static scheduler: ChainedScheduler | null = null;
   private static ioInstance: any = null;
-  private static cycleIntervalMs = 15000;
+  private static cycleIntervalMs = 10000;
 
   static setIO(io: any) {
     this.ioInstance = io;
   }
 
-  /**
-   * Inicia el demonio de monitorización continua garantizando cero solapamiento.
-   */
-  static start(intervalMs = 15000) {
+  static start(intervalMs = 10000) {
     if (this.scheduler) return;
     this.cycleIntervalMs = intervalMs;
 
