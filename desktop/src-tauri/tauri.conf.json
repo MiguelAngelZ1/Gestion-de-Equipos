@@ -4,7 +4,9 @@
   "version": "0.1.0",
   "identifier": "com.control-equipos.desktop",
   "build": {
-    "frontendDist": "../src"
+    "beforeDevCommand": "",
+    "beforeBuildCommand": "",
+    "frontendDist": "../../frontend/dist"
   },
   "app": {
     "withGlobalTauri": true,
