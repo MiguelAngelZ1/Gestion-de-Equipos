@@ -124,7 +124,7 @@ const TopologyMap: React.FC<TopologyMapProps> = ({ nodes, gatewayIp, links = [],
   const allNodes = [...(gatewayNode ? [gatewayNode] : []), ...infraNodes, ...endpointNodes];
 
   const content = draggable ? (
-    <div onClick={() => setMenu(null)} className={`group/map relative w-full ${noChrome ? 'h-full min-h-0 flex-1' : 'h-[62vh] min-h-[520px] bg-zinc-950 border border-zinc-800 rounded-2xl'} overflow-hidden`}>
+    <div onClick={() => setMenu(null)} className={`group/map relative w-full ${noChrome ? 'flex-1 min-h-[520px] bg-zinc-950' : 'h-[62vh] min-h-[520px] bg-zinc-950 border border-zinc-800 rounded-2xl'} overflow-hidden`}>
       <svg className="absolute inset-0 w-full h-full pointer-events-none">
         {links.map((l, i) => {
           const a = allNodes.findIndex(n => n.ip === l.from);

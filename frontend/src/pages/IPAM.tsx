@@ -525,7 +525,7 @@ const IPAM = () => {
                                             <h3 className="text-sm font-bold text-white">Mapa de Red — {selectedRed?.segmento || ''} <span className="text-zinc-500 font-normal ml-2">{graphedDevices.length} nodos • {graphLinks.length} vínculos</span></h3>
                                             <button onClick={() => setIsMapModalOpen(false)} className="w-8 h-8 grid place-items-center rounded-xl hover:bg-white/5 text-zinc-400"><X className="w-4 h-4" /></button>
                                         </div>
-                                        <div className="flex-1 min-h-0 overflow-hidden flex flex-col relative">
+                                        <div className="flex-1 min-h-[520px] overflow-hidden flex flex-col relative">
                                             <TopologyMap
                                                 nodes={graphedDevices}
                                                 gatewayIp={selectedRed?.gateway}
