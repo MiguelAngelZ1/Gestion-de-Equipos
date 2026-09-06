@@ -23,25 +23,18 @@ class ReportingService {
         sql += " ORDER BY eq.ine ASC";
 
         const equipos = await db.all(sql, params);
-
-        const result = [];
-        for (const eq of equipos) {
-            const especs = await db.all("SELECT * FROM especificaciones WHERE equipo_id = ?", [eq.id]);
-            const responsable = eq.resp_nombre
-                ? `${eq.resp_grado || ''} ${eq.resp_nombre} ${eq.resp_apellido.toUpperCase()}`.trim()
-                : 'SIN ASIGNAR';
-
-            result.push({
-                ...eq,
-                tipo: eq.tipo,
-                estado: eq.estado,
-                ubicacion: eq.ubicacion,
-                responsable,
-                especificaciones: especs || []
-            });
+        if (equipos.length === 0) return [];
+        const specs = await db.all(`SELECT * FROM especificaciones WHERE equipo_id IN (${equipos.map(() => '?').join(',')})`, equipos.map(e => e.id));
+        const byEquipo = new Map();
+        for (const s of specs) {
+            if (!byEquipo.has(s.equipo_id)) byEquipo.set(s.equipo_id, []);
+            byEquipo.get(s.equipo_id).push(s);
         }
-
-        return result;
+        return equipos.map(eq => ({
+            ...eq,
+            responsable: eq.resp_nombre ? `${eq.resp_grado || ''} ${eq.resp_nombre} ${eq.resp_apellido.toUpperCase()}`.trim() : 'SIN ASIGNAR',
+            especificaciones: byEquipo.get(eq.id) || []
+        }));
     }
 }
 
