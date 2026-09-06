@@ -522,7 +522,7 @@ const IPAM = () => {
                                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={() => setIsMapModalOpen(false)}>
                                     <div onClick={e => e.stopPropagation()} className="bg-zinc-950 border border-zinc-800 rounded-2xl w-[92vw] max-w-6xl h-[82vh] flex flex-col overflow-hidden shadow-2xl">
                                         <div className="px-4 py-3 border-b border-zinc-800 flex items-center justify-between shrink-0">
-                                            <h3 className="text-sm font-bold text-white">Mapa de Red — {selectedRed?.segmento || ''} <span className="text-zinc-500 font-normal ml-2">{graphedDevices.length} nodos</span></h3>
+                                            <h3 className="text-sm font-bold text-white">Mapa de Red — {selectedRed ? `${(selectedRed.gateway || selectedRed.segmento?.replace(/\.0$/, '.1') || selectedRed.segmento)}/${selectedRed.cidr ?? 24}` : ''} <span className="text-zinc-500 font-normal ml-2">{graphedDevices.length} nodos</span></h3>
                                             <button onClick={() => setIsMapModalOpen(false)} className="w-8 h-8 grid place-items-center rounded-xl hover:bg-white/5 text-zinc-400"><X className="w-4 h-4" /></button>
                                         </div>
                                         <div className="flex-1 min-h-[520px] overflow-hidden flex flex-col relative">
