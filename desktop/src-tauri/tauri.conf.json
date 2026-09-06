@@ -12,9 +12,10 @@
     "withGlobalTauri": true,
     "windows": [
       {
-        "title": "desktop",
-        "width": 800,
-        "height": 600
+        "title": "Control de Equipos 3.0",
+        "width": 1280,
+        "height": 800,
+        "url": "http://localhost:3001"
       }
     ],
     "security": {
