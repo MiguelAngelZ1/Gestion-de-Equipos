@@ -1,7 +1,7 @@
 const getBaseURL = () => {
     if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
     if (import.meta.env.PROD) return "/api";
-    return import.meta.env.VITE_API_BASE || "http://localhost:3000/api";
+    return import.meta.env.VITE_API_BASE || "http://localhost:3001/api";
 };
 export const API_BASE = getBaseURL();
 const USER_DATA_KEY = "equipos_user_data";

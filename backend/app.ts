@@ -23,6 +23,7 @@ const mantenimientoRoutes = require('./routes/mantenimiento.routes');
 const usuariosRoutes = require('./routes/usuarios.routes');
 const notificacionesRoutes = require('./routes/notificaciones.routes');
 const ipamRoutes = require('./routes/ipam.routes');
+const networkRoutes = require('./routes/network.routes');
 const prestamosRoutes = require('./routes/prestamos');
 const { apiLimiter } = require('./utils/rateLimiter');
 const { validateOrigin } = require('./middleware/csrf.middleware');
@@ -51,7 +52,7 @@ const allowedOrigins = [
   process.env.FRONTEND_URL,
   process.env.LOCAL_FRONTEND_URL || 'http://localhost:5300',
   'http://127.0.0.1:5300',
-  'http://localhost:3000'
+  'http://localhost:3001'
 ].filter(Boolean);
 
 const REQUIRED_VARS = ['JWT_SECRET'];
@@ -200,6 +201,7 @@ app.use('/api/soporte', soporteRoutes);
 app.use('/api/mantenimiento', mantenimientoRoutes);
 app.use('/api/prestamos', prestamosRoutes);
 app.use('/api/ipam', ipamRoutes);
+app.use('/api/network', networkRoutes);
 app.use('/api', exportRoutes);
 
 if (distExists) {

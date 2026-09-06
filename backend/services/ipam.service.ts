@@ -404,6 +404,19 @@ class IPAMService {
         });
     }
 
+    async pingWithOutput(ip, count = 4) {
+        if (!this.isValidIp(ip)) throw new Error('IP invalida.');
+        return new Promise((resolve, reject) => {
+            const isWin = process.platform === 'win32';
+            const args = isWin ? ['-n', String(count), ip] : ['-c', String(count), ip];
+            execFile('ping', args, { timeout: 10000, encoding: 'utf8' }, (err, stdout, stderr) => {
+                const output = (stdout || stderr || '').trim();
+                if (!output) return reject(new Error('Sin salida de ping'));
+                resolve({ ip, output });
+            });
+        });
+    }
+
     async ensureManualNetworkForAuto(redId) {
         if (!redId.startsWith('auto-')) return redId;
 

@@ -39,7 +39,9 @@ const PERMISOS = {
         CREAR: 'ipam:crear',
         EDITAR: 'ipam:editar',
         ELIMINAR: 'ipam:eliminar',
-        ASIGNAR: 'ipam:asignar'
+        ASIGNAR: 'ipam:asignar',
+        SCAN: 'ipam:scan',
+        MONITOR: 'ipam:monitor'
     },
     CONFIG: {
         VER: 'config:ver',

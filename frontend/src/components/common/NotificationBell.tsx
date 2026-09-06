@@ -16,7 +16,7 @@ const NotificationBell = ({ plain = false }: { plain?: boolean } = {}) => {
     // Determinar la URL del servidor de sockets (misma base que la API sin el /api)
     const socketURL = import.meta.env.VITE_API_URL 
         ? import.meta.env.VITE_API_URL.replace('/api', '') 
-        : window.location.origin;
+        : window.location.origin.replace(':5300', ':3001');
 
     const fetchNotifications = async (offset = 0) => {
         try {
