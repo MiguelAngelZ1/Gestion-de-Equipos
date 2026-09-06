@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Edit2, Plus, Save, X, Trash2, Loader2, Tag, Activity, MapPin, Shield } from 'lucide-react';
+import { Edit2, Plus, Save, X, Trash2, Loader2, Tag, Activity, MapPin, Shield, GripVertical } from 'lucide-react';
 import Select from '../common/Select';
 
 const InputError = ({ message }: any) => (
@@ -15,6 +15,7 @@ export default function EquipoFormModal({ isOpen, initialData, onClose, onSave, 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showErrorSummary, setShowErrorSummary] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [draggedIdx, setDraggedIdx] = useState<number | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -59,6 +60,18 @@ export default function EquipoFormModal({ isOpen, initialData, onClose, onSave, 
     setFormData(prev => { const s = [...prev.especificaciones]; s[index][field] = value; return { ...prev, especificaciones: s }; });
   };
   const removeEspecificacion = (index: number) => setFormData(prev => ({ ...prev, especificaciones: prev.especificaciones.filter((_: any, i: number) => i !== index) }));
+  const handleDragStart = (idx: number) => setDraggedIdx(idx);
+  const handleDragOver = (e: React.DragEvent, idx: number) => {
+    e.preventDefault();
+    if (draggedIdx === null || draggedIdx === idx) return;
+    setFormData(prev => {
+      const s = [...prev.especificaciones];
+      const [moved] = s.splice(draggedIdx, 1);
+      s.splice(idx, 0, moved);
+      return { ...prev, especificaciones: s };
+    });
+    setDraggedIdx(idx);
+  };
 
   const handleSubmit = async (e: any) => {
     e.preventDefault(); if (isSaving) return;
@@ -77,7 +90,6 @@ export default function EquipoFormModal({ isOpen, initialData, onClose, onSave, 
               <span className="material-symbols-outlined text-[#e4e2e4] text-[24px]">inventory_2</span>
               <div className="min-w-0">
                 <h2 className="text-[16px] font-semibold text-[#e4e2e4] leading-none">{formData.id ? 'Editar Equipo' : 'Nuevo Equipo'}</h2>
-                <p className="text-xs text-[#c4c5d9] mt-0.5">{formData.id ? `ID: ${formData.id}` : 'Registra un nuevo activo en el inventario.'}</p>
               </div>
               <button onClick={onClose} disabled={isSaving} className="ml-auto w-8 h-8 grid place-items-center rounded-full hover:bg-white/5 text-[#c4c5d9] disabled:opacity-50">
                 <X className="w-4 h-4" />
@@ -142,9 +154,7 @@ export default function EquipoFormModal({ isOpen, initialData, onClose, onSave, 
                 <div className="col-span-1 md:col-span-2 pt-2 border-t border-white/5">
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="text-xs font-bold tracking-wide text-[#e4e2e4] flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-[#b8c3ff]" /> ESPECIFICACIONES TÉCNICAS</h3>
-                    <button type="button" onClick={addEspecificacion} disabled={isSaving} className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#c4c5d9] hover:text-white disabled:opacity-50">
-                      <Plus className="w-3.5 h-3.5" /> Agregar
-                    </button>
+                    <span className="text-[11px] text-zinc-500 hidden sm:inline">Arrastra para reordenar</span>
                   </div>
                   {formData.especificaciones.length === 0 ? (
                     <div className="text-center py-8 bg-[#131315] border border-dashed border-white/5 rounded-xl">
@@ -154,7 +164,8 @@ export default function EquipoFormModal({ isOpen, initialData, onClose, onSave, 
                   ) : (
                     <div className="space-y-2">
                       {formData.especificaciones.map((spec: any, index: number) => (
-                        <div key={index} className="flex gap-2 items-center bg-[#131315] border border-white/5 rounded-xl p-2">
+                        <div key={index} draggable={!isSaving} onDragStart={() => handleDragStart(index)} onDragOver={e => handleDragOver(e, index)} onDragEnd={() => setDraggedIdx(null)} className={`flex gap-2 items-center bg-[#131315] border rounded-xl p-2 transition ${draggedIdx === index ? 'opacity-40 border-[#b8c3ff]/30' : 'border-white/5'}`}>
+                          <span className="cursor-grab active:cursor-grabbing p-1 -ml-1 text-zinc-500 hover:text-zinc-300 touch-none" draggable={false}><GripVertical className="w-4 h-4" /></span>
                           <input type="text" placeholder="Campo (Ej: RAM)" value={spec.clave} onChange={e => updateEspecificacion(index, 'clave', e.target.value)} disabled={isSaving} className="flex-1 bg-transparent text-sm placeholder:text-zinc-600 focus:outline-none" />
                           <span className="text-zinc-600">:</span>
                           <input type="text" placeholder="Valor (Ej: 16GB)" value={spec.valor} onChange={e => updateEspecificacion(index, 'valor', e.target.value)} disabled={isSaving} className="flex-[2] bg-transparent text-sm placeholder:text-zinc-600 focus:outline-none" />
@@ -165,6 +176,11 @@ export default function EquipoFormModal({ isOpen, initialData, onClose, onSave, 
                       ))}
                     </div>
                   )}
+                  <div className="sticky bottom-0 mt-3 -mx-1 px-1 py-2 bg-[#1C1C1E]/95 backdrop-blur supports-[backdrop-filter]:bg-[#1C1C1E]/80 border-t border-white/5 flex justify-end">
+                    <button type="button" onClick={addEspecificacion} disabled={isSaving} className="inline-flex items-center gap-1.5 text-xs font-semibold bg-white text-zinc-900 hover:bg-zinc-100 disabled:opacity-50 rounded-xl px-3 py-2">
+                      <Plus className="w-3.5 h-3.5" /> Agregar especificación
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
