@@ -39,7 +39,6 @@ backups/
 
 # Portable distribuible (no commitear node.exe ni build)
 Version-Portable/
-desktop/
 
 # Archivos locales de ejecución
 iniciar_local.bat
