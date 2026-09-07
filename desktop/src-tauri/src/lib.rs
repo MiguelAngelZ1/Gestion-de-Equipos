@@ -36,21 +36,77 @@ pub fn run() {
             if backend_running {
                 println!("[TAURI] Backend ya esta corriendo en 3001, no se inicia sidecar");
             } else {
-                let backend_path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../backend");
-                println!("[TAURI] Iniciando backend sidecar desde: {}", backend_path.display());
-                match Command::new("cmd")
-                    .args(["/C", "pnpm", "start"])
-                    .current_dir(&backend_path)
-                    .spawn()
-                {
-                    Ok(child) => {
-                        println!("[TAURI] Backend sidecar iniciado PID: {}", child.id());
-                        if let Some(state) = app.try_state::<BackendChild>() {
-                            *state.0.lock().unwrap() = Some(child);
+                let resource_dir = app.path().resource_dir().unwrap_or_else(|_| std::path::PathBuf::from("."));
+                let backend_resource_candidates = [resource_dir.join("bundle-backend"), resource_dir.join("backend")];
+                let backend_resource = backend_resource_candidates.iter().find(|p| p.join("server.ts").exists() || p.join("server.js").exists()).cloned().unwrap_or(resource_dir.join("bundle-backend"));
+                let backend_dev = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../backend");
+                let is_bundled = backend_resource.join("server.ts").exists() || backend_resource.join("server.js").exists();
+                if is_bundled {
+                    println!("[TAURI] Modo PRODUCCION offline - backend en: {}", backend_resource.display());
+                    let app_data = app.path().app_data_dir().unwrap_or_else(|_| resource_dir.clone());
+                    let _ = std::fs::create_dir_all(&app_data);
+                    let db_path = app_data.join("equipos.db");
+                    if !db_path.exists() {
+                        let bundled_db = backend_resource.join("equipos.db");
+                        if bundled_db.exists() {
+                            let _ = std::fs::copy(&bundled_db, &db_path);
+                            println!("[TAURI] DB inicial copiada a {}", db_path.display());
+                            for ext in ["-wal", "-shm"] {
+                                let src = backend_resource.join(format!("equipos.db{}", ext));
+                                if src.exists() {
+                                    let _ = std::fs::copy(src, app_data.join(format!("equipos.db{}", ext)));
+                                }
+                            }
                         }
                     }
-                    Err(e) => {
-                        eprintln!("[TAURI] Error iniciando backend sidecar: {}", e);
+                    let static_path = resource_dir.join("frontend").join("dist");
+                    let node_candidates = vec![
+                        resource_dir.join("node-x86_64-pc-windows-msvc.exe"),
+                        resource_dir.join("binaries").join("node-x86_64-pc-windows-msvc.exe"),
+                        std::env::current_exe().ok().and_then(|p| p.parent().map(|d| d.join("node-x86_64-pc-windows-msvc.exe"))).unwrap_or_default(),
+                        std::path::PathBuf::from("C:\\Program Files\\nodejs\\node.exe"),
+                    ];
+                    let node_path = node_candidates.into_iter().find(|p| p.exists());
+                    if let Some(node) = node_path {
+                        println!("[TAURI] Node encontrado: {}", node.display());
+                        let tsx_cli = backend_resource.join("node_modules").join("tsx").join("dist").join("cli.mjs");
+                        let server_ts = backend_resource.join("server.ts");
+                        let server_js = backend_resource.join("server.js");
+                        let mut cmd = Command::new(&node);
+                        if tsx_cli.exists() && server_ts.exists() {
+                            cmd.args([tsx_cli.to_string_lossy().to_string(), server_ts.to_string_lossy().to_string()]);
+                        } else if server_js.exists() {
+                            cmd.arg(server_js);
+                        } else {
+                            cmd.arg(server_ts);
+                        }
+                        cmd.current_dir(&backend_resource);
+                        cmd.env("DB_PATH", &db_path);
+                        cmd.env("STATIC_PATH", &static_path);
+                        cmd.env("PORT", "3001");
+                        cmd.env("NODE_ENV", "production");
+                        match cmd.spawn() {
+                            Ok(child) => {
+                                println!("[TAURI] Backend sidecar PRODUCCION PID: {}", child.id());
+                                if let Some(state) = app.try_state::<BackendChild>() {
+                                    *state.0.lock().unwrap() = Some(child);
+                                }
+                            }
+                            Err(e) => eprintln!("[TAURI] Error iniciando backend produccion: {}", e),
+                        }
+                    } else {
+                        eprintln!("[TAURI] Node no encontrado para modo produccion");
+                    }
+                } else {
+                    println!("[TAURI] Modo DEV - iniciando con pnpm desde: {}", backend_dev.display());
+                    match Command::new("cmd").args(["/C", "pnpm", "start"]).current_dir(&backend_dev).spawn() {
+                        Ok(child) => {
+                            println!("[TAURI] Backend sidecar DEV PID: {}", child.id());
+                            if let Some(state) = app.try_state::<BackendChild>() {
+                                *state.0.lock().unwrap() = Some(child);
+                            }
+                        }
+                        Err(e) => eprintln!("[TAURI] Error iniciando backend DEV: {}", e),
                     }
                 }
             }
