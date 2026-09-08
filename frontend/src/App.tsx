@@ -48,14 +48,6 @@ function IndexRedirect() {
 function AppContent() {
   const { isAuthenticated, loading } = useAuth();
 
-  React.useEffect(() => {
-    const handleForbidden = () => {
-      window.location.href = "/";
-    };
-    window.addEventListener("auth:forbidden", handleForbidden);
-    return () => window.removeEventListener("auth:forbidden", handleForbidden);
-  }, []);
-
   if (loading) return <PageLoader />;
 
   return (
@@ -96,7 +88,7 @@ function AppContent() {
             </RoleRoute>
           } />
           <Route path="ipam" element={
-            <RoleRoute roles={[ROLES.ADMIN]}>
+            <RoleRoute roles={[ROLES.ADMIN, ROLES.USER]}>
               <IPAM />
             </RoleRoute>
           } />

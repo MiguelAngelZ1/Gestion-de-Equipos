@@ -10,7 +10,7 @@ const { createNetworkSchema, updateNetworkSchema, reserveIPSchema, assignIPSchem
 // Middleware simple para asegurar que solo admin acceda (asumiendo que req.user está disponible)
 // Si no, se puede omitir para pruebas iniciales pero es recomendable.
 
-router.get('/redes', verificarAutenticacion, requirePermission(PERMISOS.IPAM.VER), async (req, res, next) => {
+router.get('/redes', verificarAutenticacion, async (req, res, next) => {
     try {
         const redes = await ipamService.getNetworks();
         res.json(redes);
@@ -19,7 +19,7 @@ router.get('/redes', verificarAutenticacion, requirePermission(PERMISOS.IPAM.VER
     }
 });
 
-router.post('/redes', ipamLimiter, verificarAutenticacion, requirePermission(PERMISOS.IPAM.CREAR), validateBody(createNetworkSchema), async (req, res, next) => {
+router.post('/redes', ipamLimiter, verificarAutenticacion, validateBody(createNetworkSchema), async (req, res, next) => {
     try {
         const nuevaRed = await ipamService.createNetwork(req.body);
         res.status(201).json(nuevaRed);
@@ -28,7 +28,7 @@ router.post('/redes', ipamLimiter, verificarAutenticacion, requirePermission(PER
     }
 });
 
-router.put('/redes/:id', ipamLimiter, verificarAutenticacion, requirePermission(PERMISOS.IPAM.EDITAR), validateBody(updateNetworkSchema), async (req, res, next) => {
+router.put('/redes/:id', ipamLimiter, verificarAutenticacion, validateBody(updateNetworkSchema), async (req, res, next) => {
     try {
         const updated = await ipamService.updateNetwork(req.params.id, req.body);
         res.json(updated);
@@ -37,7 +37,7 @@ router.put('/redes/:id', ipamLimiter, verificarAutenticacion, requirePermission(
     }
 });
 
-router.delete('/redes/:id', ipamLimiter, verificarAutenticacion, requirePermission(PERMISOS.IPAM.ELIMINAR), async (req, res, next) => {
+router.delete('/redes/:id', ipamLimiter, verificarAutenticacion, async (req, res, next) => {
     try {
         await ipamService.deleteNetwork(req.params.id);
         res.json({ success: true });
@@ -46,7 +46,7 @@ router.delete('/redes/:id', ipamLimiter, verificarAutenticacion, requirePermissi
     }
 });
 
-router.get('/redes/:id/mapa', verificarAutenticacion, requirePermission(PERMISOS.IPAM.VER), async (req, res, next) => {
+router.get('/redes/:id/mapa', verificarAutenticacion, async (req, res, next) => {
     try {
         const mapa = await ipamService.getNetworkDetails(req.params.id);
         res.json(mapa);
@@ -55,7 +55,7 @@ router.get('/redes/:id/mapa', verificarAutenticacion, requirePermission(PERMISOS
     }
 });
 
-router.post('/redes/:id/reservar', ipamLimiter, verificarAutenticacion, requirePermission(PERMISOS.IPAM.ASIGNAR), validateBody(reserveIPSchema), async (req, res, next) => {
+router.post('/redes/:id/reservar', ipamLimiter, verificarAutenticacion, validateBody(reserveIPSchema), async (req, res, next) => {
     try {
         const { ip, notas } = req.body;
         await ipamService.reserveIP(req.params.id, ip, notas);
@@ -94,7 +94,7 @@ router.post('/desvincular', ipamLimiter, verificarAutenticacion, requirePermissi
     }
 });
 
-router.get('/ping/:ip', verificarAutenticacion, requirePermission(PERMISOS.IPAM.VER), async (req, res, next) => {
+router.get('/ping/:ip', verificarAutenticacion, async (req, res, next) => {
     try {
         const resultado = await ipamService.pingIP(req.params.ip);
         res.json(resultado);
@@ -103,7 +103,7 @@ router.get('/ping/:ip', verificarAutenticacion, requirePermission(PERMISOS.IPAM.
     }
 });
 
-router.get('/exportar-excel', verificarAutenticacion, requirePermission(PERMISOS.IPAM.VER), async (req, res, next) => {
+router.get('/exportar-excel', verificarAutenticacion, async (req, res, next) => {
     try {
         const buffer = await ipamService.generateExcelBuffer();
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
@@ -114,7 +114,7 @@ router.get('/exportar-excel', verificarAutenticacion, requirePermission(PERMISOS
     }
 });
 
-router.post('/exportar-drive', ipamLimiter, verificarAutenticacion, requirePermission(PERMISOS.IPAM.VER), async (req, res, next) => {
+router.post('/exportar-drive', ipamLimiter, verificarAutenticacion, async (req, res, next) => {
     try {
         const resultado = await ipamService.exportToDrive();
         res.json(resultado);

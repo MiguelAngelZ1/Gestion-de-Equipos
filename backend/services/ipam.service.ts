@@ -314,8 +314,13 @@ class IPAMService {
         const reserved: any[] = (await db.all('SELECT * FROM ips_reservadas WHERE red_id = ?', [redId]))
             .filter((row: any) => this.isValidIp(row.ip) && this.isIpInNetwork(row.ip, meta));
 
+        const scannedRows: any[] = await db.all('SELECT ip FROM dispositivos_red WHERE red_id = ?', [redId])
+            .then((rows: any[]) => rows.filter((r: any) => this.isValidIp(r.ip) && this.isIpInNetwork(r.ip, meta)))
+            .catch(() => []);
+
         const occupiedByIp = new Map(occupied.map((row: any) => [row.ip, row]));
         const reservedByIp = new Map(reserved.map((row: any) => [row.ip, row]));
+        const scannedByIp = new Map(scannedRows.map((r: any) => [r.ip, r]));
         const gateways = new Set(detectedGateways);
         const maxDisplay = 1000;
         const displayLimit = Math.min(meta.totalIps, maxDisplay);
@@ -326,12 +331,29 @@ class IPAMService {
             const currentIp = this.intToIp(currentInt);
             const occ: any = occupiedByIp.get(currentIp);
             const res: any = reservedByIp.get(currentIp);
+            const scanned = scannedByIp.has(currentIp);
 
             let estado = 'LIBRE';
             let equipo: any = null;
             let notas = '';
 
-            if (occ) {
+            if (res) {
+                estado = 'RESERVADA';
+                notas = res.notas || '';
+                if (occ) {
+                    equipo = {
+                        id: occ.equipo_id,
+                        ine: occ.ine,
+                        tipo: occ.tipo,
+                        ubicacion: occ.ubicacion,
+                        responsable: occ.responsable,
+                        estado: occ.estado,
+                        color: occ.color_hex
+                    };
+                } else if (scanned) {
+                    notas = res.notas ? res.notas : 'Reservada manualmente';
+                }
+            } else if (occ) {
                 estado = 'OCUPADA';
                 equipo = {
                     id: occ.equipo_id,
@@ -342,9 +364,9 @@ class IPAMService {
                     estado: occ.estado,
                     color: occ.color_hex
                 };
-            } else if (res) {
-                estado = 'RESERVADA';
-                notas = res.notas || '';
+            } else if (scanned) {
+                estado = 'OCUPADA';
+                notas = 'Detectado por escaneo';
             }
 
             if (currentInt === meta.netInt) {
@@ -358,14 +380,14 @@ class IPAMService {
                     estado = 'RESERVADA';
                     notas = 'Puerta de Enlace';
                 } else {
-                    notas = 'Puerta de Enlace (Gateway)';
+                    notas = notas ? `${notas} · Puerta de Enlace (Gateway)` : 'Puerta de Enlace (Gateway)';
                 }
             }
 
             ipMap.push({ ip: currentIp, estado, equipo, notas });
         }
 
-        const occupiedIps = new Set(occupiedByIp.keys());
+        const occupiedIps = new Set([...occupiedByIp.keys(), ...scannedByIp.keys()]);
         const reservedIps = new Set([
             ...reserved.map(r => r.ip),
             this.intToIp(meta.netInt),
@@ -440,10 +462,6 @@ class IPAMService {
         if (ipInt === meta.netInt || ipInt === meta.broadcastInt) {
             throw new Error('No se puede reservar la direccion de red ni broadcast.');
         }
-
-        const details = await this.getNetworkDetails(redId);
-        const current = details.ips.find(row => row.ip === ip);
-        if (current?.estado === 'OCUPADA') throw new Error('La IP ya esta ocupada por un equipo.');
 
         const finalRedId = await this.ensureManualNetworkForAuto(redId);
         const existing = await db.get('SELECT id FROM ips_reservadas WHERE red_id = ? AND ip = ?', [finalRedId, ip]);

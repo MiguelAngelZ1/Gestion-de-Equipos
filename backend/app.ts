@@ -1,4 +1,4 @@
-require('dotenv').config({ quiet: true });
+require('dotenv').config({ path: require('path').join(__dirname, '.env'), quiet: true });
 const express = require("express");
 const logger = require("./utils/logger");
 const cors = require("cors");
@@ -186,6 +186,16 @@ app.get('/health', async (req, res) => {
       timestamp: new Date().toISOString()
     });
   }
+});
+
+app.post('/internal/shutdown', async (req, res) => {
+  const remote = req.socket.remoteAddress || '';
+  const isLocal = remote.includes('127.0.0.1') || remote.includes('::1') || remote.includes('::ffff:127.0.0.1');
+  if (!isLocal) {
+    return res.status(403).json({ error: 'Forbidden: solo localhost' });
+  }
+  res.json({ status: 'shutting down' });
+  setTimeout(() => process.emit('SIGTERM' as any), 100);
 });
 
 const dashboardController = require('./controllers/dashboard.controller');

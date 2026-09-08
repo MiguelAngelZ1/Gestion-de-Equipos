@@ -77,6 +77,7 @@ const IPAM = () => {
     const [redToDelete, setRedToDelete] = useState(null);
     const [isCreateRedOpen, setIsCreateRedOpen] = useState(false);
     const [newRed, setNewRed] = useState({ nombre: '', segmento: '', mascara: '255.255.255.0', gateway: '', dns: '' });
+    const [autoScanAfterCreate, setAutoScanAfterCreate] = useState(false);
 
     const [activeTab, setActiveTab] = useState<'SCANNER' | 'GRID'>('SCANNER');
     const [isMapModalOpen, setIsMapModalOpen] = useState(false);
@@ -191,12 +192,46 @@ const IPAM = () => {
         }
     );
 
-    const handleStartScan = async () => {
-        if (!selectedRed) return;
+    const handleStartScan = async (customRange?: string) => {
+        let targetRed: any = selectedRed;
+        if (customRange) {
+            const m = customRange.trim().match(/^(\d{1,3}\.\d{1,3}\.\d{1,3}\.)(\d{1,3})-(\d{1,3})$/);
+            if (!m) { showToast("Rango inválido", 'Usa formato 192.168.100.0-255', "error"); return; }
+            const prefix = m[1]; const s = Number(m[2]); const e = Number(m[3]);
+            if (s < 0 || s > 255 || e < 0 || e > 255 || s > e) { showToast("Rango inválido", 'Rango 0-255', "error"); return; }
+            const segmento = `${prefix}0`; const mascara = '255.255.255.0';
+            const existing = (redes as any[]).find((r: any) => r.segmento === segmento && r.mascara === mascara);
+            if (existing) { targetRed = existing; setSelectedRed(existing); }
+            else {
+                try {
+                    const created: any = await apiRequest('/ipam/redes', { method: 'POST', body: { nombre: `Red ${segmento}`, segmento, mascara, gateway: `${prefix}1`, dns: '8.8.8.8' } });
+                    await fetchRedes(); setSelectedRed(created); targetRed = created;
+                } catch (err: any) { showToast("Error", err.message || "No se pudo crear la red", "error"); return; }
+            }
+        }
+        if (!targetRed) {
+            try {
+                const data: any = await apiRequest('/network/mi-red');
+                const existing = (redes as any[]).find((r: any) => r.segmento === data.segmento && r.mascara === data.mascara);
+                if (existing) {
+                    targetRed = existing;
+                    setSelectedRed(existing);
+                } else {
+                    const created: any = await apiRequest('/ipam/redes', { method: 'POST', body: { nombre: `Red ${data.segmento}`, segmento: data.segmento, mascara: data.mascara, gateway: data.gateway, dns: data.dns } });
+                    await fetchRedes();
+                    setSelectedRed(created);
+                    targetRed = created;
+                    showToast("Red detectada", `${data.segmento}/${data.cidr} creada`, "success");
+                }
+            } catch (e: any) {
+                showToast("Error", e.message || "No se pudo detectar tu red", "error");
+                return;
+            }
+        }
         try {
             setIsScanning(true);
-            showToast("Escaneo Iniciado", `Iniciando descubrimiento en ${selectedRed.segmento}...`, "info");
-            await apiRequest(`/network/redes/${selectedRed.id}/scan`, { method: 'POST' });
+            showToast("Escaneo Iniciado", `Iniciando descubrimiento en ${targetRed.segmento}...`, "info");
+            await apiRequest(`/network/redes/${targetRed.id}/scan`, { method: 'POST' });
         } catch (e: any) {
             setIsScanning(false);
             showToast("Error", e.message || "No se pudo iniciar el escaneo.", "error");
@@ -216,8 +251,12 @@ const IPAM = () => {
         try {
             const created = await apiRequest('/ipam/redes', { method: 'POST', body: newRed });
             showToast("Red Creada", "Segmento disponible en IPAM.", "success");
-            setIsCreateRedOpen(false); setNewRed({ nombre: '', segmento: '', mascara: '255.255.255.0', gateway: '', dns: '' });
+            const shouldScan = autoScanAfterCreate;
+            setIsCreateRedOpen(false); setNewRed({ nombre: '', segmento: '', mascara: '255.255.255.0', gateway: '', dns: '' }); setAutoScanAfterCreate(false);
             await fetchRedes(); setSelectedRed(created);
+            if (shouldScan && created?.id) {
+                try { showToast("Escaneo Iniciado", `Iniciando descubrimiento en ${created.segmento}...`, "info"); await apiRequest(`/network/redes/${created.id}/scan`, { method: 'POST' }); } catch (e: any) { showToast("Error", e.message || "No se pudo iniciar el escaneo.", "error"); }
+            }
         } catch (e) { showToast("Error", e.message || "No se pudo crear la red.", "error"); }
     };
     const handleUpdateRed = async () => {
@@ -246,6 +285,14 @@ const IPAM = () => {
             showToast("Éxito", "IP reservada.", "success");
             setIsReserveModalOpen(false); setReservingIp(null); setReserveNote(''); fetchNetworkMap(selectedRed.id);
         } catch { showToast("Error", "No se pudo reservar.", "error"); }
+    };
+    const handleScannerReserve = async (node: any, notas: string) => {
+        if (!selectedRed) return;
+        try {
+            await apiRequest(`/ipam/redes/${selectedRed.id}/reservar`, { method: 'POST', body: { ip: node.ip, notas } });
+            showToast("Reservada", `${node.ip} marcada como "${notas}"`, "success");
+            fetchNetworkMap(selectedRed.id);
+        } catch (e: any) { showToast("Error", e.message || "No se pudo reservar.", "error"); }
     };
     const handleAssign = async (data) => {
         try {
@@ -392,20 +439,20 @@ const IPAM = () => {
                 </button>
             </div>
 
-            <div className="flex flex-col lg:grid lg:grid-cols-[340px_1fr] gap-4 flex-1 min-h-0 lg:overflow-hidden">
+            <div className="flex flex-col lg:grid lg:grid-cols-[260px_1fr] gap-4 flex-1 min-h-0 lg:overflow-hidden">
                 <section className="flex flex-col min-h-[280px] lg:min-h-0 lg:overflow-hidden">
-                    <div className="flex items-center gap-3 text-xs text-zinc-500 mb-3 shrink-0">
+                    <div className="flex items-center gap-2 text-xs text-zinc-500 mb-3 shrink-0">
                         <span className="inline-flex items-center gap-2 text-zinc-300 font-semibold shrink-0"><Network className="w-4 h-4 text-zinc-400" /> Segmentos</span>
-                        <span className="flex-1 text-center text-xs text-zinc-500">{redes.length} redes</span>
+                        <span className="flex-1 text-center text-xs text-zinc-500 truncate">{redes.length} redes</span>
                         <button
-                            onClick={() => { setEditingRed(null); setNewRed({ nombre: '', segmento: '', mascara: '255.255.255.0', gateway: '', dns: '' }); setIsCreateRedOpen(true); }}
-                            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-transparent hover:bg-white/5 text-zinc-400 hover:text-white text-xs font-semibold transition-colors cursor-pointer shrink-0"
+                            onClick={() => { setEditingRed(null); setAutoScanAfterCreate(false); setNewRed({ nombre: '', segmento: '', mascara: '255.255.255.0', gateway: '', dns: '' }); setIsCreateRedOpen(true); }}
+                            className="inline-flex items-center gap-1 px-2 py-1.5 rounded-xl bg-transparent hover:bg-white/5 text-zinc-400 hover:text-white text-xs font-semibold transition-colors cursor-pointer shrink-0"
                             title="Crear segmento"
                         ><Plus className="w-3.5 h-3.5" /> Añadir</button>
                     </div>
 
                     <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar pr-1">
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="grid grid-cols-1 gap-2">
                             {loading ? [1, 2, 3, 4].map(i => <div key={i} className="h-20 rounded-xl bg-zinc-900 border border-zinc-800 animate-pulse" />)
                                 : redes.length === 0 ? (
                                     <div className="col-span-2 flex flex-col items-center justify-center py-16 bg-zinc-900 border border-zinc-800 rounded-xl">
@@ -431,12 +478,22 @@ const IPAM = () => {
                                             className={`group relative rounded-xl border p-3 flex flex-col gap-1 cursor-pointer transition-colors ${isSelected ? 'bg-white border-white text-zinc-900' : 'bg-zinc-900 border-zinc-800 hover:border-zinc-700'}`}>
                                             <div className="flex items-start justify-between gap-2">
                                                 <div className="min-w-0">
-                                                    <p className={`text-[13px] font-bold tracking-tight truncate ${isSelected ? 'text-zinc-900' : 'text-white'}`}>{cidrLabel}</p>
-                                                    {mask && <p className={`text-[11px] font-medium truncate ${isSelected ? 'text-zinc-500' : 'text-zinc-400'}`}>{mask}</p>}
+                                                    {red.nombre ? (
+                                                        <>
+                                                            <p className={`text-[13px] font-bold tracking-tight truncate ${isSelected ? 'text-zinc-900' : 'text-white'}`}>{red.nombre}</p>
+                                                            <p className={`text-[11px] font-medium truncate ${isSelected ? 'text-zinc-700' : 'text-zinc-300'}`}>{cidrLabel}</p>
+                                                            {mask && <p className={`text-[10px] truncate ${isSelected ? 'text-zinc-500' : 'text-zinc-500'}`}>{mask}</p>}
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <p className={`text-[13px] font-bold tracking-tight truncate ${isSelected ? 'text-zinc-900' : 'text-white'}`}>{cidrLabel}</p>
+                                                            {mask && <p className={`text-[11px] font-medium truncate ${isSelected ? 'text-zinc-500' : 'text-zinc-400'}`}>{mask}</p>}
+                                                        </>
+                                                    )}
                                                 </div>
                                                 {!red.isAuto && (
                                                     <div className="hidden group-hover:flex items-center gap-1 shrink-0">
-                                                        <button onClick={(e) => { e.stopPropagation(); setEditingRed(red); setNewRed({ nombre: red.nombre || '', segmento: red.segmento || '', mascara: red.mascara || '255.255.255.0', gateway: red.gateway || '', dns: red.dns || '' }); setIsCreateRedOpen(true); }}
+                                                        <button onClick={(e) => { e.stopPropagation(); setEditingRed(red); setAutoScanAfterCreate(false); setNewRed({ nombre: red.nombre || '', segmento: red.segmento || '', mascara: red.mascara || '255.255.255.0', gateway: red.gateway || '', dns: red.dns || '' }); setIsCreateRedOpen(true); }}
                                                             className={`w-6 h-6 grid place-items-center rounded-lg transition-colors ${isSelected ? 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200' : 'bg-white/5 text-zinc-400 hover:text-white'}`}><Pencil className="w-3 h-3" /></button>
                                                         <button onClick={(e) => { e.stopPropagation(); setRedToDelete(red); setIsDeleteRedOpen(true); }}
                                                             className={`w-6 h-6 grid place-items-center rounded-lg transition-colors ${isSelected ? 'bg-zinc-100 text-zinc-600 hover:text-red-600' : 'bg-white/5 text-zinc-500 hover:text-red-400'}`}><Trash2 className="w-3 h-3" /></button>
@@ -515,6 +572,7 @@ const IPAM = () => {
                                     onPing={handleScannerPing}
                                     onTracert={handleTracert}
                                     onGraph={handleGraphScanner}
+                                    onReserve={handleScannerReserve}
                                 />
                             )}
 
@@ -603,9 +661,8 @@ const IPAM = () => {
                                                                 <button onClick={() => handleRelease(ip.ip)} className="group/tooltip relative w-8 h-8 grid place-items-center rounded-lg bg-transparent text-zinc-500 hover:text-red-400 hover:bg-white/5 transition-colors cursor-pointer shrink-0"><Unlock className="w-4 h-4" /><span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 whitespace-nowrap rounded-lg bg-zinc-800 border border-zinc-700 px-2 py-1 text-[11px] font-medium text-zinc-200 opacity-0 group-hover/tooltip:opacity-100 transition-opacity shadow-lg">Liberar</span></button>
                                                                 <button onClick={() => { setAssigningIp(ip.ip); setIsAssignModalOpen(true); }} className="group/tooltip relative w-8 h-8 grid place-items-center rounded-lg bg-transparent text-zinc-500 hover:text-white hover:bg-white/5 transition-colors cursor-pointer shrink-0"><LinkIcon className="w-4 h-4" /><span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 whitespace-nowrap rounded-lg bg-zinc-800 border border-zinc-700 px-2 py-1 text-[11px] font-medium text-zinc-200 opacity-0 group-hover/tooltip:opacity-100 transition-opacity shadow-lg">Vincular</span></button>
                                                             </>}
-                                                            <button onClick={() => handlePing(ip.ip)} disabled={pingingIp === ip.ip} className="group/tooltip relative w-8 h-8 grid place-items-center rounded-lg bg-transparent text-zinc-500 hover:text-emerald-400 hover:bg-white/5 transition-colors cursor-pointer disabled:opacity-50 shrink-0">
-                                                                {pingResults[ip.ip] !== undefined && <span className={`absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full border-2 border-zinc-900 ${pingResults[ip.ip] ? 'bg-emerald-500' : 'bg-red-500'}`} />}
-                                                                <Activity className={`w-4 h-4 ${pingingIp === ip.ip ? 'animate-pulse' : ''}`} />
+                                                            <button onClick={() => handleScannerPing(ip.ip)} className="group/tooltip relative w-8 h-8 grid place-items-center rounded-lg bg-transparent text-zinc-500 hover:text-emerald-400 hover:bg-white/5 transition-colors cursor-pointer shrink-0">
+                                                                <Activity className="w-4 h-4" />
                                                                 <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 whitespace-nowrap rounded-lg bg-zinc-800 border border-zinc-700 px-2 py-1 text-[11px] font-medium text-zinc-200 opacity-0 group-hover/tooltip:opacity-100 transition-opacity shadow-lg">Probar conexión</span>
                                                             </button>
                                                             <button onClick={() => handleGraph(ip)} className={`group/tooltip relative w-8 h-8 grid place-items-center rounded-lg transition-colors cursor-pointer shrink-0 ${graphedDevices.some(g => g.ip === ip.ip) ? 'bg-white text-zinc-900' : 'bg-transparent text-zinc-500 hover:text-white hover:bg-white/5'}`}>

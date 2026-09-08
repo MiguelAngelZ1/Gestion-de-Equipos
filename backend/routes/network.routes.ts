@@ -33,7 +33,6 @@ async function validarRedId(req: any, res: any, next: any) {
 router.get(
   '/redes/:redId/dispositivos',
   verificarAutenticacion,
-  requirePermission(PERMISOS.IPAM.VER),
   validarRedId,
   async (req: any, res: any, next: any) => {
     try {
@@ -72,7 +71,6 @@ router.post(
   '/redes/:redId/scan',
   ipamLimiter,
   verificarAutenticacion,
-  requirePermission(PERMISOS.IPAM.SCAN),
   validarRedId,
   async (req: any, res: any, next: any) => {
     try {
@@ -103,7 +101,6 @@ router.post(
 router.get(
   '/redes/:redId/eventos',
   verificarAutenticacion,
-  requirePermission(PERMISOS.IPAM.VER),
   validarRedId,
   async (req: any, res: any, next: any) => {
     try {
@@ -128,7 +125,6 @@ router.post(
   '/vincular',
   ipamLimiter,
   verificarAutenticacion,
-  requirePermission(PERMISOS.IPAM.ASIGNAR),
   async (req: any, res: any, next: any) => {
     try {
       const { dispositivoId, equipoId } = req.body;
@@ -148,7 +144,6 @@ router.patch(
   '/dispositivos/:id/alias',
   ipamLimiter,
   verificarAutenticacion,
-  requirePermission(PERMISOS.IPAM.ASIGNAR),
   async (req: any, res: any, next: any) => {
     try {
       const { id } = req.params;
@@ -165,7 +160,6 @@ router.patch(
 router.get(
   '/tracert/:ip',
   verificarAutenticacion,
-  requirePermission(PERMISOS.IPAM.VER),
   async (req: any, res: any, next: any) => {
     try {
       const ip = String(req.params.ip || '').trim();
@@ -187,7 +181,6 @@ router.get(
 router.get(
   '/ping/:ip',
   verificarAutenticacion,
-  requirePermission(PERMISOS.IPAM.VER),
   async (req: any, res: any, next: any) => {
     try {
       const ip = String(req.params.ip || '').trim();
@@ -210,7 +203,6 @@ router.get(
 router.get(
   '/ping-stream/:ip',
   verificarAutenticacion,
-  requirePermission(PERMISOS.IPAM.VER),
   async (req: any, res: any, next: any) => {
     try {
       const ip = String(req.params.ip || '').trim();
@@ -240,6 +232,37 @@ router.get(
   }
 );
 
+router.get(
+  '/mi-red',
+  verificarAutenticacion,
+  async (req: any, res: any, next: any) => {
+    try {
+      const raw = (req.ip || req.socket.remoteAddress || '').toString();
+      let ip = raw.replace('::ffff:', '').split(',')[0].trim();
+      const isV4 = (s: string) => /^(\d{1,3}\.){3}\d{1,3}$/.test(s) && s.split('.').every(n => { const v = Number(n); return v >= 0 && v <= 255; });
+      const isLoopback = (s: string) => s.startsWith('127.') || s === '::1' || s === '::ffff:127.0.0.1';
+      if (!isV4(ip) || isLoopback(ip)) {
+        const os = require('os');
+        const ifaces = os.networkInterfaces();
+        let fallback: string | null = null;
+        for (const addrs of Object.values(ifaces) as any) {
+          for (const a of addrs || []) {
+            if (a.family === 'IPv4' && !a.internal && isV4(a.address)) { fallback = a.address; break; }
+          }
+          if (fallback) break;
+        }
+        if (fallback) ip = fallback;
+        else return res.status(400).json({ error: 'No se pudo detectar la red del cliente. Agregue manualmente.' });
+      }
+      const parts = ip.split('.').map(Number);
+      const segmento = `${parts[0]}.${parts[1]}.${parts[2]}.0`;
+      const mascara = '255.255.255.0';
+      const gateway = `${parts[0]}.${parts[1]}.${parts[2]}.1`;
+      res.json({ ip, segmento, mascara, cidr: 24, gateway, dns: '8.8.8.8' });
+    } catch (error) { next(error); }
+  }
+);
+
 /**
  * GET /api/network/canary
  * Comprobación de salud multi-vectorial del servidor de monitorización
@@ -247,7 +270,6 @@ router.get(
 router.get(
   '/canary',
   verificarAutenticacion,
-  requirePermission(PERMISOS.IPAM.VER),
   async (req: any, res: any, next: any) => {
     try {
       const gateway = req.query.gateway as string | undefined;
@@ -267,7 +289,6 @@ router.post(
   '/benchmark',
   ipamLimiter,
   verificarAutenticacion,
-  requirePermission(PERMISOS.IPAM.SCAN),
   async (req: any, res: any, next: any) => {
     try {
       const { ips, concurrencyLimit, timeoutMs } = req.body;
@@ -290,7 +311,6 @@ router.post(
 router.get(
   '/telemetria',
   verificarAutenticacion,
-  requirePermission(PERMISOS.IPAM.VER),
   async (req: any, res: any, next: any) => {
     try {
       res.json(NetworkMonitorEngine.getTelemetry());

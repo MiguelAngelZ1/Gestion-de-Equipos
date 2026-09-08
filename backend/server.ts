@@ -62,6 +62,16 @@ async function shutdown() {
   server.close(async () => {
     try {
       if (db.client) {
+        if (!db.client.pool && typeof db.client.run === 'function') {
+          try {
+            await new Promise<void>((resolve, reject) => {
+              db.client.run("PRAGMA wal_checkpoint(TRUNCATE);", (err: any) => err ? reject(err) : resolve());
+            });
+            logger.info('WAL checkpoint TRUNCATE ok');
+          } catch (e: any) {
+            logger.warn({ err: e?.message || e }, 'WAL checkpoint fallo, continuando');
+          }
+        }
         // PostgreSQL: cerrar pool
         if (db.client.pool) {
           await db.client.pool.end();
