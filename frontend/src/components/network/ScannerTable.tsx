@@ -9,7 +9,7 @@ interface ScannerTableProps {
   nodes: any[];
   isScanning: boolean;
   scanProgress: { scanned: number; total: number; percentage: number; found: number } | null;
-  onStartScan: () => void;
+  onStartScan: (range?: string) => void;
   onRename: (node: any, alias: string) => void;
   onPing: (ip: string) => void;
   onTracert: (ip: string) => void;
@@ -36,6 +36,7 @@ const ScannerTable: React.FC<ScannerTableProps> = ({
   const [editingValue, setEditingValue] = useState('');
   const [reserveNode, setReserveNode] = useState<any | null>(null);
   const [reserveText, setReserveText] = useState('');
+  const [customRange, setCustomRange] = useState('');
 
   useEffect(() => {
     const close = () => { setMenu(null); setShowCopy(false); };
@@ -75,13 +76,14 @@ const ScannerTable: React.FC<ScannerTableProps> = ({
     <div className="flex flex-col flex-1 min-h-0 bg-zinc-950 border border-zinc-800 rounded-2xl overflow-hidden">
       <div className="p-3 border-b border-zinc-800 bg-zinc-900/40 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
+          <input value={customRange} onChange={e => setCustomRange(e.target.value)} placeholder="192.168.100.0-255" className="w-[170px] bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm font-mono text-white placeholder:text-zinc-500 outline-none focus:border-zinc-700 focus:bg-zinc-800 transition-colors" />
           <button
-            onClick={onStartScan}
+            onClick={() => onStartScan(customRange.trim() || undefined)}
             disabled={isScanning}
             className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 disabled:opacity-50 text-zinc-950 text-xs font-bold transition-all shadow-md cursor-pointer disabled:cursor-not-allowed"
           >
             {isScanning ? <RotateCw className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5 fill-current" />}
-            {isScanning ? 'Escaneando...' : 'Escanear Red'}
+            {isScanning ? 'Escaneando...' : customRange.trim() ? 'Escanear Rango' : 'Escanear Red'}
           </button>
         </div>
         <div className="flex items-center gap-2 flex-1 max-w-md justify-end">

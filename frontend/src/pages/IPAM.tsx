@@ -192,8 +192,23 @@ const IPAM = () => {
         }
     );
 
-    const handleStartScan = async () => {
+    const handleStartScan = async (customRange?: string) => {
         let targetRed: any = selectedRed;
+        if (customRange) {
+            const m = customRange.trim().match(/^(\d{1,3}\.\d{1,3}\.\d{1,3}\.)(\d{1,3})-(\d{1,3})$/);
+            if (!m) { showToast("Rango inválido", 'Usa formato 192.168.100.0-255', "error"); return; }
+            const prefix = m[1]; const s = Number(m[2]); const e = Number(m[3]);
+            if (s < 0 || s > 255 || e < 0 || e > 255 || s > e) { showToast("Rango inválido", 'Rango 0-255', "error"); return; }
+            const segmento = `${prefix}0`; const mascara = '255.255.255.0';
+            const existing = (redes as any[]).find((r: any) => r.segmento === segmento && r.mascara === mascara);
+            if (existing) { targetRed = existing; setSelectedRed(existing); }
+            else {
+                try {
+                    const created: any = await apiRequest('/ipam/redes', { method: 'POST', body: { nombre: `Red ${segmento}`, segmento, mascara, gateway: `${prefix}1`, dns: '8.8.8.8' } });
+                    await fetchRedes(); setSelectedRed(created); targetRed = created;
+                } catch (err: any) { showToast("Error", err.message || "No se pudo crear la red", "error"); return; }
+            }
+        }
         if (!targetRed) {
             try {
                 const data: any = await apiRequest('/network/mi-red');

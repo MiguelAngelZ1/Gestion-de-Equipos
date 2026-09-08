@@ -6,7 +6,7 @@ export default function Select({ value, onChange, options = [], placeholder, cla
       {label && <label className="text-xs font-semibold text-zinc-400 flex items-center gap-1.5">{Icon && <Icon className="w-3.5 h-3.5" />}{label} {required && <span className="text-red-500">*</span>}</label>}
       <div className="relative">
         <select name={name} value={value} onChange={onChange} disabled={disabled} required={required}
-          className={`w-full bg-zinc-900 border text-sm rounded-xl px-4 py-3 pr-10 focus:outline-none focus:border-zinc-700 appearance-none ${error ? 'border-red-500/50' : 'border-zinc-800'} ${disabled ? 'opacity-50' : ''}`} {...props}>
+          className={`w-full bg-zinc-900 border text-sm rounded-lg px-3 py-2 pr-10 focus:outline-none focus:border-zinc-700 focus:bg-zinc-800 transition-colors appearance-none ${error ? 'border-red-500/50' : 'border-zinc-800'} ${disabled ? 'opacity-50' : ''}`} {...props}>
           {placeholder && <option value="" disabled>{placeholder}</option>}
           {options.map((o: any) => <option key={o.value} value={o.value} className="bg-zinc-900">{o.label}</option>)}
         </select>

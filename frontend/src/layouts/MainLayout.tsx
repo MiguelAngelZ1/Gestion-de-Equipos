@@ -39,7 +39,6 @@ export default function MainLayout() {
     { label: 'Red', to: '/ipam', icon: 'lan', roles: [ROLES.ADMIN, ROLES.USER] },
     { label: 'Ajustes', to: '/configuracion', icon: 'settings', roles: [ROLES.ADMIN] },
   ].filter(i => i.roles.includes(role));
-  if (role === ROLES.USER) navItems.push({ label: 'Ajustes', to: '/configuracion', icon: 'settings', roles: [ROLES.USER] } as any);
 
   const mobilePrimary = navItems.slice(0, 5);
   const mobileExtra = navItems.slice(5);
