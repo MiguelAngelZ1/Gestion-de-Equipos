@@ -5,7 +5,7 @@ const getBaseURL = () => {
 };
 export const API_BASE = getBaseURL();
 const USER_DATA_KEY = "equipos_user_data";
-const REQUEST_TIMEOUT = 15000;
+const REQUEST_TIMEOUT = 30000;
 const MAX_RETRIES = 2;
 
 export const getAuthToken = () => null;
@@ -17,9 +17,6 @@ export const removeAuthToken = () => {
 export const getUserData = () => JSON.parse(localStorage.getItem(USER_DATA_KEY) || "null");
 
 export async function apiRequest(endpoint: string, options: Record<string, any> = {}, retries = MAX_RETRIES) {
-    if (!navigator.onLine) {
-        throw new Error("Sin conexión a internet. Verifica tu red.");
-    }
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
