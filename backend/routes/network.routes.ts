@@ -37,7 +37,7 @@ router.get(
   async (req: any, res: any, next: any) => {
     try {
       const redId = req.params.redId;
-      const userId = (req.user as any)?.id;
+      const userId = (req.user as any)?.userId ?? (req.user as any)?.id;
       const rows = await db.all(
         `SELECT d.*, 
                 dau.alias as _alias_usuario,
@@ -152,7 +152,7 @@ router.patch(
     try {
       const { id } = req.params;
       const { alias } = req.body;
-      const userId = (req.user as any)?.id;
+      const userId = (req.user as any)?.userId ?? (req.user as any)?.id;
       await ReconciliationService.updateAliasForUser(id, userId, alias);
       const row = await db.get('SELECT d.*, dau.alias as _alias_usuario FROM dispositivos_red d LEFT JOIN dispositivo_alias_usuario dau ON dau.dispositivo_id = d.id AND dau.user_id = ? WHERE d.id = ?', [userId, id]);
       const updated = row ? { ...row, alias: row._alias_usuario || null } : row;
