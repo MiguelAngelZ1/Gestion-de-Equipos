@@ -7,7 +7,6 @@ const { validateBody } = require('../middleware/validate.middleware');
 const { grupoComodidadSchema, gradoSchema, estadoSchema, ubicacionSchema } = require('../schemas/config.schema');
 
 router.use(verificarAutenticacion);
-router.use(requirePermission(PERMISOS.CONFIG.VER));
 
 // Grupo Comodidad (antes Categorías)
 router.get('/grupos-comodidad', configController.getGruposComodidad);

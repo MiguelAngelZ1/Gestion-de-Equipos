@@ -77,6 +77,7 @@ const IPAM = () => {
     const [redToDelete, setRedToDelete] = useState(null);
     const [isCreateRedOpen, setIsCreateRedOpen] = useState(false);
     const [newRed, setNewRed] = useState({ nombre: '', segmento: '', mascara: '255.255.255.0', gateway: '', dns: '' });
+    const [autoScanAfterCreate, setAutoScanAfterCreate] = useState(false);
 
     const [activeTab, setActiveTab] = useState<'SCANNER' | 'GRID'>('SCANNER');
     const [isMapModalOpen, setIsMapModalOpen] = useState(false);
@@ -216,8 +217,12 @@ const IPAM = () => {
         try {
             const created = await apiRequest('/ipam/redes', { method: 'POST', body: newRed });
             showToast("Red Creada", "Segmento disponible en IPAM.", "success");
-            setIsCreateRedOpen(false); setNewRed({ nombre: '', segmento: '', mascara: '255.255.255.0', gateway: '', dns: '' });
+            const shouldScan = autoScanAfterCreate;
+            setIsCreateRedOpen(false); setNewRed({ nombre: '', segmento: '', mascara: '255.255.255.0', gateway: '', dns: '' }); setAutoScanAfterCreate(false);
             await fetchRedes(); setSelectedRed(created);
+            if (shouldScan && created?.id) {
+                try { showToast("Escaneo Iniciado", `Iniciando descubrimiento en ${created.segmento}...`, "info"); await apiRequest(`/network/redes/${created.id}/scan`, { method: 'POST' }); } catch (e: any) { showToast("Error", e.message || "No se pudo iniciar el escaneo.", "error"); }
+            }
         } catch (e) { showToast("Error", e.message || "No se pudo crear la red.", "error"); }
     };
     const handleUpdateRed = async () => {
@@ -398,7 +403,21 @@ const IPAM = () => {
                         <span className="inline-flex items-center gap-2 text-zinc-300 font-semibold shrink-0"><Network className="w-4 h-4 text-zinc-400" /> Segmentos</span>
                         <span className="flex-1 text-center text-xs text-zinc-500">{redes.length} redes</span>
                         <button
-                            onClick={() => { setEditingRed(null); setNewRed({ nombre: '', segmento: '', mascara: '255.255.255.0', gateway: '', dns: '' }); setIsCreateRedOpen(true); }}
+                            onClick={async () => {
+                                try {
+                                    const data: any = await apiRequest('/network/mi-red');
+                                    setEditingRed(null);
+                                    setNewRed({ nombre: '', segmento: data.segmento || '', mascara: data.mascara || '255.255.255.0', gateway: data.gateway || '', dns: data.dns || '8.8.8.8' });
+                                    setAutoScanAfterCreate(true);
+                                    setIsCreateRedOpen(true);
+                                    showToast("Red detectada", `Tu PC está en ${data.ip} → ${data.segmento}/${data.cidr}`, "info");
+                                } catch (e: any) { showToast("Error", e.message || "No se pudo detectar tu red", "error"); }
+                            }}
+                            className="inline-flex items-center gap-1 px-2 py-1.5 rounded-xl bg-white text-zinc-900 text-xs font-bold hover:bg-zinc-100 transition-colors cursor-pointer shrink-0"
+                            title="Detectar y escanear mi red"
+                        ><Activity className="w-3.5 h-3.5" /> Mi red</button>
+                        <button
+                            onClick={() => { setEditingRed(null); setAutoScanAfterCreate(false); setNewRed({ nombre: '', segmento: '', mascara: '255.255.255.0', gateway: '', dns: '' }); setIsCreateRedOpen(true); }}
                             className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-transparent hover:bg-white/5 text-zinc-400 hover:text-white text-xs font-semibold transition-colors cursor-pointer shrink-0"
                             title="Crear segmento"
                         ><Plus className="w-3.5 h-3.5" /> Añadir</button>
@@ -431,12 +450,22 @@ const IPAM = () => {
                                             className={`group relative rounded-xl border p-3 flex flex-col gap-1 cursor-pointer transition-colors ${isSelected ? 'bg-white border-white text-zinc-900' : 'bg-zinc-900 border-zinc-800 hover:border-zinc-700'}`}>
                                             <div className="flex items-start justify-between gap-2">
                                                 <div className="min-w-0">
-                                                    <p className={`text-[13px] font-bold tracking-tight truncate ${isSelected ? 'text-zinc-900' : 'text-white'}`}>{cidrLabel}</p>
-                                                    {mask && <p className={`text-[11px] font-medium truncate ${isSelected ? 'text-zinc-500' : 'text-zinc-400'}`}>{mask}</p>}
+                                                    {red.nombre ? (
+                                                        <>
+                                                            <p className={`text-[13px] font-bold tracking-tight truncate ${isSelected ? 'text-zinc-900' : 'text-white'}`}>{red.nombre}</p>
+                                                            <p className={`text-[11px] font-medium truncate ${isSelected ? 'text-zinc-700' : 'text-zinc-300'}`}>{cidrLabel}</p>
+                                                            {mask && <p className={`text-[10px] truncate ${isSelected ? 'text-zinc-500' : 'text-zinc-500'}`}>{mask}</p>}
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <p className={`text-[13px] font-bold tracking-tight truncate ${isSelected ? 'text-zinc-900' : 'text-white'}`}>{cidrLabel}</p>
+                                                            {mask && <p className={`text-[11px] font-medium truncate ${isSelected ? 'text-zinc-500' : 'text-zinc-400'}`}>{mask}</p>}
+                                                        </>
+                                                    )}
                                                 </div>
                                                 {!red.isAuto && (
                                                     <div className="hidden group-hover:flex items-center gap-1 shrink-0">
-                                                        <button onClick={(e) => { e.stopPropagation(); setEditingRed(red); setNewRed({ nombre: red.nombre || '', segmento: red.segmento || '', mascara: red.mascara || '255.255.255.0', gateway: red.gateway || '', dns: red.dns || '' }); setIsCreateRedOpen(true); }}
+                                                        <button onClick={(e) => { e.stopPropagation(); setEditingRed(red); setAutoScanAfterCreate(false); setNewRed({ nombre: red.nombre || '', segmento: red.segmento || '', mascara: red.mascara || '255.255.255.0', gateway: red.gateway || '', dns: red.dns || '' }); setIsCreateRedOpen(true); }}
                                                             className={`w-6 h-6 grid place-items-center rounded-lg transition-colors ${isSelected ? 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200' : 'bg-white/5 text-zinc-400 hover:text-white'}`}><Pencil className="w-3 h-3" /></button>
                                                         <button onClick={(e) => { e.stopPropagation(); setRedToDelete(red); setIsDeleteRedOpen(true); }}
                                                             className={`w-6 h-6 grid place-items-center rounded-lg transition-colors ${isSelected ? 'bg-zinc-100 text-zinc-600 hover:text-red-600' : 'bg-white/5 text-zinc-500 hover:text-red-400'}`}><Trash2 className="w-3 h-3" /></button>

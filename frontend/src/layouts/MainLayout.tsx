@@ -36,7 +36,7 @@ export default function MainLayout() {
     { label: 'Movimientos', to: '/historial', icon: 'history', roles: [ROLES.ADMIN] },
     { label: 'Repuestos', to: '/componentes', icon: 'settings_input_component', roles: [ROLES.ADMIN] },
     { label: 'Préstamos', to: '/prestamos', icon: 'handshake', roles: [ROLES.ADMIN] },
-    { label: 'Red', to: '/ipam', icon: 'lan', roles: [ROLES.ADMIN] },
+    { label: 'Red', to: '/ipam', icon: 'lan', roles: [ROLES.ADMIN, ROLES.USER] },
     { label: 'Ajustes', to: '/configuracion', icon: 'settings', roles: [ROLES.ADMIN] },
   ].filter(i => i.roles.includes(role));
   if (role === ROLES.USER) navItems.push({ label: 'Ajustes', to: '/configuracion', icon: 'settings', roles: [ROLES.USER] } as any);

@@ -33,7 +33,6 @@ async function validarRedId(req: any, res: any, next: any) {
 router.get(
   '/redes/:redId/dispositivos',
   verificarAutenticacion,
-  requirePermission(PERMISOS.IPAM.VER),
   validarRedId,
   async (req: any, res: any, next: any) => {
     try {
@@ -236,6 +235,37 @@ router.get(
       tick();
       const iv = setInterval(tick, 1000);
       req.on('close', () => clearInterval(iv));
+    } catch (error) { next(error); }
+  }
+);
+
+router.get(
+  '/mi-red',
+  verificarAutenticacion,
+  async (req: any, res: any, next: any) => {
+    try {
+      const raw = (req.ip || req.socket.remoteAddress || '').toString();
+      let ip = raw.replace('::ffff:', '').split(',')[0].trim();
+      const isV4 = (s: string) => /^(\d{1,3}\.){3}\d{1,3}$/.test(s) && s.split('.').every(n => { const v = Number(n); return v >= 0 && v <= 255; });
+      const isLoopback = (s: string) => s.startsWith('127.') || s === '::1' || s === '::ffff:127.0.0.1';
+      if (!isV4(ip) || isLoopback(ip)) {
+        const os = require('os');
+        const ifaces = os.networkInterfaces();
+        let fallback: string | null = null;
+        for (const addrs of Object.values(ifaces) as any) {
+          for (const a of addrs || []) {
+            if (a.family === 'IPv4' && !a.internal && isV4(a.address)) { fallback = a.address; break; }
+          }
+          if (fallback) break;
+        }
+        if (fallback) ip = fallback;
+        else return res.status(400).json({ error: 'No se pudo detectar la red del cliente. Agregue manualmente.' });
+      }
+      const parts = ip.split('.').map(Number);
+      const segmento = `${parts[0]}.${parts[1]}.${parts[2]}.0`;
+      const mascara = '255.255.255.0';
+      const gateway = `${parts[0]}.${parts[1]}.${parts[2]}.1`;
+      res.json({ ip, segmento, mascara, cidr: 24, gateway, dns: '8.8.8.8' });
     } catch (error) { next(error); }
   }
 );

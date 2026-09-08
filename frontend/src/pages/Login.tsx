@@ -16,7 +16,7 @@ import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
 import CircularProgress from '@mui/material/CircularProgress';
 import InputAdornment from '@mui/material/InputAdornment';
-import { User, Lock, MailCheck, KeyRound, Check, ArrowLeft } from 'lucide-react';
+import { User, Lock, MailCheck, KeyRound, Check, ArrowLeft, Eye, EyeOff } from 'lucide-react';
 
 const ViewTransition = {
   initial: { opacity: 0, y: 24, filter: 'blur(8px)' },
@@ -42,6 +42,9 @@ const Login = () => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [resendCooldown, setResendCooldown] = useState(0);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { login } = useAuth();
 
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -423,7 +426,7 @@ const Login = () => {
                     <TextField
                       fullWidth
                       label="Contraseña"
-                      type="password"
+                      type={showPassword ? 'text' : 'password'}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       autoComplete="current-password"
@@ -432,6 +435,18 @@ const Login = () => {
                           startAdornment: (
                             <InputAdornment position="start">
                               <Lock size={20} style={{ color: '#94a3b8' }} />
+                            </InputAdornment>
+                          ),
+                          endAdornment: (
+                            <InputAdornment position="end">
+                              <Box
+                                component="button"
+                                type="button"
+                                onClick={() => setShowPassword(v => !v)}
+                                sx={{ display: 'grid', placeItems: 'center', width: 32, height: 32, borderRadius: '50%', border: 'none', bgcolor: 'transparent', cursor: 'pointer', color: '#94a3b8', '&:hover': { color: '#e2e8f0' } }}
+                              >
+                                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                              </Box>
                             </InputAdornment>
                           ),
                         },
@@ -672,7 +687,7 @@ const Login = () => {
                       <TextField
                         fullWidth
                         label="Nueva contraseña"
-                        type="password"
+                        type={showNewPassword ? 'text' : 'password'}
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
                         slotProps={{
@@ -680,6 +695,18 @@ const Login = () => {
                             startAdornment: (
                               <InputAdornment position="start">
                                 <KeyRound size={20} style={{ color: '#94a3b8' }} />
+                              </InputAdornment>
+                            ),
+                            endAdornment: (
+                              <InputAdornment position="end">
+                                <Box
+                                  component="button"
+                                  type="button"
+                                  onClick={() => setShowNewPassword(v => !v)}
+                                  sx={{ display: 'grid', placeItems: 'center', width: 32, height: 32, borderRadius: '50%', border: 'none', bgcolor: 'transparent', cursor: 'pointer', color: '#94a3b8', '&:hover': { color: '#e2e8f0' } }}
+                                >
+                                  {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                </Box>
                               </InputAdornment>
                             ),
                           },
@@ -728,7 +755,7 @@ const Login = () => {
                       <TextField
                         fullWidth
                         label="Confirmar contraseña"
-                        type="password"
+                        type={showConfirmPassword ? 'text' : 'password'}
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
                         error={confirmPassword.length > 0 && confirmPassword !== newPassword}
@@ -742,6 +769,18 @@ const Login = () => {
                             startAdornment: (
                               <InputAdornment position="start">
                                 <KeyRound size={20} style={{ color: '#94a3b8' }} />
+                              </InputAdornment>
+                            ),
+                            endAdornment: (
+                              <InputAdornment position="end">
+                                <Box
+                                  component="button"
+                                  type="button"
+                                  onClick={() => setShowConfirmPassword(v => !v)}
+                                  sx={{ display: 'grid', placeItems: 'center', width: 32, height: 32, borderRadius: '50%', border: 'none', bgcolor: 'transparent', cursor: 'pointer', color: '#94a3b8', '&:hover': { color: '#e2e8f0' } }}
+                                >
+                                  {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                </Box>
                               </InputAdornment>
                             ),
                           },

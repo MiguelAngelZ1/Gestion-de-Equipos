@@ -52,7 +52,6 @@ export async function apiRequest(endpoint: string, options: Record<string, any> 
                 throw new Error("No autorizado. Inicie sesión nuevamente.");
             }
             if (response.status === 403) {
-                window.dispatchEvent(new Event("auth:forbidden"));
                 throw new Error("Acceso denegado: No tiene los permisos necesarios para realizar esta acción.");
             }
             const errorMessage = (data && data.error) ? data.error : `Error ${response.status}: ${response.statusText}`;
