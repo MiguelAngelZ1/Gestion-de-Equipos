@@ -37,14 +37,17 @@ router.get(
   async (req: any, res: any, next: any) => {
     try {
       const redId = req.params.redId;
-      const dispositivos = await db.all(
+      const userId = (req.user as any)?.userId ?? (req.user as any)?.id;
+      const rows = await db.all(
         `SELECT d.*, 
+                dau.alias as _alias_usuario,
                 e.id as equipo_id, e.ine as equipo_ine, e.serie as equipo_serie,
                 gc.nombre as equipo_tipo,
                 COALESCE(u.nombre, u.ubicacion) as equipo_ubicacion,
                 TRIM(COALESCE(r.grado, '') || ' ' || COALESCE(r.nombre, '') || ' ' || COALESCE(r.apellido, '')) as equipo_responsable,
                 est.nombre as equipo_estado, est.color_hex as equipo_color
          FROM dispositivos_red d
+         LEFT JOIN dispositivo_alias_usuario dau ON dau.dispositivo_id = d.id AND dau.user_id = ?
          LEFT JOIN interfaces_red ir ON d.interfaz_id = ir.id
          LEFT JOIN equipos e ON ir.equipo_id = e.id AND e.is_deleted = 0
          LEFT JOIN grupos_comodidad gc ON e.categoria_id = gc.id
@@ -53,8 +56,9 @@ router.get(
          LEFT JOIN estados est ON e.estado_id = est.id
          WHERE d.red_id = ?
          ORDER BY d.ip ASC`,
-        [redId]
+        [userId, redId]
       );
+      const dispositivos = rows.map((r: any) => ({ ...r, alias: r._alias_usuario || null }));
 
       res.json(dispositivos);
     } catch (error) {
@@ -148,8 +152,10 @@ router.patch(
     try {
       const { id } = req.params;
       const { alias } = req.body;
-      await ReconciliationService.updateAlias(id, alias);
-      const updated = await db.get('SELECT * FROM dispositivos_red WHERE id = ?', [id]);
+      const userId = (req.user as any)?.userId ?? (req.user as any)?.id;
+      await ReconciliationService.updateAliasForUser(id, userId, alias);
+      const row = await db.get('SELECT d.*, dau.alias as _alias_usuario FROM dispositivos_red d LEFT JOIN dispositivo_alias_usuario dau ON dau.dispositivo_id = d.id AND dau.user_id = ? WHERE d.id = ?', [userId, id]);
+      const updated = row ? { ...row, alias: row._alias_usuario || null } : row;
       res.json(updated);
     } catch (error) {
       next(error);

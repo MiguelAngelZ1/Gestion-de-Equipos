@@ -122,14 +122,16 @@ const IPAM = () => {
 
     useEffect(() => { fetchRedes(); }, [fetchRedes]); // eslint-disable-line react-hooks/set-state-in-effect
     const [graphPositions, setGraphPositions] = useState<Record<string, { x: number; y: number }>>({});
+    const getUid = () => { try { const u = JSON.parse(localStorage.getItem("equipos_user_data") || "{}"); return String((u as any).id || (u as any).userId || "anon"); } catch { return "anon"; } };
     useEffect(() => {
         if (selectedRed) {
             fetchNetworkMap(selectedRed.id);
             fetchDispositivos(selectedRed.id);
             try {
-                const g = localStorage.getItem(`graph:${selectedRed.id}`);
-                const l = localStorage.getItem(`graphLinks:${selectedRed.id}`);
-                const p = localStorage.getItem(`graphPos:${selectedRed.id}`);
+                const uid = getUid();
+                const g = localStorage.getItem(`graph:${uid}:${selectedRed.id}`);
+                const l = localStorage.getItem(`graphLinks:${uid}:${selectedRed.id}`);
+                const p = localStorage.getItem(`graphPos:${uid}:${selectedRed.id}`);
                 if (g) setGraphedDevices(JSON.parse(g)); else setGraphedDevices([]);
                 if (l) setGraphLinks(JSON.parse(l)); else setGraphLinks([]);
                 if (p) setGraphPositions(JSON.parse(p)); else setGraphPositions({});
@@ -140,22 +142,22 @@ const IPAM = () => {
 
     useEffect(() => {
         if (!selectedRed) return;
-        try { localStorage.setItem(`graph:${selectedRed.id}`, JSON.stringify(graphedDevices)); } catch {}
+        try { localStorage.setItem(`graph:${getUid()}:${selectedRed.id}`, JSON.stringify(graphedDevices)); } catch {}
     }, [graphedDevices, selectedRed]);
     useEffect(() => {
         if (!selectedRed) return;
-        try { localStorage.setItem(`graphLinks:${selectedRed.id}`, JSON.stringify(graphLinks)); } catch {}
+        try { localStorage.setItem(`graphLinks:${getUid()}:${selectedRed.id}`, JSON.stringify(graphLinks)); } catch {}
     }, [graphLinks, selectedRed]);
     useEffect(() => {
         if (!selectedRed) return;
-        try { localStorage.setItem(`graphPos:${selectedRed.id}`, JSON.stringify(graphPositions)); } catch {}
+        try { localStorage.setItem(`graphPos:${getUid()}:${selectedRed.id}`, JSON.stringify(graphPositions)); } catch {}
     }, [graphPositions, selectedRed]);
 
     useEffect(() => {
         if (!graphedDevices.length || !dispositivos.length) return;
         setGraphedDevices(prev => prev.map(g => {
-            const d = dispositivos.find(x => x.ip === g.ip || x.id === g.id);
-            return d ? { ...g, estado_monitoreo: d.estado_monitoreo, latencia_actual_ms: d.latencia_actual_ms, fallos_consecutivos: d.fallos_consecutivos } : g;
+            const d = dispositivos.find(x => x.ip === g.ip || x.id === g.id) as any;
+            return d ? { ...g, alias: d.alias ?? g.alias, hostname_actual: d.hostname_actual ?? g.hostname_actual, fabricante_actual: d.fabricante_actual ?? g.fabricante_actual, estado_monitoreo: d.estado_monitoreo, latencia_actual_ms: d.latencia_actual_ms, fallos_consecutivos: d.fallos_consecutivos } : g;
         }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [dispositivos]);

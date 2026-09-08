@@ -125,18 +125,12 @@ export class ReconciliationService {
       }
     }
 
-    // 5. Inserción de nuevo nodo en dispositivos_red (preservar alias por MAC si existe)
-    let aliasToCarry: string | null = null;
-    if (normalizedMac) {
-      const prevAlias = await db.get('SELECT alias FROM dispositivos_red WHERE mac_actual = ? AND alias IS NOT NULL AND alias != "" LIMIT 1', [normalizedMac]);
-      if (prevAlias?.alias) aliasToCarry = prevAlias.alias;
-    }
     const newId = `dev_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
     await db.run(
       `INSERT INTO dispositivos_red (
          id, red_id, ip, mac_actual, hostname_actual, fabricante_actual, tipo_mac,
-         interfaz_id, rol, estado_monitoreo, latencia_actual_ms, ultimo_visto_online, alias
-       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'ONLINE', ?, CURRENT_TIMESTAMP, ?)`,
+         interfaz_id, rol, estado_monitoreo, latencia_actual_ms, ultimo_visto_online
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'ONLINE', ?, CURRENT_TIMESTAMP)`,
       [
         newId,
         redId,
@@ -147,8 +141,7 @@ export class ReconciliationService {
         ouiInfo?.tipoMac || 'UNIVERSAL',
         matchedInterfaceId,
         ouiInfo?.rolSugerido || 'ENDPOINT',
-        rttMs || null,
-        aliasToCarry
+        rttMs || null
       ]
     );
 
@@ -176,11 +169,20 @@ export class ReconciliationService {
     const trimmed = alias ? String(alias).trim().slice(0, 80) : null;
     if (trimmed && trimmed.length < 1) throw new Error('Alias inválido.');
     await db.run('UPDATE dispositivos_red SET alias = ? WHERE id = ?', [trimmed || null, dispositivoId]);
-    if (trimmed) {
-      const node = await db.get('SELECT mac_actual FROM dispositivos_red WHERE id = ?', [dispositivoId]);
-      if (node?.mac_actual) {
-        await db.run('UPDATE dispositivos_red SET alias = ? WHERE mac_actual = ? AND (alias IS NULL OR alias = "")', [trimmed, node.mac_actual]);
-      }
+  }
+  static async updateAliasForUser(dispositivoId: string, userId: string, alias: string | null): Promise<void> {
+    if (!userId) throw new Error('Usuario requerido.');
+    const trimmed = alias ? String(alias).trim().slice(0, 80) : null;
+    if (trimmed && trimmed.length < 1) throw new Error('Alias inválido.');
+    if (!trimmed) {
+      await db.run('DELETE FROM dispositivo_alias_usuario WHERE user_id = ? AND dispositivo_id = ?', [userId, dispositivoId]);
+      return;
+    }
+    const isPG = !!(db as any).client?.pool;
+    if (isPG) {
+      await db.run(`INSERT INTO dispositivo_alias_usuario (user_id, dispositivo_id, alias) VALUES (?, ?, ?) ON CONFLICT (user_id, dispositivo_id) DO UPDATE SET alias = EXCLUDED.alias, actualizado_en = CURRENT_TIMESTAMP`, [userId, dispositivoId, trimmed]);
+    } else {
+      await db.run('INSERT OR REPLACE INTO dispositivo_alias_usuario (user_id, dispositivo_id, alias) VALUES (?, ?, ?)', [userId, dispositivoId, trimmed]);
     }
   }
 
