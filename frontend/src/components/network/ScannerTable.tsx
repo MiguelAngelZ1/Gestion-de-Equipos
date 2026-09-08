@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Play, RotateCw, AlertCircle, Cpu, Laptop, Smartphone, Printer, Server, Edit2, Activity, Network, MapPinned, Copy, ChevronRight } from 'lucide-react';
+import { Play, RotateCw, AlertCircle, Cpu, Laptop, Smartphone, Printer, Server, Edit2, Activity, Network, MapPinned, Copy, ChevronRight, Bookmark } from 'lucide-react';
+import ConfirmModal from '../common/ConfirmModal';
 import SearchInput from '../common/SearchInput';
 import Select from '../common/Select';
 import { createPortal } from 'react-dom';
@@ -13,6 +14,7 @@ interface ScannerTableProps {
   onPing: (ip: string) => void;
   onTracert: (ip: string) => void;
   onGraph: (node: any) => void;
+  onReserve?: (node: any, notas: string) => void;
 }
 
 const ScannerTable: React.FC<ScannerTableProps> = ({
@@ -23,7 +25,8 @@ const ScannerTable: React.FC<ScannerTableProps> = ({
   onRename,
   onPing,
   onTracert,
-  onGraph
+  onGraph,
+  onReserve
 }) => {
   const [search, setSearch] = useState('');
   const [filterState, setFilterState] = useState('');
@@ -31,6 +34,8 @@ const ScannerTable: React.FC<ScannerTableProps> = ({
   const [showCopy, setShowCopy] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingValue, setEditingValue] = useState('');
+  const [reserveNode, setReserveNode] = useState<any | null>(null);
+  const [reserveText, setReserveText] = useState('');
 
   useEffect(() => {
     const close = () => { setMenu(null); setShowCopy(false); };
@@ -155,9 +160,34 @@ const ScannerTable: React.FC<ScannerTableProps> = ({
           </tbody>
         </table>
       </div>
+      <ConfirmModal
+        isOpen={!!reserveNode}
+        title="Marcar como reservada"
+        confirmText="Reservar"
+        cancelText="Cancelar"
+        type="info"
+        onClose={() => setReserveNode(null)}
+        onConfirm={() => {
+          if (!reserveText.trim()) return;
+          onReserve?.(reserveNode, reserveText.trim());
+          setReserveNode(null);
+        }}
+      >
+        <div className="space-y-3 text-left">
+          <p className="text-sm text-zinc-400">IP <span className="font-mono text-white">{reserveNode?.ip}</span> — escribe el nombre libre</p>
+          <input
+            autoFocus
+            value={reserveText}
+            onChange={e => setReserveText(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter' && reserveText.trim()) { onReserve?.(reserveNode, reserveText.trim()); setReserveNode(null); } if (e.key === 'Escape') setReserveNode(null); }}
+            placeholder="Ej: Puerta de Enlace"
+            className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-zinc-700"
+          />
+        </div>
+      </ConfirmModal>
       {menu && createPortal(
         (() => {
-          const W = 192, H = 210;
+          const W = 192, H = 230;
           const vw = window.innerWidth, vh = window.innerHeight;
           const left = Math.min(menu.x, vw - W - 8);
           const top = menu.y + H > vh - 12 ? Math.max(8, menu.y - H) : menu.y;
@@ -178,6 +208,7 @@ const ScannerTable: React.FC<ScannerTableProps> = ({
           <button onClick={() => { onPing(menu.node.ip); setMenu(null); }} className="w-full text-left px-3 py-2 rounded-lg hover:bg-white/5 text-zinc-300 hover:text-white text-xs font-medium flex items-center gap-2"><Activity className="w-3.5 h-3.5" /> Ping</button>
           <button onClick={() => { onTracert(menu.node.ip); setMenu(null); }} className="w-full text-left px-3 py-2 rounded-lg hover:bg-white/5 text-zinc-300 hover:text-white text-xs font-medium flex items-center gap-2"><Network className="w-3.5 h-3.5" /> Tracert</button>
           <button onClick={() => { onGraph(menu.node); setMenu(null); }} className="w-full text-left px-3 py-2 rounded-lg hover:bg-white/5 text-zinc-300 hover:text-white text-xs font-medium flex items-center gap-2"><MapPinned className="w-3.5 h-3.5" /> Graficar en mapa</button>
+          {onReserve && <button onClick={() => { const n = menu.node; setMenu(null); setReserveNode(n); setReserveText(''); }} className="w-full text-left px-3 py-2 rounded-lg hover:bg-white/5 text-amber-300 hover:text-amber-200 text-xs font-medium flex items-center gap-2"><Bookmark className="w-3.5 h-3.5" /> Marcar como reservada</button>}
         </div>
           );
         })(),

@@ -71,7 +71,6 @@ router.post(
   '/redes/:redId/scan',
   ipamLimiter,
   verificarAutenticacion,
-  requirePermission(PERMISOS.IPAM.SCAN),
   validarRedId,
   async (req: any, res: any, next: any) => {
     try {
@@ -102,7 +101,6 @@ router.post(
 router.get(
   '/redes/:redId/eventos',
   verificarAutenticacion,
-  requirePermission(PERMISOS.IPAM.VER),
   validarRedId,
   async (req: any, res: any, next: any) => {
     try {
@@ -127,7 +125,6 @@ router.post(
   '/vincular',
   ipamLimiter,
   verificarAutenticacion,
-  requirePermission(PERMISOS.IPAM.ASIGNAR),
   async (req: any, res: any, next: any) => {
     try {
       const { dispositivoId, equipoId } = req.body;
@@ -147,7 +144,6 @@ router.patch(
   '/dispositivos/:id/alias',
   ipamLimiter,
   verificarAutenticacion,
-  requirePermission(PERMISOS.IPAM.ASIGNAR),
   async (req: any, res: any, next: any) => {
     try {
       const { id } = req.params;
@@ -164,7 +160,6 @@ router.patch(
 router.get(
   '/tracert/:ip',
   verificarAutenticacion,
-  requirePermission(PERMISOS.IPAM.VER),
   async (req: any, res: any, next: any) => {
     try {
       const ip = String(req.params.ip || '').trim();
@@ -186,7 +181,6 @@ router.get(
 router.get(
   '/ping/:ip',
   verificarAutenticacion,
-  requirePermission(PERMISOS.IPAM.VER),
   async (req: any, res: any, next: any) => {
     try {
       const ip = String(req.params.ip || '').trim();
@@ -209,7 +203,6 @@ router.get(
 router.get(
   '/ping-stream/:ip',
   verificarAutenticacion,
-  requirePermission(PERMISOS.IPAM.VER),
   async (req: any, res: any, next: any) => {
     try {
       const ip = String(req.params.ip || '').trim();
@@ -277,7 +270,6 @@ router.get(
 router.get(
   '/canary',
   verificarAutenticacion,
-  requirePermission(PERMISOS.IPAM.VER),
   async (req: any, res: any, next: any) => {
     try {
       const gateway = req.query.gateway as string | undefined;
@@ -297,7 +289,6 @@ router.post(
   '/benchmark',
   ipamLimiter,
   verificarAutenticacion,
-  requirePermission(PERMISOS.IPAM.SCAN),
   async (req: any, res: any, next: any) => {
     try {
       const { ips, concurrencyLimit, timeoutMs } = req.body;
@@ -320,7 +311,6 @@ router.post(
 router.get(
   '/telemetria',
   verificarAutenticacion,
-  requirePermission(PERMISOS.IPAM.VER),
   async (req: any, res: any, next: any) => {
     try {
       res.json(NetworkMonitorEngine.getTelemetry());

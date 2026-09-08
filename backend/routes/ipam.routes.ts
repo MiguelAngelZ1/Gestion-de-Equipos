@@ -19,7 +19,7 @@ router.get('/redes', verificarAutenticacion, async (req, res, next) => {
     }
 });
 
-router.post('/redes', ipamLimiter, verificarAutenticacion, requirePermission(PERMISOS.IPAM.CREAR), validateBody(createNetworkSchema), async (req, res, next) => {
+router.post('/redes', ipamLimiter, verificarAutenticacion, validateBody(createNetworkSchema), async (req, res, next) => {
     try {
         const nuevaRed = await ipamService.createNetwork(req.body);
         res.status(201).json(nuevaRed);
@@ -28,7 +28,7 @@ router.post('/redes', ipamLimiter, verificarAutenticacion, requirePermission(PER
     }
 });
 
-router.put('/redes/:id', ipamLimiter, verificarAutenticacion, requirePermission(PERMISOS.IPAM.EDITAR), validateBody(updateNetworkSchema), async (req, res, next) => {
+router.put('/redes/:id', ipamLimiter, verificarAutenticacion, validateBody(updateNetworkSchema), async (req, res, next) => {
     try {
         const updated = await ipamService.updateNetwork(req.params.id, req.body);
         res.json(updated);
@@ -55,7 +55,7 @@ router.get('/redes/:id/mapa', verificarAutenticacion, async (req, res, next) => 
     }
 });
 
-router.post('/redes/:id/reservar', ipamLimiter, verificarAutenticacion, requirePermission(PERMISOS.IPAM.ASIGNAR), validateBody(reserveIPSchema), async (req, res, next) => {
+router.post('/redes/:id/reservar', ipamLimiter, verificarAutenticacion, validateBody(reserveIPSchema), async (req, res, next) => {
     try {
         const { ip, notas } = req.body;
         await ipamService.reserveIP(req.params.id, ip, notas);
