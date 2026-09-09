@@ -30,9 +30,9 @@ const sendRecoveryCode = async (to, code) => {
                     .content { padding: 32px 28px; text-align: center; }
                     h1 { font-size: 18px; font-weight: 800; color: #fafafa; margin: 0 0 8px 0; letter-spacing: -0.02em; }
                     .subtitle { font-size: 13px; line-height: 1.5; color: #a1a1aa; margin: 0 0 24px 0; }
-                    .code-box { background: #27272a; border: 1px solid #3f3f46; border-radius: 12px; padding: 14px 16px; margin: 0; }
+                    .code-box { background: #27272a; border: 1px solid #3f3f46; border-radius: 12px; padding: 18px; margin: 0; text-align: center; }
                     .code { font-size: 28px; font-weight: 800; letter-spacing: 10px; color: #fafafa; font-family: 'Courier New', monospace; user-select: all; }
-                    .icon-btn { width: 36px; height: 36px; border-radius: 8px; background: transparent; display: inline-grid; place-items: center; text-decoration: none; }
+                    .copy-hint { font-size: 12px; color: #a1a1aa; margin-top: 12px; }
                     .warning { font-size: 11px; color: #71717a; margin-top: 16px; line-height: 1.5; }
                 </style>
             </head>
@@ -45,16 +45,9 @@ const sendRecoveryCode = async (to, code) => {
                         <h1>Recuperación de Acceso</h1>
                         <p class="subtitle">Has solicitado restablecer tu contraseña. Usa el código para continuar:</p>
                         <div class="code-box">
-                            <table width="100%" cellpadding="0" cellspacing="0" style="width:100%">
-                                <tr>
-                                    <td style="width:36px"></td>
-                                    <td align="center"><span class="code">${code}</span></td>
-                                    <td align="right" style="width:36px">
-                                        <a class="icon-btn" href="#" style="color:#ffffff; font-size:18px; text-decoration:none; line-height:1">⧉</a>
-                                    </td>
-                                </tr>
-                            </table>
+                            <span class="code">${code}</span>
                         </div>
+                        <p class="copy-hint">Selecciona el código, cópialo con <b>Ctrl+C</b> y pégalo en la página de recuperación.</p>
                         <p class="warning">Expira en 15 minutos. Si no solicitaste este cambio, ignora este mensaje.</p>
                     </div>
                 </div>
