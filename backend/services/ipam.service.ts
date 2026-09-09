@@ -10,6 +10,7 @@ const MASK_KEYS = ['mascara', 'mask', 'subred', 'netmask'];
 const GATEWAY_KEYS = ['gateway', 'puerta de enlace', 'p. enlace', 'gw'];
 const DNS1_KEYS = ['dns primario', 'dns1', 'dns principal'];
 const DNS2_KEYS = ['dns secundario', 'dns2', 'dns alternativo'];
+const MAC_KEYS = ['mac', 'mac address', 'direccion mac'];
 
 class IPAMService {
     ipToInt(ip) {
@@ -267,6 +268,8 @@ class IPAMService {
 
         const allSpecs = await this.getEquipoNetworkRows();
         const equipoNetworkMap: any = this.buildEquipoNetworkMap(allSpecs);
+        const macByEquipo: any = {};
+        allSpecs.forEach((r: any) => { if (this.isKeyIn(r.clave, MAC_KEYS) && r.valor) macByEquipo[r.equipo_id] = String(r.valor).trim(); });
         const detectedGateways = Array.from(new Set(
             (Object.values(equipoNetworkMap) as any[])
                 .map((e: any) => e.gateway)
@@ -280,9 +283,13 @@ class IPAMService {
         const reserved: any[] = (await db.all('SELECT * FROM ips_reservadas WHERE red_id = ?', [redId]))
             .filter((row: any) => this.isValidIp(row.ip) && this.isIpInNetwork(row.ip, meta));
 
-        const scannedRows: any[] = await db.all('SELECT ip FROM dispositivos_red WHERE red_id = ?', [redId])
-            .then((rows: any[]) => rows.filter((r: any) => this.isValidIp(r.ip) && this.isIpInNetwork(r.ip, meta)))
-            .catch(() => []);
+        let scannedRows: any[] = [];
+        try {
+            const rawScanned: any[] = userId != null
+                ? await db.all(`SELECT d.ip, d.mac_actual, d.hostname_actual, d.fabricante_actual, d.interfaz_id, dau.alias as alias_scanner FROM dispositivos_red d LEFT JOIN dispositivo_alias_usuario dau ON dau.dispositivo_id = d.id AND dau.user_id = ? WHERE d.red_id = ?`, [userId, redId])
+                : await db.all(`SELECT d.ip, d.mac_actual, d.hostname_actual, d.fabricante_actual, d.interfaz_id, NULL as alias_scanner FROM dispositivos_red d WHERE d.red_id = ?`, [redId]);
+            scannedRows = rawScanned.filter((r: any) => this.isValidIp(r.ip) && this.isIpInNetwork(r.ip, meta));
+        } catch (_) { scannedRows = []; }
 
         const occupiedByIp = new Map(occupied.map((row: any) => [row.ip, row]));
         const reservedByIp = new Map(reserved.map((row: any) => [row.ip, row]));
@@ -314,10 +321,22 @@ class IPAMService {
                         ubicacion: occ.ubicacion,
                         responsable: occ.responsable,
                         estado: occ.estado,
-                        color: occ.color_hex
+                        color: occ.color_hex,
+                        mac: macByEquipo[occ.equipo_id] || ''
                     };
                 } else if (scanned) {
-                    notas = res.notas ? res.notas : 'Reservada manualmente';
+                    const s: any = scannedByIp.get(currentIp);
+                    const displayName = (s?.alias_scanner || s?.hostname_actual || 'Desconocido').toString().trim() || 'Desconocido';
+                    equipo = {
+                        id: null,
+                        ine: displayName,
+                        tipo: s?.fabricante_actual || '',
+                        ubicacion: '',
+                        responsable: '',
+                        estado: 'Detectado',
+                        color: null,
+                        mac: (s?.mac_actual || '').toString().trim()
+                    };
                 }
             } else if (occ) {
                 estado = 'OCUPADA';
@@ -328,10 +347,24 @@ class IPAMService {
                     ubicacion: occ.ubicacion,
                     responsable: occ.responsable,
                     estado: occ.estado,
-                    color: occ.color_hex
+                    color: occ.color_hex,
+                    mac: macByEquipo[occ.equipo_id] || ''
                 };
             } else if (scanned) {
+                const s: any = scannedByIp.get(currentIp);
+                const displayName = (s?.alias_scanner || s?.hostname_actual || 'Desconocido').toString().trim() || 'Desconocido';
+                const fabricante = s?.fabricante_actual ? String(s.fabricante_actual).trim() : '';
                 estado = 'OCUPADA';
+                equipo = {
+                    id: null,
+                    ine: displayName,
+                    tipo: fabricante,
+                    ubicacion: '',
+                    responsable: '',
+                    estado: 'Detectado',
+                    color: null,
+                    mac: (s?.mac_actual || '').toString().trim()
+                };
                 notas = 'Detectado por escaneo';
             }
 
@@ -350,7 +383,10 @@ class IPAMService {
                 }
             }
 
-            ipMap.push({ ip: currentIp, estado, equipo, notas });
+            const sc: any = scanned ? scannedByIp.get(currentIp) as any : null;
+            const mac = equipo?.mac || sc?.mac_actual || '';
+            const fabricante = sc?.fabricante_actual || '';
+            ipMap.push({ ip: currentIp, estado, equipo, mac, fabricante, notas });
         }
 
         const occupiedIps = new Set([...occupiedByIp.keys(), ...scannedByIp.keys()]);
@@ -504,7 +540,7 @@ class IPAMService {
         const usedSheetNames = new Set();
 
         for (const red of redes) {
-            const data = await this.getNetworkDetails(red.id);
+            const data = await this.getNetworkDetails(red.id, userId);
             let baseSheetName = String(red.nombre || red.segmento || 'Red')
                 .replace(/[*?:\\/[\]]/g, '-')
                 .trim()
@@ -522,31 +558,63 @@ class IPAMService {
             sheet.columns = [
                 { header: 'IP', key: 'ip', width: 20 },
                 { header: 'ESTADO', key: 'estado', width: 15 },
-                { header: 'INE EQUIPO', key: 'ine', width: 20 },
-                { header: 'TIPO', key: 'tipo', width: 22 },
+                { header: 'INE EQUIPO', key: 'ine', width: 22 },
                 { header: 'UBICACION', key: 'ubicacion', width: 25 },
                 { header: 'RESPONSABLE', key: 'responsable', width: 35 },
-                { header: 'ESTADO EQUIPO', key: 'estado_equipo', width: 20 },
+                { header: 'MAC', key: 'mac', width: 20 },
+                { header: 'FABRICANTE', key: 'fabricante', width: 34 },
                 { header: 'NOTAS / RESERVA', key: 'notas', width: 40 }
             ];
 
-            sheet.getRow(1).eachCell((cell) => {
-                cell.font = { bold: true, color: { argb: 'FFFFFF' } };
-                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: '1e1b4b' } };
-                cell.alignment = { horizontal: 'center' };
+            const headerRow = sheet.getRow(1);
+            headerRow.height = 28;
+            headerRow.eachCell((cell) => {
+                cell.font = { name: 'Calibri', bold: true, color: { argb: 'FFFFFFFF' }, size: 10 };
+                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1e1b4b' } };
+                cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+                cell.border = { bottom: { style: 'medium', color: { argb: 'FF4f46e5' } } };
             });
 
             data.ips.forEach(ip => {
-                sheet.addRow({
+                const row = sheet.addRow({
                     ip: ip.ip,
                     estado: ip.estado,
                     ine: ip.equipo?.ine || '',
-                    tipo: ip.equipo?.tipo || '',
                     ubicacion: ip.equipo?.ubicacion || '',
                     responsable: ip.equipo?.responsable || '',
-                    estado_equipo: ip.equipo?.estado || '',
+                    mac: (ip as any).mac || '',
+                    fabricante: (ip as any).fabricante || ip.equipo?.tipo || '',
                     notas: ip.notas || ''
                 });
+                const palette: any = {
+                    OCUPADA: { fill: 'FFFEE2E2', color: 'FF991B1B' },
+                    RESERVADA: { fill: 'FFFEF3C7', color: 'FF92400E' },
+                    LIBRE: { fill: 'FFDCFCE7', color: 'FF166534' }
+                }[ip.estado];
+                if (palette) {
+                    row.eachCell((cell) => {
+                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: palette.fill } };
+                        cell.font = { name: 'Calibri', size: 10, color: { argb: palette.color } };
+                        cell.alignment = { vertical: 'middle', wrapText: true };
+                        cell.border = { bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } } };
+                    });
+                }
+            });
+
+            sheet.columns.forEach((col: any) => {
+                if (col.key === 'ip') { col.width = 16; return; }
+                if (col.key === 'estado') { col.width = 13; return; }
+                if (col.key === 'mac') { col.width = 20; return; }
+                if (col.key === 'fabricante') { /* autofit below */ }
+                let maxLen = String(col.header || '').length;
+                col.eachCell((cell: any, rowNumber: number) => {
+                    if (rowNumber === 1) return;
+                    const v = cell.value ? String(cell.value) : '';
+                    const longest = Math.max(...v.split('\n').map((s: string) => s.length), 0);
+                    if (longest > maxLen) maxLen = longest;
+                });
+                const maxCap = col.key === 'ine' ? 48 : col.key === 'fabricante' ? 38 : col.key === 'notas' ? 42 : 34;
+                col.width = Math.min(maxCap, Math.max(16, Math.ceil(maxLen * 1.12) + 2));
             });
 
             sheet.autoFilter = { from: 'A1', to: 'H1' };

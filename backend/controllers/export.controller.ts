@@ -36,13 +36,17 @@ const formatDate = (value) => {
     if (!value) return '';
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return '';
-    return date.toISOString().split('T')[0];
+    const d = String(date.getDate()).padStart(2, '0');
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const y = date.getFullYear();
+    return `${d}/${m}/${y}`;
 };
 
 const applySheetDefaults = (sheet, freezeRows = 1) => {
     sheet.views = [{ state: 'frozen', ySplit: freezeRows }];
     sheet.properties.defaultRowHeight = 20;
     sheet.eachRow((row, rowNumber) => {
+        if (rowNumber === 1) return;
         row.eachCell((cell) => {
             cell.font = { name: 'Calibri', size: 10 };
             cell.alignment = { vertical: 'top', wrapText: true };
@@ -194,23 +198,6 @@ const generarExcelBuffer = async (id) => {
         { header: 'UBICACION', key: 'ubicacion', width: 24 },
         { header: 'CUENTA ADMIN', key: 'cuentaAdmin', width: 20 },
         { header: 'PASS ADMIN', key: 'passAdmin', width: 24 },
-        { header: 'CUENTA ESTANDAR', key: 'cuentaEstandar', width: 20 },
-        { header: 'PASS ESTANDAR', key: 'passEstandar', width: 24 },
-        { header: 'PASS BIOS', key: 'passBios', width: 18 },
-        { header: 'ID RUSTDESK', key: 'idRustdesk', width: 18 },
-        { header: 'PASS RUSTDESK', key: 'passRustdesk', width: 22 },
-        { header: 'IP', key: 'ip', width: 16 },
-        { header: 'MASCARA', key: 'mascara', width: 16 },
-        { header: 'PUERTA DE ENLACE', key: 'gateway', width: 18 },
-        { header: 'DNS 1', key: 'dns1', width: 18 },
-        { header: 'DNS 2', key: 'dns2', width: 18 },
-        { header: 'MAC', key: 'mac', width: 20 },
-        { header: 'PROCESADOR', key: 'procesador', width: 28 },
-        { header: 'RAM', key: 'ram', width: 14 },
-        { header: 'DISCO', key: 'disco', width: 24 },
-        { header: 'SO', key: 'so', width: 24 },
-        { header: 'PUERTO', key: 'puerto', width: 14 },
-        { header: 'ENTRADAS DE VIDEO', key: 'entradasVideo', width: 20 },
         { header: 'CREADO', key: 'createdAt', width: 14 },
         { header: 'ACTUALIZADO', key: 'updatedAt', width: 14 },
         { header: 'TODAS LAS ESPECIFICACIONES', key: 'specsTexto', width: 60 }
@@ -220,13 +207,41 @@ const generarExcelBuffer = async (id) => {
     applySheetDefaults(inventario);
     addTableFilter(inventario);
     inventario.getColumn('passAdmin').font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FF991b1b' } };
-    inventario.getColumn('passRustdesk').font = { name: 'Calibri', size: 10, color: { argb: 'FF075985' } };
     inventario.getColumn('specsTexto').alignment = { vertical: 'top', wrapText: true };
+
+    inventario.columns.forEach((col: any) => {
+        let maxLen = String(col.header || '').length;
+        col.eachCell((cell: any, rowNumber: number) => {
+            if (rowNumber === 1) return;
+            const v = cell.value ? String(cell.value) : '';
+            const longest = Math.max(...v.split('\n').map((s: string) => s.length), 0);
+            if (longest > maxLen) maxLen = longest;
+        });
+        const cap = col.key === 'specsTexto' ? 65 : col.key === 'ine' ? 50 : col.key === 'tipo' || col.key === 'responsable' || col.key === 'ubicacion' ? 36 : 30;
+        const minW = col.key === 'estado' || col.key === 'creadoAt' || col.key === 'actualizadoAt' ? 12 : 14;
+        col.width = Math.min(cap, Math.max(minW, Math.ceil(maxLen * 1.12) + 2));
+        col.alignment = { vertical: 'top', wrapText: true };
+    });
+
+    styleHeader(inventario);
 
     [inventario].forEach((sheet) => {
         sheet.getRow(1).commit();
-        sheet.eachRow((row, rowNumber) => {
-            if (rowNumber > 1) row.height = Math.min(90, Math.max(20, row.height || 20));
+        sheet.eachRow((row: any, rowNumber: number) => {
+            if (rowNumber === 1) return;
+            let maxLines = 1;
+            row.eachCell((cell: any) => {
+                const col = sheet.getColumn(cell.col);
+                const w = (col as any).width || 20;
+                const v = cell.value ? String(cell.value) : '';
+                const parts = v.split('\n');
+                let lines = 0;
+                parts.forEach((p: string) => {
+                    lines += Math.max(1, Math.ceil(p.length / Math.max(10, w * 1.1)));
+                });
+                if (lines > maxLines) maxLines = lines;
+            });
+            row.height = Math.min(90, Math.max(20, maxLines * 15));
         });
     });
 
