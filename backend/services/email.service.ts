@@ -32,7 +32,7 @@ const sendRecoveryCode = async (to, code) => {
                     .subtitle { font-size: 13px; line-height: 1.5; color: #a1a1aa; margin: 0 0 24px 0; }
                     .code-box { background: #27272a; border: 1px solid #3f3f46; border-radius: 12px; padding: 14px 16px; margin: 0; }
                     .code { font-size: 28px; font-weight: 800; letter-spacing: 10px; color: #fafafa; font-family: 'Courier New', monospace; user-select: all; }
-                    .icon-btn { width: 36px; height: 36px; border-radius: 8px; background: #ffffff; display: inline-grid; place-items: center; text-decoration: none; }
+                    .icon-btn { width: 36px; height: 36px; border-radius: 8px; background: transparent; display: inline-grid; place-items: center; text-decoration: none; }
                     .warning { font-size: 11px; color: #71717a; margin-top: 16px; line-height: 1.5; }
                 </style>
             </head>
@@ -51,7 +51,7 @@ const sendRecoveryCode = async (to, code) => {
                                     <td align="center"><span class="code">${code}</span></td>
                                     <td align="right" style="width:36px">
                                         <a class="icon-btn" href="#">
-                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#18181b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v3"></path></svg>
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v3"></path></svg>
                                         </a>
                                     </td>
                                 </tr>
