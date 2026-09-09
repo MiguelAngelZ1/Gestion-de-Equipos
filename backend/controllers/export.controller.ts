@@ -3,10 +3,10 @@ const exceljs = require('exceljs');
 const { google } = require('googleapis');
 const { Readable } = require('stream');
 
-const HEADER_FILL = '1e1b4b';
-const HEADER_ACCENT = '4f46e5';
-const ALT_ROW_FILL = 'f8fafc';
-const BORDER_COLOR = 'e2e8f0';
+const HEADER_FILL = 'FF1e1b4b';
+const HEADER_ACCENT = 'FF4f46e5';
+const ALT_ROW_FILL = 'FFf8fafc';
+const BORDER_COLOR = 'FFe2e8f0';
 
 const { normalizeText } = require('../utils/helpers');
 
@@ -63,7 +63,7 @@ const styleHeader = (sheet) => {
     const headerRow = sheet.getRow(1);
     headerRow.height = 28;
     headerRow.eachCell((cell) => {
-        cell.font = { name: 'Calibri', bold: true, color: { argb: 'FFFFFF' }, size: 10 };
+        cell.font = { name: 'Calibri', bold: true, color: { argb: 'FFFFFFFF' }, size: 10 };
         cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: HEADER_FILL } };
         cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
         cell.border = { bottom: { style: 'medium', color: { argb: HEADER_ACCENT } } };
@@ -219,8 +219,8 @@ const generarExcelBuffer = async (id) => {
     rows.forEach(row => inventario.addRow(row));
     applySheetDefaults(inventario);
     addTableFilter(inventario);
-    inventario.getColumn('passAdmin').font = { name: 'Calibri', size: 10, bold: true, color: { argb: '991b1b' } };
-    inventario.getColumn('passRustdesk').font = { name: 'Calibri', size: 10, color: { argb: '075985' } };
+    inventario.getColumn('passAdmin').font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FF991b1b' } };
+    inventario.getColumn('passRustdesk').font = { name: 'Calibri', size: 10, color: { argb: 'FF075985' } };
     inventario.getColumn('specsTexto').alignment = { vertical: 'top', wrapText: true };
 
     [inventario].forEach((sheet) => {
