@@ -33,8 +33,8 @@ const sendRecoveryCode = async (to, code) => {
                 <style>
                     body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7fa; margin: 0; padding: 0; }
                     .container { max-width: 500px; margin: 40px auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
-                    .header { background: #0f172a; padding: 30px; text-align: center; }
-                    .logo { height: 60px; margin-bottom: 10px; }
+                    .header { background: #09090b; padding: 28px; text-align: center; }
+                    .logo { width: 72px; height: 72px; border-radius: 50%; background: #ffffff; padding: 6px; object-fit: contain; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
                     .content { padding: 40px; text-align: center; color: #334155; }
                     h1 { font-size: 22px; margin-bottom: 10px; color: #1e293b; font-weight: 700; }
                     p { font-size: 15px; line-height: 1.6; color: #64748b; margin-bottom: 30px; }
