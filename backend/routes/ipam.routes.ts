@@ -12,7 +12,8 @@ const { createNetworkSchema, updateNetworkSchema, reserveIPSchema, assignIPSchem
 
 router.get('/redes', verificarAutenticacion, async (req, res, next) => {
     try {
-        const redes = await ipamService.getNetworks();
+        const userId = (req as any).user?.userId ?? (req as any).user?.id;
+        const redes = await ipamService.getNetworks(userId);
         res.json(redes);
     } catch (error) {
         next(error);
@@ -21,7 +22,8 @@ router.get('/redes', verificarAutenticacion, async (req, res, next) => {
 
 router.post('/redes', ipamLimiter, verificarAutenticacion, validateBody(createNetworkSchema), async (req, res, next) => {
     try {
-        const nuevaRed = await ipamService.createNetwork(req.body);
+        const userId = (req as any).user?.userId ?? (req as any).user?.id;
+        const nuevaRed = await ipamService.createNetwork(req.body, userId);
         res.status(201).json(nuevaRed);
     } catch (error) {
         next(error);
@@ -30,7 +32,8 @@ router.post('/redes', ipamLimiter, verificarAutenticacion, validateBody(createNe
 
 router.put('/redes/:id', ipamLimiter, verificarAutenticacion, validateBody(updateNetworkSchema), async (req, res, next) => {
     try {
-        const updated = await ipamService.updateNetwork(req.params.id, req.body);
+        const userId = (req as any).user?.userId ?? (req as any).user?.id;
+        const updated = await ipamService.updateNetwork(req.params.id, req.body, userId);
         res.json(updated);
     } catch (error) {
         next(error);
@@ -39,7 +42,8 @@ router.put('/redes/:id', ipamLimiter, verificarAutenticacion, validateBody(updat
 
 router.delete('/redes/:id', ipamLimiter, verificarAutenticacion, async (req, res, next) => {
     try {
-        await ipamService.deleteNetwork(req.params.id);
+        const userId = (req as any).user?.userId ?? (req as any).user?.id;
+        await ipamService.deleteNetwork(req.params.id, userId);
         res.json({ success: true });
     } catch (error) {
         next(error);
@@ -48,7 +52,8 @@ router.delete('/redes/:id', ipamLimiter, verificarAutenticacion, async (req, res
 
 router.get('/redes/:id/mapa', verificarAutenticacion, async (req, res, next) => {
     try {
-        const mapa = await ipamService.getNetworkDetails(req.params.id);
+        const userId = (req as any).user?.userId ?? (req as any).user?.id;
+        const mapa = await ipamService.getNetworkDetails(req.params.id, userId);
         res.json(mapa);
     } catch (error) {
         next(error);
@@ -57,8 +62,9 @@ router.get('/redes/:id/mapa', verificarAutenticacion, async (req, res, next) => 
 
 router.post('/redes/:id/reservar', ipamLimiter, verificarAutenticacion, validateBody(reserveIPSchema), async (req, res, next) => {
     try {
+        const userId = (req as any).user?.userId ?? (req as any).user?.id;
         const { ip, notas } = req.body;
-        await ipamService.reserveIP(req.params.id, ip, notas);
+        await ipamService.reserveIP(req.params.id, ip, notas, userId);
         res.json({ success: true });
     } catch (error) {
         next(error);
@@ -76,8 +82,9 @@ router.delete('/liberar/:ip', ipamLimiter, verificarAutenticacion, requirePermis
 
 router.post('/asignar', ipamLimiter, verificarAutenticacion, requirePermission(PERMISOS.IPAM.ASIGNAR), validateBody(assignIPSchema), async (req, res, next) => {
     try {
+        const userId = (req as any).user?.userId ?? (req as any).user?.id;
         const { redId, ip, equipoId, dns1, dns2 } = req.body;
-        const result = await ipamService.assignIPToEquipo(redId, ip, equipoId, dns1, dns2);
+        const result = await ipamService.assignIPToEquipo(redId, ip, equipoId, dns1, dns2, userId);
         res.json(result);
     } catch (error) {
         next(error);
@@ -105,7 +112,8 @@ router.get('/ping/:ip', verificarAutenticacion, async (req, res, next) => {
 
 router.get('/exportar-excel', verificarAutenticacion, async (req, res, next) => {
     try {
-        const buffer = await ipamService.generateExcelBuffer();
+        const userId = (req as any).user?.userId ?? (req as any).user?.id;
+        const buffer = await ipamService.generateExcelBuffer(userId);
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         res.setHeader('Content-Disposition', `attachment; filename=Reporte_IPAM_${new Date().toISOString().split('T')[0]}.xlsx`);
         res.send(buffer);
@@ -116,7 +124,8 @@ router.get('/exportar-excel', verificarAutenticacion, async (req, res, next) => 
 
 router.post('/exportar-drive', ipamLimiter, verificarAutenticacion, async (req, res, next) => {
     try {
-        const resultado = await ipamService.exportToDrive();
+        const userId = (req as any).user?.userId ?? (req as any).user?.id;
+        const resultado = await ipamService.exportToDrive(userId);
         res.json(resultado);
     } catch (error) {
         next(error);

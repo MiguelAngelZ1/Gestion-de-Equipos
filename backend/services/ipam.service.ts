@@ -10,8 +10,6 @@ const MASK_KEYS = ['mascara', 'mask', 'subred', 'netmask'];
 const GATEWAY_KEYS = ['gateway', 'puerta de enlace', 'p. enlace', 'gw'];
 const DNS1_KEYS = ['dns primario', 'dns1', 'dns principal'];
 const DNS2_KEYS = ['dns secundario', 'dns2', 'dns alternativo'];
-const DEFAULT_AUTO_MASK = '255.255.255.0';
-const MIN_AUTO_CIDR = 24;
 
 class IPAMService {
     ipToInt(ip) {
@@ -94,16 +92,6 @@ class IPAMService {
         };
     }
 
-    normalizeAutoMask(mask) {
-        try {
-            const normalized = this.normalizeMask(mask || DEFAULT_AUTO_MASK);
-            const cidr = this.maskToCidr(normalized);
-            return cidr < MIN_AUTO_CIDR ? DEFAULT_AUTO_MASK : normalized;
-        } catch (_) {
-            return DEFAULT_AUTO_MASK;
-        }
-    }
-
     isIpInNetwork(ip, meta) {
         if (!this.isValidIp(ip)) return false;
         const ipInt = this.ipToInt(ip);
@@ -135,58 +123,21 @@ class IPAMService {
         return equipos;
     }
 
-    async getNetworks() {
-        const manualRedes: any[] = await db.all('SELECT * FROM redes ORDER BY nombre ASC');
-        const specs = await this.getEquipoNetworkRows();
-        const equipoMap: any = this.buildEquipoNetworkMap(specs);
-        const detectedSegments = new Map();
-
-        (Object.values(equipoMap) as any[]).forEach((equipo: any) => {
-            if (!equipo.ip) return;
-
-            try {
-                const meta = this.getNetworkMeta(equipo.ip, this.normalizeAutoMask(equipo.mask));
-                if (!detectedSegments.has(meta.segmento)) {
-                    detectedSegments.set(meta.segmento, {
-                        id: `auto-${meta.segmento}-${meta.cidr}`,
-                        nombre: `Segmento ${meta.segmento}/${meta.cidr}`,
-                        segmento: meta.segmento,
-                        mascara: meta.mascara,
-                        cidr: meta.cidr,
-                        isAuto: true
-                    });
-                }
-            } catch (_) {
-                // Ignoramos datos incompletos o mal escritos en especificaciones.
-            }
-        });
-
-        const allRedes = manualRedes.map((red: any) => {
+    async getNetworks(userId?: any) {
+        const manualRedes: any[] = userId != null
+            ? await db.all('SELECT * FROM redes WHERE created_by = ? ORDER BY nombre ASC', [userId])
+            : await db.all('SELECT * FROM redes ORDER BY nombre ASC');
+        return manualRedes.map((red: any) => {
             try {
                 const meta = this.getNetworkMeta(red.segmento, red.mascara);
-                return { ...red, segmento: meta.segmento, mascara: meta.mascara, cidr: meta.cidr, isAuto: false };
+                return { ...red, segmento: meta.segmento, mascara: meta.mascara, cidr: meta.cidr };
             } catch (_) {
-                return { ...red, isAuto: false };
+                return { ...red };
             }
         });
-
-        Array.from(detectedSegments.values()).forEach(auto => {
-            const exists = allRedes.some(manual => {
-                try {
-                    const manualMeta = this.getNetworkMeta(manual.segmento, manual.mascara);
-                    const autoMeta = this.getNetworkMeta(auto.segmento, auto.mascara);
-                    return manualMeta.segmento === autoMeta.segmento && manualMeta.mascara === autoMeta.mascara;
-                } catch (_) {
-                    return manual.segmento === auto.segmento;
-                }
-            });
-            if (!exists) allRedes.push(auto);
-        });
-
-        return allRedes;
     }
 
-    async createNetwork(data) {
+    async createNetwork(data, userId?: any) {
         const nombre = String(data?.nombre || '').trim();
         const segmentoInput = String(data?.segmento || '').trim();
         const mascaraInput = String(data?.mascara || data?.cidr || '255.255.255.0').trim();
@@ -204,34 +155,45 @@ class IPAMService {
         }
 
         const duplicated = await db.get(
-            'SELECT id FROM redes WHERE segmento = ? AND mascara = ?',
-            [meta.segmento, meta.mascara]
+            userId != null ? 'SELECT id FROM redes WHERE segmento = ? AND mascara = ? AND created_by = ?' : 'SELECT id FROM redes WHERE segmento = ? AND mascara = ?',
+            userId != null ? [meta.segmento, meta.mascara, userId] : [meta.segmento, meta.mascara]
         );
         if (duplicated) throw new Error('Ya existe una red manual con ese segmento y mascara.');
 
         const id = `red_${crypto.randomUUID()}`;
         await db.run(
-            'INSERT INTO redes (id, nombre, segmento, mascara, gateway, dns, vlan) VALUES (?, ?, ?, ?, ?, ?, ?)',
-            [id, nombre, meta.segmento, meta.mascara, gateway || null, dns || null, vlan]
+            'INSERT INTO redes (id, nombre, segmento, mascara, gateway, dns, vlan, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            [id, nombre, meta.segmento, meta.mascara, gateway || null, dns || null, vlan, userId ?? null]
         );
+        const netIp = this.intToIp(meta.netInt);
+        const broadcastIp = this.intToIp(meta.broadcastInt);
+        const toReserve = [
+            [netIp, 'Direccion de Red (Segmento)'],
+            ...(meta.totalIps > 1 ? [[broadcastIp, 'Direccion de Broadcast']] : []),
+            ...(gateway ? [[gateway, 'Puerta de Enlace']] : [])
+        ];
+        for (const [ip, notas] of toReserve) {
+            const exists = await db.get('SELECT id FROM ips_reservadas WHERE red_id = ? AND ip = ?', [id, ip]);
+            if (!exists) await db.run('INSERT INTO ips_reservadas (red_id, ip, notas) VALUES (?, ?, ?)', [id, ip, notas]);
+        }
 
-        return { id, nombre, segmento: meta.segmento, mascara: meta.mascara, cidr: meta.cidr, gateway, dns, vlan, isAuto: false };
+        return { id, nombre, segmento: meta.segmento, mascara: meta.mascara, cidr: meta.cidr, gateway, dns, vlan };
     }
 
-    async deleteNetwork(id) {
-        if (String(id).startsWith('auto-')) {
-            const persisted = await db.get('SELECT id FROM redes WHERE id = ?', [id]);
-            if (!persisted) {
-                throw new Error('Las redes detectadas automaticamente no se eliminan. Corrija las IPs de los equipos si no deben aparecer.');
-            }
+    async deleteNetwork(id, userId?: any) {
+        if (userId != null) {
+            const owner = await db.get('SELECT created_by FROM redes WHERE id = ?', [id]);
+            if (!owner) throw new Error('Red no encontrada');
+            if (String(owner.created_by) !== String(userId)) throw new Error('No tienes permiso para eliminar esta red');
         }
         await db.run('DELETE FROM redes WHERE id = ?', [id]);
         return { success: true };
     }
 
-    async updateNetwork(id, data) {
+    async updateNetwork(id, data, userId?: any) {
         const existing = await db.get('SELECT * FROM redes WHERE id = ?', [id]);
         if (!existing) throw new Error('Red no encontrada.');
+        if (userId != null && String(existing.created_by) !== String(userId)) throw new Error('No tienes permiso para editar esta red');
 
         const nombre = String(data?.nombre || '').trim();
         const segmentoInput = String(data?.segmento || '').trim();
@@ -250,8 +212,8 @@ class IPAMService {
         }
 
         const duplicated = await db.get(
-            'SELECT id FROM redes WHERE segmento = ? AND mascara = ? AND id != ?',
-            [meta.segmento, meta.mascara, id]
+            userId != null ? 'SELECT id FROM redes WHERE segmento = ? AND mascara = ? AND created_by = ? AND id != ?' : 'SELECT id FROM redes WHERE segmento = ? AND mascara = ? AND id != ?',
+            userId != null ? [meta.segmento, meta.mascara, userId, id] : [meta.segmento, meta.mascara, id]
         );
         if (duplicated) throw new Error('Ya existe otra red manual con ese segmento y mascara.');
 
@@ -259,26 +221,30 @@ class IPAMService {
             'UPDATE redes SET nombre = ?, segmento = ?, mascara = ?, gateway = ?, dns = ?, vlan = ? WHERE id = ?',
             [nombre, meta.segmento, meta.mascara, gateway || null, dns || null, vlan, id]
         );
-
-        return { id, nombre, segmento: meta.segmento, mascara: meta.mascara, cidr: meta.cidr, gateway, dns, vlan, isAuto: false };
-    }
-
-    async getNetworkById(redId) {
-        if (redId.startsWith('auto-')) {
-            const redes = await this.getNetworks();
-            const auto = redes.find(red => red.id === redId);
-            if (!auto) throw new Error('Red no encontrada');
-            return auto;
+        const netIp = this.intToIp(meta.netInt);
+        const broadcastIp = this.intToIp(meta.broadcastInt);
+        const toReserve = [
+            [netIp, 'Direccion de Red (Segmento)'],
+            ...(meta.totalIps > 1 ? [[broadcastIp, 'Direccion de Broadcast']] : []),
+            ...(gateway ? [[gateway, 'Puerta de Enlace']] : [])
+        ];
+        for (const [ip, notas] of toReserve) {
+            const exists = await db.get('SELECT id FROM ips_reservadas WHERE red_id = ? AND ip = ?', [id, ip]);
+            if (!exists) await db.run('INSERT INTO ips_reservadas (red_id, ip, notas) VALUES (?, ?, ?)', [id, ip, notas]);
         }
 
-        const red = await db.get('SELECT * FROM redes WHERE id = ?', [redId]);
-        if (!red) throw new Error('Red no encontrada');
-        const meta = this.getNetworkMeta(red.segmento, red.mascara);
-        return { ...red, segmento: meta.segmento, mascara: meta.mascara, cidr: meta.cidr, isAuto: false };
+        return { id, nombre, segmento: meta.segmento, mascara: meta.mascara, cidr: meta.cidr, gateway, dns, vlan };
     }
 
-    async getNetworkDetails(redId: string) {
-        const red: any = await this.getNetworkById(redId);
+    async getNetworkById(redId, userId?: any) {
+        const red = await db.get(userId != null ? 'SELECT * FROM redes WHERE id = ? AND created_by = ?' : 'SELECT * FROM redes WHERE id = ?', userId != null ? [redId, userId] : [redId]);
+        if (!red) throw new Error('Red no encontrada');
+        const meta = this.getNetworkMeta(red.segmento, red.mascara);
+        return { ...red, segmento: meta.segmento, mascara: meta.mascara, cidr: meta.cidr };
+    }
+
+    async getNetworkDetails(redId: string, userId?: any) {
+        const red: any = await this.getNetworkById(redId, userId);
         const meta = this.getNetworkMeta(red.segmento, red.mascara);
 
         const occupiedRows: any[] = await db.all(`
@@ -439,22 +405,8 @@ class IPAMService {
         });
     }
 
-    async ensureManualNetworkForAuto(redId) {
-        if (!redId.startsWith('auto-')) return redId;
-
-        const exists = await db.get('SELECT id FROM redes WHERE id = ?', [redId]);
-        if (exists) return redId;
-
-        const details = await this.getNetworkDetails(redId);
-        await db.run(
-            'INSERT INTO redes (id, nombre, segmento, mascara, gateway) VALUES (?, ?, ?, ?, ?)',
-            [redId, details.network.nombre, details.network.segmento, details.network.mascara, details.network.gateway]
-        );
-        return redId;
-    }
-
-    async reserveIP(redId, ip, notas) {
-        const red = await this.getNetworkById(redId);
+    async reserveIP(redId, ip, notas, userId?: any) {
+        const red = await this.getNetworkById(redId, userId);
         const meta = this.getNetworkMeta(red.segmento, red.mascara);
         if (!this.isIpInNetwork(ip, meta)) throw new Error('La IP no pertenece a la red seleccionada.');
 
@@ -463,8 +415,7 @@ class IPAMService {
             throw new Error('No se puede reservar la direccion de red ni broadcast.');
         }
 
-        const finalRedId = await this.ensureManualNetworkForAuto(redId);
-        const existing = await db.get('SELECT id FROM ips_reservadas WHERE red_id = ? AND ip = ?', [finalRedId, ip]);
+        const existing = await db.get('SELECT id FROM ips_reservadas WHERE red_id = ? AND ip = ?', [redId, ip]);
         if (existing) {
             await db.run('UPDATE ips_reservadas SET notas = ? WHERE id = ?', [notas || '', existing.id]);
             return { success: true, updated: true };
@@ -472,7 +423,7 @@ class IPAMService {
 
         await db.run(
             'INSERT INTO ips_reservadas (red_id, ip, notas) VALUES (?, ?, ?)',
-            [finalRedId, ip, notas || '']
+            [redId, ip, notas || '']
         );
         return { success: true };
     }
@@ -496,21 +447,20 @@ class IPAMService {
         }
     }
 
-    async assignIPToEquipo(redId, ip, equipoId, dns1 = '', dns2 = '') {
-        const red = await this.getNetworkById(redId);
+    async assignIPToEquipo(redId, ip, equipoId, dns1 = '', dns2 = '', userId?: any) {
+        const red = await this.getNetworkById(redId, userId);
         const meta = this.getNetworkMeta(red.segmento, red.mascara);
         if (!this.isIpInNetwork(ip, meta)) throw new Error('La IP no pertenece a la red seleccionada.');
 
         const equipo = await db.get('SELECT id FROM equipos WHERE id = ? AND is_deleted = 0', [equipoId]);
         if (!equipo) throw new Error('Equipo no encontrado.');
 
-        const details = await this.getNetworkDetails(redId);
+        const details = await this.getNetworkDetails(redId, userId);
         const current = details.ips.find(row => row.ip === ip);
         if (current?.estado === 'OCUPADA' && current.equipo?.id !== equipoId) {
             throw new Error(`La IP ya esta ocupada por el equipo ${current.equipo.ine}.`);
         }
 
-        const finalRedId = await this.ensureManualNetworkForAuto(redId);
         await this.releaseIP(ip);
 
         await this.upsertEquipoSpec(equipoId, 'IP', ip, IP_KEYS);
@@ -521,7 +471,7 @@ class IPAMService {
 
         await db.run(
             'INSERT INTO historial_personal (equipo_id, responsable, evento, notas) VALUES (?, ?, ?, ?)',
-            [equipoId, 'SISTEMA', 'ASIGNACION IP', `IP ${ip} asignada desde IPAM (${finalRedId}).`]
+            [equipoId, 'SISTEMA', 'ASIGNACION IP', `IP ${ip} asignada desde IPAM (${redId}).`]
         );
 
         return { success: true };
@@ -548,8 +498,8 @@ class IPAMService {
         return { success: true };
     }
 
-    async generateExcelBuffer() {
-        const redes = await this.getNetworks();
+    async generateExcelBuffer(userId?: any) {
+        const redes = await this.getNetworks(userId);
         const workbook = new exceljs.Workbook();
         const usedSheetNames = new Set();
 
@@ -605,7 +555,7 @@ class IPAMService {
         return await workbook.xlsx.writeBuffer();
     }
 
-    async exportToDrive() {
+    async exportToDrive(userId?: any) {
         const folderId = process.env.GOOGLE_DRIVE_FOLDER_ID;
         const clientId = process.env.GOOGLE_CLIENT_ID;
         const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
@@ -615,7 +565,7 @@ class IPAMService {
             throw new Error('Falta configuracion de Google Drive en .env');
         }
 
-        const buffer = await this.generateExcelBuffer();
+        const buffer = await this.generateExcelBuffer(userId);
         const filename = `Reporte_IPAM_${new Date().toISOString().split('T')[0]}.xlsx`;
 
         const auth = new google.auth.OAuth2(clientId, clientSecret);

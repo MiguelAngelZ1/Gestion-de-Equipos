@@ -17,9 +17,9 @@ async function validarRedId(req: any, res: any, next: any) {
   try {
     const redId = req.params.redId;
     if (!redId) return res.status(400).json({ error: 'Parámetro redId requerido.' });
-    if (String(redId).startsWith('auto-')) return next();
-    const red = await db.get('SELECT id FROM redes WHERE id = ?', [redId]);
-    if (!red) return res.status(404).json({ error: 'La red especificada no existe.' });
+    const userId = (req as any).user?.userId ?? (req as any).user?.id;
+    const red = await db.get('SELECT id FROM redes WHERE id = ? AND created_by = ?', [redId, userId]);
+    if (!red) return res.status(404).json({ error: 'La red especificada no existe o no te pertenece.' });
     next();
   } catch (error) {
     next(error);

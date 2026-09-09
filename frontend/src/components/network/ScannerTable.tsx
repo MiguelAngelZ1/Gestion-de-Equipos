@@ -142,6 +142,7 @@ const ScannerTable: React.FC<ScannerTableProps> = ({
                             autoFocus
                             value={editingValue}
                             onChange={e => setEditingValue(e.target.value)}
+                            onFocus={e => e.currentTarget.select()}
                             onKeyDown={e => { if (e.key === 'Enter') commitEdit(node); if (e.key === 'Escape') cancelEdit(); }}
                             onBlur={() => commitEdit(node)}
                             className="bg-zinc-800 border border-cyan-500 rounded-lg px-2 py-1 text-xs text-white w-[200px] focus:outline-none"

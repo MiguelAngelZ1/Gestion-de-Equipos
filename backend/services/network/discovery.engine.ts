@@ -26,26 +26,11 @@ export class DiscoveryEngine {
       throw new Error(`Ya existe un escaneo en curso para la red ${redId}.`);
     }
 
-    let red: any;
-    let segmento: string;
-    let mascara: string;
-    if (String(redId).startsWith('auto-')) {
-      const rest = String(redId).replace('auto-', '');
-      const lastDash = rest.lastIndexOf('-');
-      const seg = rest.substring(0, lastDash);
-      const cidr = rest.substring(lastDash + 1);
-      const bits = Number(cidr);
-      const maskInt = bits === 0 ? 0 : (0xffffffff << (32 - bits)) >>> 0;
-      const intToIp = (i: number) => [(i >>> 24) & 255, (i >>> 16) & 255, (i >>> 8) & 255, i & 255].join('.');
-      segmento = seg;
-      mascara = intToIp(maskInt);
-      red = { id: redId, segmento, mascara };
-    } else {
-      red = await db.get('SELECT * FROM redes WHERE id = ?', [redId]);
-      if (!red) throw new Error('Red no encontrada.');
-      segmento = red.segmento;
-      mascara = red.mascara;
-    }
+    const red: any = await db.get('SELECT * FROM redes WHERE id = ?', [redId]);
+    if (!red) throw new Error('Red no encontrada.');
+    // ownership ya validado por validarRedId en rutas; scanSubnet no filtra por usuario para job background
+    const segmento: string = red.segmento;
+    const mascara: string = red.mascara;
 
     this.activeScans.add(redId);
     logger.info({ redId, segmento, mascara }, '[Discovery] Iniciando escaneo de red');
