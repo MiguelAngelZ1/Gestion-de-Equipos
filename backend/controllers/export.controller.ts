@@ -178,7 +178,7 @@ const generarExcelBuffer = async (id) => {
     }
 
     const workbook = new exceljs.Workbook();
-    workbook.creator = 'Control de Equipos 3.0';
+    workbook.creator = 'Control de Equipos';
     workbook.created = new Date();
     workbook.modified = new Date();
 
@@ -223,101 +223,7 @@ const generarExcelBuffer = async (id) => {
     inventario.getColumn('passRustdesk').font = { name: 'Calibri', size: 10, color: { argb: '075985' } };
     inventario.getColumn('specsTexto').alignment = { vertical: 'top', wrapText: true };
 
-    const credenciales = addWorksheet(workbook, 'Credenciales', [
-        { header: 'INE', key: 'ine', width: 20 },
-        { header: 'TIPO', key: 'tipo', width: 22 },
-        { header: 'UBICACION', key: 'ubicacion', width: 24 },
-        { header: 'RESPONSABLE', key: 'responsable', width: 34 },
-        { header: 'CUENTA ADMIN', key: 'cuentaAdmin', width: 22 },
-        { header: 'PASS ADMIN', key: 'passAdmin', width: 26 },
-        { header: 'CUENTA ESTANDAR', key: 'cuentaEstandar', width: 22 },
-        { header: 'PASS ESTANDAR', key: 'passEstandar', width: 26 },
-        { header: 'PASS BIOS', key: 'passBios', width: 20 },
-        { header: 'ID RUSTDESK', key: 'idRustdesk', width: 18 },
-        { header: 'PASS RUSTDESK', key: 'passRustdesk', width: 24 },
-        { header: 'IP', key: 'ip', width: 16 }
-    ]);
-    rows
-        .filter(row => row.cuentaAdmin || row.passAdmin || row.cuentaEstandar || row.passEstandar || row.passBios || row.idRustdesk || row.passRustdesk)
-        .forEach(row => credenciales.addRow(row));
-    applySheetDefaults(credenciales);
-    addTableFilter(credenciales);
-    credenciales.getColumn('passAdmin').font = { name: 'Calibri', size: 10, bold: true, color: { argb: '991b1b' } };
-
-    const red = addWorksheet(workbook, 'Red', [
-        { header: 'INE', key: 'ine', width: 20 },
-        { header: 'TIPO', key: 'tipo', width: 22 },
-        { header: 'UBICACION', key: 'ubicacion', width: 24 },
-        { header: 'IP', key: 'ip', width: 16 },
-        { header: 'MASCARA', key: 'mascara', width: 16 },
-        { header: 'PUERTA DE ENLACE', key: 'gateway', width: 18 },
-        { header: 'DNS 1', key: 'dns1', width: 18 },
-        { header: 'DNS 2', key: 'dns2', width: 18 },
-        { header: 'MAC', key: 'mac', width: 20 },
-        { header: 'PUERTO', key: 'puerto', width: 14 }
-    ]);
-    rows
-        .filter(row => row.ip || row.gateway || row.dns1 || row.dns2 || row.mac || row.puerto)
-        .forEach(row => red.addRow(row));
-    applySheetDefaults(red);
-    addTableFilter(red);
-
-    const especificaciones = addWorksheet(workbook, 'Especificaciones', [
-        { header: 'INE', key: 'ine', width: 20 },
-        { header: 'TIPO', key: 'tipo', width: 22 },
-        { header: 'ESTADO', key: 'estado', width: 18 },
-        { header: 'UBICACION', key: 'ubicacion', width: 24 },
-        { header: 'RESPONSABLE', key: 'responsable', width: 34 },
-        { header: 'CREDENCIALES', key: 'credenciales', width: 45 },
-        { header: 'RED', key: 'red', width: 38 },
-        { header: 'HARDWARE', key: 'hardware', width: 45 },
-        { header: 'SISTEMA / SOFTWARE', key: 'sistema', width: 38 },
-        { header: 'OTRAS ESPECIFICACIONES', key: 'otras', width: 45 }
-    ]);
-    equiposFull.forEach((eq) => {
-        const base = buildRowData(eq);
-        const grouped = groupSpecs(eq.especificaciones || []);
-        especificaciones.addRow({
-            ine: base.ine,
-            tipo: base.tipo,
-            estado: base.estado,
-            ubicacion: base.ubicacion,
-            responsable: base.responsable,
-            ...grouped
-        });
-    });
-    applySheetDefaults(especificaciones);
-    addTableFilter(especificaciones);
-
-    const faltantes = addWorksheet(workbook, 'Faltantes', [
-        { header: 'INE', key: 'ine', width: 20 },
-        { header: 'TIPO', key: 'tipo', width: 22 },
-        { header: 'ESTADO', key: 'estado', width: 18 },
-        { header: 'UBICACION', key: 'ubicacion', width: 24 },
-        { header: 'RESPONSABLE', key: 'responsable', width: 34 },
-        { header: 'FALTANTES CRITICOS', key: 'faltantes', width: 60 },
-        { header: 'CANTIDAD', key: 'cantidad', width: 12 }
-    ]);
-
-    rows.forEach((row) => {
-        const missing = getMissingFields(row);
-        if (missing.length > 0) {
-            faltantes.addRow({
-                ine: row.ine,
-                tipo: row.tipo,
-                estado: row.estado,
-                ubicacion: row.ubicacion,
-                responsable: row.responsable,
-                faltantes: missing.join(', '),
-                cantidad: missing.length
-            });
-        }
-    });
-    applySheetDefaults(faltantes);
-    addTableFilter(faltantes);
-    faltantes.getColumn('faltantes').font = { name: 'Calibri', size: 10, color: { argb: '991b1b' } };
-
-    [inventario, credenciales, red, especificaciones, faltantes].forEach((sheet) => {
+    [inventario].forEach((sheet) => {
         sheet.getRow(1).commit();
         sheet.eachRow((row, rowNumber) => {
             if (rowNumber > 1) row.height = Math.min(90, Math.max(20, row.height || 20));
