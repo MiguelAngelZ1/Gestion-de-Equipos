@@ -493,14 +493,12 @@ const IPAM = () => {
                                                         </>
                                                     )}
                                                 </div>
-                                                {!red.isAuto && (
-                                                    <div className="hidden group-hover:flex items-center gap-1 shrink-0">
+                                                <div className="hidden group-hover:flex items-center gap-1 shrink-0">
                                                         <button onClick={(e) => { e.stopPropagation(); setEditingRed(red); setAutoScanAfterCreate(false); setNewRed({ nombre: red.nombre || '', segmento: red.segmento || '', mascara: red.mascara || '255.255.255.0', gateway: red.gateway || '', dns: red.dns || '' }); setIsCreateRedOpen(true); }}
                                                             className={`w-6 h-6 grid place-items-center rounded-lg transition-colors ${isSelected ? 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200' : 'bg-white/5 text-zinc-400 hover:text-white'}`}><Pencil className="w-3 h-3" /></button>
                                                         <button onClick={(e) => { e.stopPropagation(); setRedToDelete(red); setIsDeleteRedOpen(true); }}
                                                             className={`w-6 h-6 grid place-items-center rounded-lg transition-colors ${isSelected ? 'bg-zinc-100 text-zinc-600 hover:text-red-600' : 'bg-white/5 text-zinc-500 hover:text-red-400'}`}><Trash2 className="w-3 h-3" /></button>
                                                     </div>
-                                                )}
                                             </div>
                                         </motion.div>
                                     );
