@@ -6,16 +6,6 @@ import { apiRequest } from '../services/api';
 import logoImage from '../assets/LogoIMPERIO.webp';
 import { useToast } from '../context/ToastContext';
 import SideRays from '../components/effects/SideRays';
-
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import TextField from '@mui/material/TextField';
-import Button from '@mui/material/Button';
-import Typography from '@mui/material/Typography';
-import Box from '@mui/material/Box';
-import Link from '@mui/material/Link';
-import CircularProgress from '@mui/material/CircularProgress';
-import InputAdornment from '@mui/material/InputAdornment';
 import { User, Lock, MailCheck, KeyRound, Check, ArrowLeft, Eye, EyeOff } from 'lucide-react';
 
 const ViewTransition = {
@@ -24,14 +14,12 @@ const ViewTransition = {
   exit: { opacity: 0, y: -24, filter: 'blur(8px)' },
   transition: { type: 'spring' as const, stiffness: 300, damping: 30 },
 };
+const Shake = { animate: { x: [-12, 12, -8, 8, -4, 4, 0] }, transition: { duration: 0.5 } };
 
-const ShakeAnimation = {
-  animate: { x: [-12, 12, -8, 8, -4, 4, 0] },
-  transition: { duration: 0.5 },
-};
-
-const Login = () => {
+export default function Login() {
   const { showToast } = useToast();
+  const { login } = useAuth();
+  const navigate = useNavigate();
   const [usuario, setUsuario] = useState('');
   const [password, setPassword] = useState('');
   const [codigo, setCodigo] = useState('');
@@ -45,892 +33,179 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const { login } = useAuth();
-
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
-
   const [shake, setShake] = useState(false);
-  const triggerError = (msg: string) => {
-    showToast(msg, 'error');
-    setShake(true);
-    setTimeout(() => setShake(false), 500);
-  };
-
-  const navigate = useNavigate();
+  const triggerError = (msg: string) => { showToast(msg, 'error'); setShake(true); setTimeout(() => setShake(false), 500); };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!usuario || !password) return;
-
     setLoading(true);
-
     try {
       const data = await login({ usuario, password });
-
-      if (data.success) {
-        navigate('/');
-      } else {
-        triggerError('Credenciales incorrectas o usuario no encontrado.');
-      }
-    } catch {
-      triggerError('No se pudo conectar con el servidor.');
-    } finally {
-      setLoading(false);
-    }
+      if (data.success) navigate('/');
+      else triggerError('Credenciales incorrectas o usuario no encontrado.');
+    } catch { triggerError('No se pudo conectar con el servidor.'); }
+    finally { setLoading(false); }
   };
-
   const handleRecoverEmail = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
     setLoading(true);
     try {
-      const data = await apiRequest('/auth/forgot-password', {
-        method: 'POST',
-        body: JSON.stringify({ email }),
-      });
-      if (data.success) {
-        setViewState('recover_code');
-        setSuccessMsg('Te hemos enviado un código de seguridad.');
-        setResendCooldown(30);
-      }
-    } catch (err: any) {
-      triggerError(err.message || 'Error al enviar el código');
-    } finally {
-      setLoading(false);
-    }
+      const data: any = await apiRequest('/auth/forgot-password', { method: 'POST', body: JSON.stringify({ email }) });
+      if (data.success) { setViewState('recover_code'); setSuccessMsg('Te hemos enviado un código de seguridad.'); setResendCooldown(30); }
+    } catch (err: any) { triggerError(err.message || 'Error al enviar el código'); }
+    finally { setLoading(false); }
   };
-
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!codigo || !newPassword) return;
-    if (newPassword !== confirmPassword) {
-      triggerError('Las contraseñas no coinciden.');
-      return;
-    }
+    if (newPassword !== confirmPassword) { triggerError('Las contraseñas no coinciden.'); return; }
     setLoading(true);
     try {
-      const data = await apiRequest('/auth/reset-password', {
-        method: 'POST',
-        body: JSON.stringify({ email, code: codigo, newPassword }),
-      });
-      if (data.success) {
-        setSuccessMsg('');
-        setViewState('success');
-        showToast('Contraseña actualizada con éxito', 'success');
-      }
-    } catch (err: any) {
-      setCodigo('');
-      triggerError(err.message || 'Error al restablecer la contraseña');
-    } finally {
-      setLoading(false);
-    }
+      const data: any = await apiRequest('/auth/reset-password', { method: 'POST', body: JSON.stringify({ email, code: codigo, newPassword }) });
+      if (data.success) { setSuccessMsg(''); setViewState('success'); showToast('Contraseña actualizada con éxito', 'success'); }
+    } catch (err: any) { setCodigo(''); triggerError(err.message || 'Error al restablecer la contraseña'); }
+    finally { setLoading(false); }
   };
-
   const handleResendCode = useCallback(async () => {
     if (resendCooldown > 0 || loading) return;
     setLoading(true);
-    try {
-      await apiRequest('/auth/forgot-password', {
-        method: 'POST',
-        body: JSON.stringify({ email }),
-      });
-      setCodigo('');
-      setResendCooldown(30);
-      showToast('Te hemos enviado un nuevo código.', 'success');
-    } catch (err: any) {
-      triggerError(err.message || 'Error al reenviar el código');
-    } finally {
-      setLoading(false);
-    }
-  }, [email, resendCooldown, loading, showToast, triggerError]);
+    try { await apiRequest('/auth/forgot-password', { method: 'POST', body: JSON.stringify({ email }) }); setCodigo(''); setResendCooldown(30); showToast('Te hemos enviado un nuevo código.', 'success'); }
+    catch (err: any) { triggerError(err.message || 'Error al reenviar el código'); }
+    finally { setLoading(false); }
+  }, [email, resendCooldown, loading]);
+  const maskEmail = (e: string) => { const [u, d] = e.split('@'); if (!d) return e; return `${u[0]}***${u[u.length - 1]}@${d}`; };
+  useEffect(() => { if (resendCooldown <= 0) return; const t = setInterval(() => setResendCooldown(p => p <= 1 ? 0 : p - 1), 1000); return () => clearInterval(t); }, [resendCooldown]);
+  useEffect(() => { if (viewState !== 'success') return; const t = setTimeout(() => { setViewState('login'); setSuccessMsg(''); }, 3000); return () => clearTimeout(t); }, [viewState]);
+  const pwStrength = (() => {
+    if (!newPassword) return { level: 0, label: '', color: '' };
+    let s = 0; if (newPassword.length >= 6) s++; if (newPassword.length >= 10) s++; if (/[A-Z]/.test(newPassword) && /[a-z]/.test(newPassword)) s++; if (/[0-9]/.test(newPassword)) s++; if (/[^A-Za-z0-9]/.test(newPassword)) s++;
+    if (s <= 2) return { level: 1, label: 'Débil', color: '#ef4444' }; if (s <= 3) return { level: 2, label: 'Media', color: '#eab308' }; if (s <= 4) return { level: 3, label: 'Fuerte', color: '#22c55e' }; return { level: 4, label: 'Muy fuerte', color: '#22c55e' };
+  })();
 
-  const maskEmail = (e: string): string => {
-    const [user, domain] = e.split('@');
-    if (!domain) return e;
-    const maskedUser = user.length > 2 ? user[0] + '***' + user[user.length - 1] : user[0] + '***';
-    return `${maskedUser}@${domain}`;
-  };
-
-  useEffect(() => {
-    if (resendCooldown <= 0) return;
-    const timer = setInterval(() => {
-      setResendCooldown((prev) => (prev <= 1 ? 0 : prev - 1));
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [resendCooldown]);
-
-  useEffect(() => {
-    if (viewState !== 'success') return;
-    const timer = setTimeout(() => {
-      setViewState('login');
-      setSuccessMsg('');
-    }, 3000);
-    return () => clearTimeout(timer);
-  }, [viewState]);
-
-  const getPasswordStrength = (pw: string): { level: number; label: string; color: string } => {
-    if (!pw) return { level: 0, label: '', color: '' };
-    let score = 0;
-    if (pw.length >= 6) score++;
-    if (pw.length >= 10) score++;
-    if (/[A-Z]/.test(pw) && /[a-z]/.test(pw)) score++;
-    if (/[0-9]/.test(pw)) score++;
-    if (/[^A-Za-z0-9]/.test(pw)) score++;
-
-    if (score <= 2) return { level: 1, label: 'Débil', color: '#f43f5e' };
-    if (score <= 3) return { level: 2, label: 'Media', color: '#f59e0b' };
-    if (score <= 4) return { level: 3, label: 'Fuerte', color: '#10b981' };
-    return { level: 4, label: 'Muy fuerte', color: '#34d399' };
-  };
-
-  const pwStrength = getPasswordStrength(newPassword);
-
-  const titleText = 'Control de Equipos';
+  const Input = ({ icon: Icon, right, ...props }: any) => (
+    <div className="relative">
+      <Icon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 pointer-events-none" />
+      <input {...props} className={`w-full bg-zinc-900 border border-zinc-800 rounded-lg ${Icon ? 'pl-10' : 'pl-3'} ${right ? 'pr-10' : 'pr-3'} py-2.5 text-sm text-white placeholder:text-zinc-500 outline-none focus:border-zinc-700 focus:bg-zinc-800 transition-colors ${props.className || ''}`} />
+      {right}
+    </div>
+  );
 
   return (
-    <Box
-      sx={{
-        minHeight: '100vh',
-        fontFamily: "'Outfit', sans-serif",
-        bgcolor: '#000000',
-        position: 'relative',
-        overflowY: 'auto',
-        overflowX: 'hidden',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-      }}
-    >
-      {/* FULL-SCREEN SideRays BACKGROUND */}
-      <SideRays
-        speed={2.5}
-        rayColor1="#06B6D4"
-        rayColor2="#ffffff"
-        intensity={2}
-        spread={2}
-        origin="top-left"
-        tilt={0}
-        saturation={1.5}
-        blend={0.75}
-        falloff={1.6}
-        opacity={1}
-      />
-
-      {/* CENTERED CONTENT */}
-      <Box
-        sx={{
-          position: 'relative',
-          zIndex: 10,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'safe center',
-          width: '100%',
-          maxWidth: { xs: '100%', sm: 420 },
-          px: { xs: 2, sm: 3 },
-          py: { xs: 2, sm: 3 },
-          minHeight: '100vh',
-        }}
-      >
-        {/* Logo */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.7, y: -20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          transition={{ type: 'spring', damping: 14, stiffness: 120 }}
-          style={{ marginBottom: 12 }}
-        >
-          <Box
-            component="img"
-            src={logoImage}
-            alt="Logo Control de Equipos"
-            sx={{
-              height: { xs: 80, sm: 100 },
-              objectFit: 'contain',
-              filter: 'drop-shadow(0 0 20px rgba(6,182,212,0.3))',
-            }}
-            onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
-              (e.target as HTMLImageElement).style.display = 'none';
-            }}
-          />
+    <div className="min-h-screen bg-black relative overflow-y-auto overflow-x-hidden flex flex-col items-center" style={{ fontFamily: 'Hanken Grotesk, sans-serif' }}>
+      <SideRays speed={2.5} rayColor1="#06B6D4" rayColor2="#ffffff" intensity={2} spread={2} origin="top-left" tilt={0} saturation={1.5} blend={0.75} falloff={1.6} opacity={1} />
+      <div className="relative z-10 flex flex-col items-center justify-center w-full max-w-[420px] px-4 sm:px-6 py-6 min-h-screen">
+        <motion.div initial={{ opacity: 0, scale: 0.7, y: -20 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ type: 'spring', damping: 14, stiffness: 120 }} className="mb-3">
+          <img src={logoImage} alt="IMPERIO" className="h-[80px] sm:h-[100px] object-contain drop-shadow-[0_0_20px_rgba(6,182,212,0.3)]" onError={e => ((e.target as HTMLImageElement).style.display = 'none')} />
         </motion.div>
+        <div className="mb-6 text-center">
+          <h1 className="font-black tracking-tight text-[1.6rem] sm:text-[2rem] text-slate-100" style={{ textShadow: '0 0 30px rgba(6,182,212,0.4), 0 0 60px rgba(6,182,212,0.15)' }}>Control de Equipos</h1>
+        </div>
 
-        {/* Animated Title */}
-        <Box sx={{ mb: { xs: 2, sm: 3 }, textAlign: 'center' }}>
-          <Typography
-            variant="h4"
-            component="h1"
-            sx={{
-              fontWeight: 900,
-              letterSpacing: '-0.02em',
-              fontSize: { xs: '1.6rem', sm: '2rem' },
-            }}
-          >
-            {titleText.split('').map((char, i) => (
-              <motion.span
-                key={i}
-                initial={{ opacity: 0, y: 20, filter: 'blur(8px)' }}
-                animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-                transition={{
-                  delay: 0.3 + i * 0.04,
-                  duration: 0.5,
-                  ease: [0.25, 0.46, 0.45, 0.94],
-                }}
-                style={{
-                  display: 'inline-block',
-                  color: '#f1f5f9',
-                  textShadow: '0 0 30px rgba(6,182,212,0.4), 0 0 60px rgba(6,182,212,0.15)',
-                }}
-              >
-                {char === ' ' ? '\u00A0' : char}
-              </motion.span>
-            ))}
-          </Typography>
-        </Box>
-
-        {/* Form Card */}
-        <Card
-          sx={{
-            width: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            overflow: 'hidden',
-          }}
-        >
-          <CardContent
-            sx={{
-              display: 'flex',
-              flexDirection: 'column',
-              px: { xs: 2.5, sm: 4 },
-              py: { xs: 2.5, sm: 3.5 },
-            }}
-          >
-            {/* Bienvenido header */}
+        <div className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl">
+          <div className="px-6 sm:px-8 py-6 sm:py-7 flex flex-col">
             {viewState === 'login' && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1, duration: 0.4 }}
-              >
-                <Typography variant="h5" sx={{ fontWeight: 700, textAlign: 'center', mb: 0.5 }}>
-                  Bienvenido
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', mb: { xs: 2, sm: 3 } }}>
-                  Ingresa tus credenciales para acceder
-                </Typography>
+              <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-6">
+                <h2 className="text-xl font-bold text-white">Bienvenido</h2>
+                <p className="text-sm text-zinc-500 mt-1">Ingresa tus credenciales para acceder</p>
               </motion.div>
             )}
-
-            {/* Stepper */}
             {viewState !== 'login' && viewState !== 'success' && (
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mb: { xs: 2, sm: 4 }, mt: 1 }}>
-                {[1, 2].map((step) => {
-                  const isActive =
-                    (viewState === 'recover_email' && step === 1) ||
-                    (viewState === 'recover_code' && step === 2);
+              <div className="flex items-center justify-center gap-2 mb-6">
+                {[1, 2].map(step => {
+                  const isActive = (viewState === 'recover_email' && step === 1) || (viewState === 'recover_code' && step === 2);
                   const isCompleted = viewState === 'recover_code' && step === 1;
-
                   return (
                     <React.Fragment key={step}>
-                      <Box
-                        sx={{
-                          width: 36,
-                          height: 36,
-                          borderRadius: '50%',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: '0.75rem',
-                          fontWeight: 900,
-                          transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
-                          border: '2px solid',
-                          ...(isActive
-                            ? {
-                                bgcolor: '#4f46e5',
-                                borderColor: '#6366f1',
-                                color: '#ffffff',
-                                boxShadow: '0 0 20px rgba(79,70,229,0.5)',
-                                transform: 'scale(1.1)',
-                              }
-                            : isCompleted
-                            ? {
-                                bgcolor: '#10b981',
-                                borderColor: '#34d399',
-                                color: '#ffffff',
-                              }
-                            : {
-                                bgcolor: 'rgba(255,255,255,0.05)',
-                                borderColor: 'rgba(255,255,255,0.1)',
-                                color: '#64748b',
-                                opacity: 0.5,
-                              }),
-                        }}
-                      >
-                        {isCompleted ? (
-                          <Check size={18} />
-                        ) : (
-                          step
-                        )}
-                      </Box>
-                      {step === 1 && (
-                        <Box
-                          sx={{
-                            width: 48,
-                            height: 4,
-                            borderRadius: 2,
-                            mx: 1,
-                            transition: 'all 0.7s ease',
-                            bgcolor: isCompleted ? 'rgba(16,185,129,0.5)' : 'rgba(255,255,255,0.05)',
-                          }}
-                        />
-                      )}
+                      <div className={`w-9 h-9 rounded-full grid place-items-center text-xs font-black border-2 transition-all ${isActive ? 'bg-white border-white text-zinc-900 scale-110 shadow-[0_0_20px_rgba(255,255,255,0.3)]' : isCompleted ? 'bg-emerald-500 border-emerald-400 text-white' : 'bg-zinc-800 border-zinc-700 text-zinc-500 opacity-60'}`}>
+                        {isCompleted ? <Check className="w-4 h-4" /> : step}
+                      </div>
+                      {step === 1 && <div className={`w-12 h-1 rounded-full transition-all ${isCompleted ? 'bg-emerald-500/50' : 'bg-zinc-800'}`} />}
                     </React.Fragment>
                   );
                 })}
-              </Box>
+              </div>
             )}
 
-            <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-              <AnimatePresence mode="wait">
-                {/* ===== LOGIN VIEW ===== */}
-                {viewState === 'login' && (
-                  <motion.form
-                    key="login-form"
-                    initial={ViewTransition.initial}
-                    animate={
-                      shake
-                        ? { ...ShakeAnimation.animate, opacity: 1 }
-                        : ViewTransition.animate
-                    }
-                    exit={ViewTransition.exit}
-                    transition={shake ? ShakeAnimation.transition : ViewTransition.transition}
-                    onSubmit={handleLogin}
-                    style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}
-                  >
-                    <TextField
-                      fullWidth
-                      label="Usuario"
-                      value={usuario}
-                      onChange={(e) => setUsuario(e.target.value)}
-                      autoComplete="username"
-                      slotProps={{
-                        input: {
-                          startAdornment: (
-                            <InputAdornment position="start">
-                              <User size={20} style={{ color: '#94a3b8' }} />
-                            </InputAdornment>
-                          ),
-                        },
-                      }}
-                    />
-
-                    <TextField
-                      fullWidth
-                      label="Contraseña"
-                      type={showPassword ? 'text' : 'password'}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      autoComplete="current-password"
-                      slotProps={{
-                        input: {
-                          startAdornment: (
-                            <InputAdornment position="start">
-                              <Lock size={20} style={{ color: '#94a3b8' }} />
-                            </InputAdornment>
-                          ),
-                          endAdornment: (
-                            <InputAdornment position="end">
-                              <Box
-                                component="button"
-                                type="button"
-                                onClick={() => setShowPassword(v => !v)}
-                                sx={{ display: 'grid', placeItems: 'center', width: 32, height: 32, borderRadius: '50%', border: 'none', bgcolor: 'transparent', cursor: 'pointer', color: '#94a3b8', '&:hover': { color: '#e2e8f0' } }}
-                              >
-                                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                              </Box>
-                            </InputAdornment>
-                          ),
-                        },
-                      }}
-                    />
-
-                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: -0.5 }}>
-                      <Link
-                        component="button"
-                        type="button"
-                        variant="body2"
-                        onClick={() => {
-                          setSuccessMsg('');
-                          setViewState('recover_email');
+            <AnimatePresence mode="wait">
+              {viewState === 'login' && (
+                <motion.form key="login" initial={ViewTransition.initial} animate={shake ? { ...Shake.animate, opacity: 1 } : ViewTransition.animate} exit={ViewTransition.exit} transition={shake ? Shake.transition : ViewTransition.transition} onSubmit={handleLogin} className="flex flex-col gap-4">
+                  <Input icon={User} placeholder="Usuario" value={usuario} onChange={(e: any) => setUsuario(e.target.value)} autoComplete="username" />
+                  <Input icon={Lock} placeholder="Contraseña" type={showPassword ? 'text' : 'password'} value={password} onChange={(e: any) => setPassword(e.target.value)} autoComplete="current-password"
+                    right={<button type="button" onClick={() => setShowPassword(v => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 grid place-items-center rounded-full text-zinc-500 hover:text-white hover:bg-white/5 transition-colors">{showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}</button>} />
+                  <div className="flex justify-end -mt-1">
+                    <button type="button" onClick={() => { setSuccessMsg(''); setViewState('recover_email'); }} className="text-xs font-semibold text-zinc-400 hover:text-white transition-colors">¿Olvidaste tu contraseña?</button>
+                  </div>
+                  <button type="submit" disabled={loading} className="w-full inline-flex items-center justify-center gap-2 bg-white hover:bg-zinc-100 disabled:opacity-50 text-zinc-900 font-bold text-sm py-2.5 rounded-xl transition-colors shadow-md mt-1">
+                    {loading ? <span className="w-5 h-5 border-2 border-zinc-300 border-t-zinc-900 rounded-full animate-spin" /> : 'Iniciar Sesión'}
+                  </button>
+                </motion.form>
+              )}
+              {viewState === 'recover_email' && (
+                <motion.form key="recover_email" initial={{ opacity: 0, x: 50, filter: 'blur(5px)' }} animate={shake ? { ...Shake.animate, opacity: 1, filter: 'blur(0px)' } : { x: 0, opacity: 1, filter: 'blur(0px)' }} exit={{ opacity: 0, x: -50, filter: 'blur(5px)' }} transition={shake ? Shake.transition : ViewTransition.transition} onSubmit={handleRecoverEmail} className="flex flex-col gap-4">
+                  <Input icon={MailCheck} placeholder="Correo electrónico" type="email" value={email} onChange={(e: any) => setEmail(e.target.value)} autoComplete="email" />
+                  <button type="submit" disabled={loading} className="w-full inline-flex items-center justify-center gap-2 bg-white hover:bg-zinc-100 disabled:opacity-50 text-zinc-900 font-bold text-sm py-2.5 rounded-xl transition-colors shadow-md">
+                    {loading ? <span className="w-5 h-5 border-2 border-zinc-300 border-t-zinc-900 rounded-full animate-spin" /> : 'Recibir código'}
+                  </button>
+                  <div className="flex justify-center pt-2">
+                    <button type="button" onClick={() => { setSuccessMsg(''); setViewState('login'); }} className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-400 hover:text-white transition-colors"><ArrowLeft className="w-3.5 h-3.5" /> Volver al Inicio</button>
+                  </div>
+                </motion.form>
+              )}
+              {viewState === 'recover_code' && (
+                <motion.form key="recover_code" initial={{ opacity: 0, x: 50, filter: 'blur(5px)' }} animate={shake ? { ...Shake.animate, opacity: 1, filter: 'blur(0px)' } : { x: 0, opacity: 1, filter: 'blur(0px)' }} exit={{ opacity: 0, x: -50, filter: 'blur(5px)' }} transition={shake ? Shake.transition : ViewTransition.transition} onSubmit={handleResetPassword} className="flex flex-col gap-4">
+                  <p className="text-xs text-center text-zinc-500">Código enviado a <span className="text-white font-semibold">{maskEmail(email)}</span></p>
+                  <div className="flex justify-between gap-1.5">
+                    {[0, 1, 2, 3, 4, 5].map(i => (
+                      <input key={i} ref={el => { inputRefs.current[i] = el; }} value={codigo[i] || ''} maxLength={1} inputMode="numeric"
+                        onChange={e => {
+                          const v = e.target.value.replace(/[^0-9]/g, ''); if (!v) { const a = codigo.split(''); a[i] = ''; setCodigo(a.join('')); return; }
+                          const a = codigo.split(''); a[i] = v.slice(-1); setCodigo(a.join('').slice(0, 6)); if (v && i < 5) inputRefs.current[i + 1]?.focus();
                         }}
-                        sx={{ fontSize: '0.813rem' }}
-                      >
-                        ¿Olvidaste tu contraseña?
-                      </Link>
-                    </Box>
-
-                    {/* Submit Button */}
-                    <Button
-                      type="submit"
-                      fullWidth
-                      variant="contained"
-                      size="large"
-                      disabled={loading}
-                      sx={{ mt: 1 }}
-                    >
-                      <AnimatePresence mode="wait">
-                        {loading ? (
-                          <motion.div
-                            key="loading"
-                            initial={{ opacity: 0, scale: 0.5 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.5 }}
-                          >
-                            <CircularProgress size={22} sx={{ color: 'white' }} />
-                          </motion.div>
-                        ) : (
-                          <motion.span
-                            key="text"
-                            initial={{ opacity: 0, y: 5 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -5 }}
-                          >
-                            Iniciar Sesión
-                          </motion.span>
-                        )}
-                      </AnimatePresence>
-                    </Button>
-                  </motion.form>
-                )}
-
-                {/* ===== RECOVER EMAIL VIEW ===== */}
-                {viewState === 'recover_email' && (
-                  <motion.form
-                    key="recover-email-form"
-                    initial={{ opacity: 0, x: 50, filter: 'blur(5px)' }}
-                    animate={
-                      shake
-                        ? { ...ShakeAnimation.animate, opacity: 1, filter: 'blur(0px)' }
-                        : { x: 0, opacity: 1, filter: 'blur(0px)' }
-                    }
-                    exit={{ opacity: 0, x: -50, filter: 'blur(5px)' }}
-                    transition={shake ? ShakeAnimation.transition : ViewTransition.transition}
-                    onSubmit={handleRecoverEmail}
-                    style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}
-                  >
-                    <TextField
-                      fullWidth
-                      label="Correo electrónico"
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      autoComplete="email"
-                      slotProps={{
-                        input: {
-                          startAdornment: (
-                            <InputAdornment position="start">
-                              <MailCheck size={20} style={{ color: '#94a3b8' }} />
-                            </InputAdornment>
-                          ),
-                        },
-                      }}
-                    />
-
-                    <Button
-                      type="submit"
-                      fullWidth
-                      variant="contained"
-                      size="large"
-                      disabled={loading}
-                    >
-                      <AnimatePresence mode="wait">
-                        {loading ? (
-                          <motion.div
-                            key="loading"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                          >
-                            <CircularProgress size={22} sx={{ color: 'white' }} />
-                          </motion.div>
-                        ) : (
-                          <motion.span
-                            key="text"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                          >
-                            Recibir código
-                          </motion.span>
-                        )}
-                      </AnimatePresence>
-                    </Button>
-
-                    <Box sx={{ display: 'flex', justifyContent: 'center', pt: 2 }}>
-                      <Link
-                        component="button"
-                        type="button"
-                        variant="body2"
-                        onClick={() => {
-                          setSuccessMsg('');
-                          setViewState('login');
-                        }}
-                        sx={{ display: 'flex', alignItems: 'center', gap: 0.5, fontSize: '0.813rem' }}
-                      >
-                        <ArrowLeft size={14} />
-                        Volver al Inicio de Sesión
-                      </Link>
-                    </Box>
-                  </motion.form>
-                )}
-
-                {/* ===== RECOVER CODE + NEW PASSWORD VIEW ===== */}
-                {viewState === 'recover_code' && (
-                  <motion.form
-                    key="recover-code-form"
-                    initial={{ opacity: 0, x: 50, filter: 'blur(5px)' }}
-                    animate={
-                      shake
-                        ? { ...ShakeAnimation.animate, opacity: 1, filter: 'blur(0px)' }
-                        : { x: 0, opacity: 1, filter: 'blur(0px)' }
-                    }
-                    exit={{ opacity: 0, x: -50, filter: 'blur(5px)' }}
-                    transition={shake ? ShakeAnimation.transition : ViewTransition.transition}
-                    onSubmit={handleResetPassword}
-                    style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}
-                  >
-                    <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', mb: -1, fontSize: '0.813rem' }}>
-                      Código enviado a <Box component="span" sx={{ color: '#818cf8', fontWeight: 600 }}>{maskEmail(email)}</Box>
-                    </Typography>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-                      {/* Code inputs */}
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: { xs: 0.5, sm: 1 }, px: { xs: 0.2, sm: 0.5 } }}>
-                        {[0, 1, 2, 3, 4, 5].map((index) => (
-                          <TextField
-                            key={index}
-                            inputRef={(el: HTMLInputElement | null) => {
-                              inputRefs.current[index] = el;
-                            }}
-                            slotProps={{
-                              input: {
-                                inputProps: {
-                                  maxLength: 1,
-                                  inputMode: 'numeric',
-                                  style: {
-                                    textAlign: 'center',
-                                    fontSize: '1.25rem',
-                                    fontWeight: 900,
-                                    padding: '14px 0',
-                                  },
-                                },
-                              },
-                            }}
-                            sx={{
-                              width: { xs: 40, sm: 48 },
-                              '& .MuiOutlinedInput-root': {
-                                borderRadius: { xs: '12px', sm: '16px' },
-                                bgcolor: codigo[index]
-                                  ? 'rgba(79,70,229,0.1)'
-                                  : 'rgba(255,255,255,0.05)',
-                                '& fieldset': {
-                                  borderColor: codigo[index]
-                                    ? 'rgba(99,102,241,0.5)'
-                                    : 'rgba(255,255,255,0.1)',
-                                },
-                                '&:hover fieldset': {
-                                  borderColor: 'rgba(129,140,248,0.5)',
-                                },
-                                '&.Mui-focused': {
-                                  boxShadow: '0 0 0 2px rgba(99,102,241,0.2)',
-                                  '& fieldset': {
-                                    borderColor: '#818cf8',
-                                  },
-                                },
-                              },
-                            }}
-                            value={codigo[index] || ''}
-                            onChange={(e) => {
-                              const val = e.target.value.replace(/[^0-9]/g, '');
-                              if (!val) {
-                                const newCode = codigo.split('');
-                                newCode[index] = '';
-                                setCodigo(newCode.join(''));
-                                return;
-                              }
-                              const newCode = codigo.split('');
-                              newCode[index] = val.slice(-1);
-                              const updatedCode = newCode.join('').slice(0, 6);
-                              setCodigo(updatedCode);
-
-                              if (val && index < 5) {
-                                inputRefs.current[index + 1]?.focus();
-                              }
-                            }}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Backspace' && !codigo[index] && index > 0) {
-                                inputRefs.current[index - 1]?.focus();
-                              }
-                            }}
-                            onPaste={(e) => {
-                              e.preventDefault();
-                              const pasteData = e.clipboardData.getData('text').replace(/[^0-9]/g, '').slice(0, 6);
-                              if (pasteData) {
-                                setCodigo(pasteData);
-                                const nextIndex = Math.min(pasteData.length, 5);
-                                inputRefs.current[nextIndex]?.focus();
-                              }
-                            }}
-                          />
-                        ))}
-                      </Box>
-
-                      {/* New password */}
-                      <TextField
-                        fullWidth
-                        label="Nueva contraseña"
-                        type={showNewPassword ? 'text' : 'password'}
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                        slotProps={{
-                          input: {
-                            startAdornment: (
-                              <InputAdornment position="start">
-                                <KeyRound size={20} style={{ color: '#94a3b8' }} />
-                              </InputAdornment>
-                            ),
-                            endAdornment: (
-                              <InputAdornment position="end">
-                                <Box
-                                  component="button"
-                                  type="button"
-                                  onClick={() => setShowNewPassword(v => !v)}
-                                  sx={{ display: 'grid', placeItems: 'center', width: 32, height: 32, borderRadius: '50%', border: 'none', bgcolor: 'transparent', cursor: 'pointer', color: '#94a3b8', '&:hover': { color: '#e2e8f0' } }}
-                                >
-                                  {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                                </Box>
-                              </InputAdornment>
-                            ),
-                          },
-                        }}
-                      />
-
-                      {/* Password strength bar */}
-                      {newPassword && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: 'auto' }}
-                          style={{ display: 'flex', flexDirection: 'column', gap: 8 }}
-                        >
-                          <Box sx={{ display: 'flex', gap: 1 }}>
-                            {[1, 2, 3, 4].map((i) => (
-                              <Box
-                                key={i}
-                                sx={{
-                                  height: 5,
-                                  flex: 1,
-                                  borderRadius: 3,
-                                  transition: 'all 0.5s ease',
-                                  bgcolor: i <= pwStrength.level ? pwStrength.color : 'rgba(255,255,255,0.05)',
-                                }}
-                              />
-                            ))}
-                          </Box>
-                          <Typography
-                            variant="caption"
-                            sx={{
-                              fontWeight: 700,
-                              fontSize: '0.7rem',
-                              color: pwStrength.level <= 1
-                                ? '#fb7185'
-                                : pwStrength.level <= 2
-                                ? '#fbbf24'
-                                : '#34d399',
-                            }}
-                          >
-                            {pwStrength.label}
-                          </Typography>
-                        </motion.div>
-                      )}
-
-                      {/* Confirm password */}
-                      <TextField
-                        fullWidth
-                        label="Confirmar contraseña"
-                        type={showConfirmPassword ? 'text' : 'password'}
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        error={confirmPassword.length > 0 && confirmPassword !== newPassword}
-                        helperText={
-                          confirmPassword.length > 0 && confirmPassword !== newPassword
-                            ? 'Las contraseñas no coinciden'
-                            : ''
-                        }
-                        slotProps={{
-                          input: {
-                            startAdornment: (
-                              <InputAdornment position="start">
-                                <KeyRound size={20} style={{ color: '#94a3b8' }} />
-                              </InputAdornment>
-                            ),
-                            endAdornment: (
-                              <InputAdornment position="end">
-                                <Box
-                                  component="button"
-                                  type="button"
-                                  onClick={() => setShowConfirmPassword(v => !v)}
-                                  sx={{ display: 'grid', placeItems: 'center', width: 32, height: 32, borderRadius: '50%', border: 'none', bgcolor: 'transparent', cursor: 'pointer', color: '#94a3b8', '&:hover': { color: '#e2e8f0' } }}
-                                >
-                                  {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                                </Box>
-                              </InputAdornment>
-                            ),
-                          },
-                        }}
-                      />
-                    </Box>
-
-                    <Button
-                      type="submit"
-                      fullWidth
-                      variant="contained"
-                      size="large"
-                      disabled={loading}
-                    >
-                      <AnimatePresence mode="wait">
-                        {loading ? (
-                          <motion.div
-                            key="loading"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                          >
-                            <CircularProgress size={22} sx={{ color: 'white' }} />
-                          </motion.div>
-                        ) : (
-                          <motion.span
-                            key="text"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                          >
-                            Establecer nueva contraseña
-                          </motion.span>
-                        )}
-                      </AnimatePresence>
-                    </Button>
-
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', px: 0.5, pt: 1 }}>
-                      <Link
-                        component="button"
-                        type="button"
-                        variant="body2"
-                        onClick={() => {
-                          setSuccessMsg('');
-                          setViewState('login');
-                        }}
-                        sx={{ fontSize: '0.813rem' }}
-                      >
-                        Cancelar
-                      </Link>
-                      <Link
-                        component="button"
-                        type="button"
-                        variant="body2"
-                        onClick={handleResendCode}
-                        sx={{
-                          fontSize: '0.813rem',
-                          color: resendCooldown > 0 ? '#64748b' : '#818cf8',
-                          pointerEvents: resendCooldown > 0 ? 'none' : 'auto',
-                        }}
-                      >
-                        {resendCooldown > 0 ? `Reenviar código (${resendCooldown}s)` : 'Reenviar código'}
-                      </Link>
-                    </Box>
-                  </motion.form>
-                )}
-
-                {/* ===== SUCCESS VIEW ===== */}
-                {viewState === 'success' && (
-                  <motion.div
-                    key="success-view"
-                    initial={{ opacity: 0, scale: 0.8, filter: 'blur(10px)' }}
-                    animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
-                    style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', gap: 24 }}
-                  >
-                    <Box sx={{ display: 'flex', justifyContent: 'center', position: 'relative' }}>
-                      <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: [0, 1.2, 1] }}
-                        transition={{ duration: 0.5, delay: 0.2 }}
-                        style={{
-                          position: 'relative',
-                          zIndex: 10,
-                        }}
-                      >
-                        <Box
-                          sx={{
-                            width: 96,
-                            height: 96,
-                            borderRadius: '50%',
-                            bgcolor: 'rgba(16,185,129,0.2)',
-                            border: '1px solid rgba(16,185,129,0.3)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                          }}
-                        >
-                          <Check size={48} style={{ color: '#34d399' }} />
-                        </Box>
-                      </motion.div>
-                      <motion.div
-                        animate={{ scale: [1, 1.5, 1], opacity: [0.5, 0, 0.5] }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                        style={{
-                          position: 'absolute',
-                          inset: 0,
-                          background: 'rgba(16,185,129,0.1)',
-                          borderRadius: '50%',
-                          filter: 'blur(20px)',
-                        }}
-                      />
-                    </Box>
-
-                    <Box>
-                      <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500, px: 2, lineHeight: 1.6 }}>
-                        {successMsg || 'Tu cuenta ya está asegurada con tu nueva clave. Ya puedes iniciar sesión nuevamente.'}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1, opacity: 0.7 }}>
-                        Redirigiendo al inicio en 3s...
-                      </Typography>
-                    </Box>
-
-                    <Button
-                      fullWidth
-                      variant="contained"
-                      size="large"
-                      onClick={() => {
-                        setViewState('login');
-                        setSuccessMsg('');
-                      }}
-                      sx={{
-                        background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                        boxShadow: '0 10px 30px rgba(16,185,129,0.3)',
-                        '&:hover': {
-                          background: 'linear-gradient(135deg, #34d399 0%, #10b981 100%)',
-                          boxShadow: '0 12px 35px rgba(16,185,129,0.4)',
-                        },
-                      }}
-                    >
-                      Volver al Inicio
-                    </Button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </Box>
-          </CardContent>
-        </Card>
-      </Box>
-    </Box>
+                        onKeyDown={e => { if (e.key === 'Backspace' && !codigo[i] && i > 0) inputRefs.current[i - 1]?.focus(); }}
+                        onPaste={e => { e.preventDefault(); const d = e.clipboardData.getData('text').replace(/[^0-9]/g, '').slice(0, 6); if (d) { setCodigo(d); inputRefs.current[Math.min(d.length, 5)]?.focus(); } }}
+                        className={`w-10 sm:w-12 h-12 rounded-xl bg-zinc-900 border text-center text-lg font-black text-white outline-none transition-colors ${codigo[i] ? 'border-white bg-zinc-800' : 'border-zinc-800 focus:border-zinc-700 focus:bg-zinc-800'}`} />
+                    ))}
+                  </div>
+                  <Input icon={KeyRound} placeholder="Nueva contraseña" type={showNewPassword ? 'text' : 'password'} value={newPassword} onChange={(e: any) => setNewPassword(e.target.value)}
+                    right={<button type="button" onClick={() => setShowNewPassword(v => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 grid place-items-center rounded-full text-zinc-500 hover:text-white hover:bg-white/5">{showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}</button>} />
+                  {newPassword && (
+                    <div className="flex flex-col gap-1.5 -mt-1">
+                      <div className="flex gap-1">{[1, 2, 3, 4].map(n => <div key={n} className="h-1 flex-1 rounded-full transition-colors" style={{ background: n <= pwStrength.level ? pwStrength.color : 'rgba(63,63,70,0.6)' }} />)}</div>
+                      <span className="text-[11px] font-bold" style={{ color: pwStrength.color }}>{pwStrength.label}</span>
+                    </div>
+                  )}
+                  <Input icon={KeyRound} placeholder="Confirmar contraseña" type={showConfirmPassword ? 'text' : 'password'} value={confirmPassword} onChange={(e: any) => setConfirmPassword(e.target.value)}
+                    right={<button type="button" onClick={() => setShowConfirmPassword(v => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 grid place-items-center rounded-full text-zinc-500 hover:text-white hover:bg-white/5">{showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}</button>} />
+                  {confirmPassword && confirmPassword !== newPassword && <p className="text-xs text-red-400 -mt-2">Las contraseñas no coinciden</p>}
+                  <button type="submit" disabled={loading} className="w-full inline-flex items-center justify-center gap-2 bg-white hover:bg-zinc-100 disabled:opacity-50 text-zinc-900 font-bold text-sm py-2.5 rounded-xl transition-colors shadow-md">
+                    {loading ? <span className="w-5 h-5 border-2 border-zinc-300 border-t-zinc-900 rounded-full animate-spin" /> : 'Establecer nueva contraseña'}
+                  </button>
+                  <div className="flex justify-between items-center pt-1">
+                    <button type="button" onClick={() => { setSuccessMsg(''); setViewState('login'); }} className="text-xs font-semibold text-zinc-400 hover:text-white">Cancelar</button>
+                    <button type="button" onClick={handleResendCode} disabled={resendCooldown > 0} className={`text-xs font-semibold ${resendCooldown > 0 ? 'text-zinc-600' : 'text-white hover:text-zinc-300'} disabled:pointer-events-none`}>{resendCooldown > 0 ? `Reenviar código (${resendCooldown}s)` : 'Reenviar código'}</button>
+                  </div>
+                </motion.form>
+              )}
+              {viewState === 'success' && (
+                <motion.div key="success" initial={{ opacity: 0, scale: 0.8, filter: 'blur(10px)' }} animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }} className="flex flex-col items-center text-center gap-6 py-2">
+                  <div className="relative">
+                    <div className="w-20 h-20 rounded-full bg-emerald-500/10 border border-emerald-500/20 grid place-items-center"><Check className="w-10 h-10 text-emerald-400" /></div>
+                    <div className="absolute inset-0 bg-emerald-500/10 rounded-full blur-xl animate-pulse" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-zinc-400 leading-relaxed px-2">{successMsg || 'Tu cuenta ya está asegurada con tu nueva clave. Ya puedes iniciar sesión nuevamente.'}</p>
+                    <p className="text-xs text-zinc-600 mt-2">Redirigiendo al inicio en 3s...</p>
+                  </div>
+                  <button onClick={() => { setViewState('login'); setSuccessMsg(''); }} className="w-full bg-white hover:bg-zinc-100 text-zinc-900 font-bold text-sm py-2.5 rounded-xl transition-colors">Volver al Inicio</button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+      </div>
+    </div>
   );
-};
-
-export default Login;
+}
