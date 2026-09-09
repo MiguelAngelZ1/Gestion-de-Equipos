@@ -17,7 +17,7 @@ const sendRecoveryCode = async (to, code) => {
     const mailOptions = {
         from: `"IMPERIO - Gestión de Equipos" <${process.env.EMAIL_USER || process.env.SMTP_USER}>`,
         to: to,
-        subject: "Código de Seguridad - Control de Equipos 3.0",
+        subject: "Código de Seguridad - Control de Equipos",
         html: `
             <!DOCTYPE html>
             <html>
