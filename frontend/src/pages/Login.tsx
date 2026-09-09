@@ -16,6 +16,14 @@ const ViewTransition = {
 };
 const Shake = { animate: { x: [-12, 12, -8, 8, -4, 4, 0] }, transition: { duration: 0.5 } };
 
+const LoginInput = ({ icon: Icon, right, ...props }: any) => (
+  <div className="relative">
+    {Icon && <Icon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 pointer-events-none" />}
+    <input {...props} className={`w-full bg-zinc-900 border border-zinc-800 rounded-lg ${Icon ? 'pl-10' : 'pl-3'} ${right ? 'pr-10' : 'pr-3'} py-2.5 text-sm text-white placeholder:text-zinc-500 outline-none focus:border-zinc-700 focus:bg-zinc-800 transition-colors ${props.className || ''}`} />
+    {right}
+  </div>
+);
+
 export default function Login() {
   const { showToast } = useToast();
   const { login } = useAuth();
@@ -85,14 +93,6 @@ export default function Login() {
     if (s <= 2) return { level: 1, label: 'Débil', color: '#ef4444' }; if (s <= 3) return { level: 2, label: 'Media', color: '#eab308' }; if (s <= 4) return { level: 3, label: 'Fuerte', color: '#22c55e' }; return { level: 4, label: 'Muy fuerte', color: '#22c55e' };
   })();
 
-  const Input = ({ icon: Icon, right, ...props }: any) => (
-    <div className="relative">
-      <Icon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 pointer-events-none" />
-      <input {...props} className={`w-full bg-zinc-900 border border-zinc-800 rounded-lg ${Icon ? 'pl-10' : 'pl-3'} ${right ? 'pr-10' : 'pr-3'} py-2.5 text-sm text-white placeholder:text-zinc-500 outline-none focus:border-zinc-700 focus:bg-zinc-800 transition-colors ${props.className || ''}`} />
-      {right}
-    </div>
-  );
-
   return (
     <div className="min-h-screen bg-black relative overflow-y-auto overflow-x-hidden flex flex-col items-center" style={{ fontFamily: 'Hanken Grotesk, sans-serif' }}>
       <SideRays speed={2.5} rayColor1="#06B6D4" rayColor2="#ffffff" intensity={2} spread={2} origin="top-left" tilt={0} saturation={1.5} blend={0.75} falloff={1.6} opacity={1} />
@@ -132,8 +132,8 @@ export default function Login() {
             <AnimatePresence mode="wait">
               {viewState === 'login' && (
                 <motion.form key="login" initial={ViewTransition.initial} animate={shake ? { ...Shake.animate, opacity: 1 } : ViewTransition.animate} exit={ViewTransition.exit} transition={shake ? Shake.transition : ViewTransition.transition} onSubmit={handleLogin} className="flex flex-col gap-4">
-                  <Input icon={User} placeholder="Usuario" value={usuario} onChange={(e: any) => setUsuario(e.target.value)} autoComplete="username" />
-                  <Input icon={Lock} placeholder="Contraseña" type={showPassword ? 'text' : 'password'} value={password} onChange={(e: any) => setPassword(e.target.value)} autoComplete="current-password"
+                  <LoginInput icon={User} placeholder="Usuario" value={usuario} onChange={(e: any) => setUsuario(e.target.value)} autoComplete="username" />
+                  <LoginInput icon={Lock} placeholder="Contraseña" type={showPassword ? 'text' : 'password'} value={password} onChange={(e: any) => setPassword(e.target.value)} autoComplete="current-password"
                     right={<button type="button" onClick={() => setShowPassword(v => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 grid place-items-center rounded-full text-zinc-500 hover:text-white hover:bg-white/5 transition-colors">{showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}</button>} />
                   <div className="flex justify-end -mt-1">
                     <button type="button" onClick={() => { setSuccessMsg(''); setViewState('recover_email'); }} className="text-xs font-semibold text-zinc-400 hover:text-white transition-colors">¿Olvidaste tu contraseña?</button>
@@ -145,7 +145,7 @@ export default function Login() {
               )}
               {viewState === 'recover_email' && (
                 <motion.form key="recover_email" initial={{ opacity: 0, x: 50, filter: 'blur(5px)' }} animate={shake ? { ...Shake.animate, opacity: 1, filter: 'blur(0px)' } : { x: 0, opacity: 1, filter: 'blur(0px)' }} exit={{ opacity: 0, x: -50, filter: 'blur(5px)' }} transition={shake ? Shake.transition : ViewTransition.transition} onSubmit={handleRecoverEmail} className="flex flex-col gap-4">
-                  <Input icon={MailCheck} placeholder="Correo electrónico" type="email" value={email} onChange={(e: any) => setEmail(e.target.value)} autoComplete="email" />
+                  <LoginInput icon={MailCheck} placeholder="Correo electrónico" type="email" value={email} onChange={(e: any) => setEmail(e.target.value)} autoComplete="email" />
                   <button type="submit" disabled={loading} className="w-full inline-flex items-center justify-center gap-2 bg-white hover:bg-zinc-100 disabled:opacity-50 text-zinc-900 font-bold text-sm py-2.5 rounded-xl transition-colors shadow-md">
                     {loading ? <span className="w-5 h-5 border-2 border-zinc-300 border-t-zinc-900 rounded-full animate-spin" /> : 'Recibir código'}
                   </button>
@@ -169,7 +169,7 @@ export default function Login() {
                         className={`w-10 sm:w-12 h-12 rounded-xl bg-zinc-900 border text-center text-lg font-black text-white outline-none transition-colors ${codigo[i] ? 'border-white bg-zinc-800' : 'border-zinc-800 focus:border-zinc-700 focus:bg-zinc-800'}`} />
                     ))}
                   </div>
-                  <Input icon={KeyRound} placeholder="Nueva contraseña" type={showNewPassword ? 'text' : 'password'} value={newPassword} onChange={(e: any) => setNewPassword(e.target.value)}
+                  <LoginInput icon={KeyRound} placeholder="Nueva contraseña" type={showNewPassword ? 'text' : 'password'} value={newPassword} onChange={(e: any) => setNewPassword(e.target.value)}
                     right={<button type="button" onClick={() => setShowNewPassword(v => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 grid place-items-center rounded-full text-zinc-500 hover:text-white hover:bg-white/5">{showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}</button>} />
                   {newPassword && (
                     <div className="flex flex-col gap-1.5 -mt-1">
@@ -177,7 +177,7 @@ export default function Login() {
                       <span className="text-[11px] font-bold" style={{ color: pwStrength.color }}>{pwStrength.label}</span>
                     </div>
                   )}
-                  <Input icon={KeyRound} placeholder="Confirmar contraseña" type={showConfirmPassword ? 'text' : 'password'} value={confirmPassword} onChange={(e: any) => setConfirmPassword(e.target.value)}
+                  <LoginInput icon={KeyRound} placeholder="Confirmar contraseña" type={showConfirmPassword ? 'text' : 'password'} value={confirmPassword} onChange={(e: any) => setConfirmPassword(e.target.value)}
                     right={<button type="button" onClick={() => setShowConfirmPassword(v => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 grid place-items-center rounded-full text-zinc-500 hover:text-white hover:bg-white/5">{showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}</button>} />
                   {confirmPassword && confirmPassword !== newPassword && <p className="text-xs text-red-400 -mt-2">Las contraseñas no coinciden</p>}
                   <button type="submit" disabled={loading} className="w-full inline-flex items-center justify-center gap-2 bg-white hover:bg-zinc-100 disabled:opacity-50 text-zinc-900 font-bold text-sm py-2.5 rounded-xl transition-colors shadow-md">
