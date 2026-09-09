@@ -21,7 +21,6 @@ const Soporte = lazy(() => import('./pages/Soporte'));
 const Configuracion = lazy(() => import('./pages/Configuracion'));
 const Historial = lazy(() => import('./pages/Historial'));
 const Componentes = lazy(() => import('./pages/Componentes'));
-const MensajeAdmin = lazy(() => import('./pages/MensajeAdmin'));
 const Prestamos = lazy(() => import('./pages/Prestamos'));
 const IPAM = lazy(() => import('./pages/IPAM'));
 
@@ -92,7 +91,6 @@ function AppContent() {
               <IPAM />
             </RoleRoute>
           } />
-          <Route path="mensaje-admin" element={<MensajeAdmin />} />
         </Route>
       </Routes>
     </Suspense>

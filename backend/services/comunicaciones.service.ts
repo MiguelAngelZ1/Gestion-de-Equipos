@@ -131,37 +131,6 @@ class PrestamosService {
     }
 }
 
-class MensajeriaService {
-    async enviarMensaje(data) {
-        const { usuario_id, remitente, mensaje } = data;
-        const result = await db.run(
-            "INSERT INTO mensajes_admin (usuario_id, remitente, mensaje) VALUES (?, ?, ?)",
-            [usuario_id || null, remitente || null, mensaje]
-        );
-        return { id: result.lastID, ...data };
-    }
-
-    async getMensajes() {
-        return await db.all("SELECT * FROM mensajes_admin ORDER BY fecha DESC LIMIT 100");
-    }
-
-    async marcarLeido(id) {
-        await db.run("UPDATE mensajes_admin SET leido = 1 WHERE id = ?", [parseInt(id)]);
-        return { success: true };
-    }
-
-    async marcarTodoLeido() {
-        await db.run("UPDATE mensajes_admin SET leido = 1 WHERE leido = 0");
-        return { success: true };
-    }
-
-    async eliminarLeidos() {
-        const result = await db.run("DELETE FROM mensajes_admin WHERE leido = 1");
-        return { count: result.changes };
-    }
-}
-
 module.exports = {
-    prestamosService: new PrestamosService(),
-    mensajeriaService: new MensajeriaService()
+    prestamosService: new PrestamosService()
 };
