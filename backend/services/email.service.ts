@@ -2,8 +2,6 @@ const logger = require('../utils/logger');
 const nodemailer = require('nodemailer');
 const path = require('path');
 
-// Configuración de transporte
-// Nota: Usamos EMAIL_USER y EMAIL_PASS según lo solicitado
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -12,13 +10,7 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-/**
- * Envía un correo electrónico con el código de recuperación
- * @param {string} to - Email del destinatario
- * @param {string} code - Código de validación generado
- */
 const sendRecoveryCode = async (to, code) => {
-    // Intentamos obtener la ruta del logo para embeberlo
     const logoRelPath = '../../frontend/src/assets/LogoIMPERIO.webp';
     const logoAbsPath = path.join(__dirname, logoRelPath);
 
@@ -31,17 +23,17 @@ const sendRecoveryCode = async (to, code) => {
             <html>
             <head>
                 <style>
-                    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7fa; margin: 0; padding: 0; }
-                    .container { max-width: 500px; margin: 40px auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
-                    .header { background: #09090b; padding: 28px; text-align: center; }
-                    .logo { width: 72px; height: 72px; border-radius: 50%; background: #ffffff; padding: 6px; object-fit: contain; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
-                    .content { padding: 40px; text-align: center; color: #334155; }
-                    h1 { font-size: 22px; margin-bottom: 10px; color: #1e293b; font-weight: 700; }
-                    p { font-size: 15px; line-height: 1.6; color: #64748b; margin-bottom: 30px; }
-                    .code-box { background: #f8fafc; border: 2px dashed #e2e8f0; border-radius: 12px; padding: 18px 20px; margin: 20px 0; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
-                    .code { font-size: 32px; font-weight: 800; letter-spacing: 10px; color: #18181b; font-family: 'Courier New', Courier, monospace; user-select: all; }
-                    .copy-btn { background: #18181b; color: #ffffff; border-radius: 8px; padding: 10px 16px; font-size: 12px; font-weight: 700; text-decoration: none; display: inline-block; white-space: nowrap; }
-                    .warning { font-size: 12px; color: #94a3b8; margin-top: 20px; font-style: italic; }
+                    body { font-family: 'Inter', 'Segoe UI', sans-serif; background-color: #09090b; margin: 0; padding: 0; }
+                    .container { max-width: 480px; margin: 32px auto; background: #18181b; border: 1px solid #27272a; border-radius: 16px; overflow: hidden; }
+                    .header { background: #09090b; padding: 28px; text-align: center; border-bottom: 1px solid #27272a; }
+                    .logo { width: 64px; height: 64px; border-radius: 50%; background: #ffffff; padding: 5px; object-fit: contain; }
+                    .content { padding: 32px 28px; text-align: center; }
+                    h1 { font-size: 18px; font-weight: 800; color: #fafafa; margin: 0 0 8px 0; letter-spacing: -0.02em; }
+                    .subtitle { font-size: 13px; line-height: 1.5; color: #a1a1aa; margin: 0 0 24px 0; }
+                    .code-box { background: #27272a; border: 1px solid #3f3f46; border-radius: 12px; padding: 14px 16px; margin: 0; }
+                    .code { font-size: 28px; font-weight: 800; letter-spacing: 10px; color: #fafafa; font-family: 'Courier New', monospace; user-select: all; }
+                    .icon-btn { width: 36px; height: 36px; border-radius: 8px; background: #ffffff; display: inline-grid; place-items: center; text-decoration: none; }
+                    .warning { font-size: 11px; color: #71717a; margin-top: 16px; line-height: 1.5; }
                 </style>
             </head>
             <body>
@@ -51,12 +43,21 @@ const sendRecoveryCode = async (to, code) => {
                     </div>
                     <div class="content">
                         <h1>Recuperación de Acceso</h1>
-                        <p>Has solicitado restablecer tu contraseña. Utiliza el siguiente código de seguridad para continuar con el proceso:</p>
+                        <p class="subtitle">Has solicitado restablecer tu contraseña. Usa el código para continuar:</p>
                         <div class="code-box">
-                            <span class="code">${code}</span>
-                            <a class="copy-btn" href="#">Copiar</a>
+                            <table width="100%" cellpadding="0" cellspacing="0" style="width:100%">
+                                <tr>
+                                    <td style="width:36px"></td>
+                                    <td align="center"><span class="code">${code}</span></td>
+                                    <td align="right" style="width:36px">
+                                        <a class="icon-btn" href="#">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#18181b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v3"></path></svg>
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
                         </div>
-                        <p class="warning">Este código expira en 15 minutos por razones de seguridad.<br>Si no solicitaste este cambio, puedes ignorar este aviso.</p>
+                        <p class="warning">Expira en 15 minutos. Si no solicitaste este cambio, ignora este mensaje.</p>
                     </div>
                 </div>
             </body>
@@ -65,14 +66,13 @@ const sendRecoveryCode = async (to, code) => {
         attachments: [{
             filename: 'logo.png',
             path: logoAbsPath,
-            cid: 'logo' // mismo ID que en el src="cid:logo"
+            cid: 'logo'
         }]
     };
 
     try {
         const user = process.env.EMAIL_USER || process.env.SMTP_USER;
         const pass = process.env.EMAIL_PASS || process.env.SMTP_PASS;
-
         if (!user || !pass) {
             logger.warn({ code }, "Email no configurado. Código de recuperación visible en log.");
             return { success: true, simulated: true };
