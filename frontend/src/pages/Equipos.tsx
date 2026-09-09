@@ -115,6 +115,7 @@ export default function Equipos() {
   }, [isSidebarOpen]);
   useEffect(() => { fetchConfig(); }, []);
   useEffect(() => {
+    if (!search.trim() && !hasActiveFilters) { if (fetchedOnce) { setEquipos([]); setTotal(0); setTotalPages(0); setFetchedOnce(false); } return; }
     if (!search && !fetchedOnce) return;
     if (searchDebounce.current) clearTimeout(searchDebounce.current);
     searchDebounce.current = setTimeout(() => fetchData(search, filterEstado, filterUbicacion, filterGrupo, 1), 400);
