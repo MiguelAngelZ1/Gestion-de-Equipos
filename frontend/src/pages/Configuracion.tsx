@@ -13,13 +13,12 @@ const BackupPanel = lazy(() => import('../components/config/BackupPanel'));
 const UserManagementPanel = lazy(() => import('../components/config/UserManagementPanel'));
 const ProfilePanel = lazy(() => import('../components/config/ProfilePanel'));
 const NotificationsPanel = lazy(() => import('../components/config/NotificationsPanel'));
-const MensajesAdminPanel = lazy(() => import('../components/config/MensajesAdminPanel'));
+
 
 const TABS = [
   { id: 'perfil', label: 'Mi Perfil', icon: UserCircle },
   { id: 'notificaciones', label: 'Notificaciones', icon: Bell },
   { id: 'usuarios', label: 'Usuarios', icon: Users, admin: true },
-  { id: 'mensajes', label: 'Bandeja', icon: Bell, admin: true },
   { id: 'grupos-comodidad', label: 'Grupos', icon: Tag },
   { id: 'grados', label: 'Grados', icon: Shield },
   { id: 'estados', label: 'Estados', icon: Activity },
@@ -72,7 +71,7 @@ export default function Configuracion() {
                 {tab === 'perfil' && <ProfilePanel />}
                 {tab === 'notificaciones' && <NotificationsPanel />}
                 {tab === 'usuarios' && <UserManagementPanel />}
-                {tab === 'mensajes' && <MensajesAdminPanel />}
+
                 {tab === 'grupos-comodidad' && <GruposComodidadPanel />}
                 {tab === 'grados' && <GradosPanel />}
                 {tab === 'estados' && <EstadosPanel />}

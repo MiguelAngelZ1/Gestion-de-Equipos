@@ -181,7 +181,7 @@ const NotificationBell = ({ plain = false }: { plain?: boolean } = {}) => {
                 navigate('/soporte');
                 break;
             case 'tickets':
-                navigate('/configuracion', { state: { activeTab: 'mensajes' } });
+                navigate('/soporte');
                 break;
             default:
                 break;

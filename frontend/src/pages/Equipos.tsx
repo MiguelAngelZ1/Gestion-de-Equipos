@@ -70,7 +70,7 @@ export default function Equipos() {
   const userData = JSON.parse(localStorage.getItem("equipos_user_data") || "{}");
   const userRole = (userData.rol || ROLES.USER).toUpperCase();
   const hasActiveFilters = filterEstado !== "TODOS" || filterUbicacion !== "TODAS" || filterGrupo !== "TODOS";
-  const clearFilters = () => { setSearch(""); setFilterEstado("TODOS"); setFilterUbicacion("TODAS"); setFilterGrupo("TODOS"); };
+  const clearFilters = () => { setSearch(""); setFilterEstado("TODOS"); setFilterUbicacion("TODAS"); setFilterGrupo("TODOS"); setEquipos([]); setTotal(0); setTotalPages(0); setCurrentPage(1); setFetchedOnce(false); };
   const searchDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
   const filterRef = useRef<HTMLDivElement>(null);
 
@@ -120,7 +120,11 @@ export default function Equipos() {
     searchDebounce.current = setTimeout(() => fetchData(search, filterEstado, filterUbicacion, filterGrupo, 1), 400);
     return () => { if (searchDebounce.current) clearTimeout(searchDebounce.current); };
   }, [search]);
-  useEffect(() => { if (!hasActiveFilters && !fetchedOnce) return; fetchData(search, filterEstado, filterUbicacion, filterGrupo, 1); }, [filterEstado, filterUbicacion, filterGrupo]);
+  useEffect(() => {
+    if (!hasActiveFilters && !search) { if (fetchedOnce) { setEquipos([]); setTotal(0); setTotalPages(0); setFetchedOnce(false); } return; }
+    if (!hasActiveFilters && !fetchedOnce) return;
+    fetchData(search, filterEstado, filterUbicacion, filterGrupo, 1);
+  }, [filterEstado, filterUbicacion, filterGrupo]);
 
   const toggleSelect = (id: number) => setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
   const toggleAll = () => {

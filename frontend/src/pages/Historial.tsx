@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { History, Calendar, Tag, User, ChevronLeft, ChevronRight } from 'lucide-react';
+import { History, Calendar, Tag, User, ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiRequest } from '../services/api';
 import { getEventStyle } from '../utils/historialEventos';
@@ -12,7 +12,8 @@ const spring = { type: 'spring' as const, stiffness: 400, damping: 30 };
 export default function Historial() {
     const [search, setSearch] = useState("");
     const [results, setResults] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
+    const [fetchedOnce, setFetchedOnce] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const [total, setTotal] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
@@ -31,6 +32,7 @@ export default function Historial() {
             setTotal(data?.pagination?.total || 0);
             setTotalPages(data?.pagination?.totalPages || 0);
             setCurrentPage(data?.pagination?.page || 1);
+            setFetchedOnce(true);
         } catch {
             // silent
         } finally {
@@ -39,6 +41,7 @@ export default function Historial() {
     };
 
     useEffect(() => {
+        if (!search.trim()) { if (fetchedOnce) { setResults([]); setTotal(0); setTotalPages(0); setFetchedOnce(false); } return; }
         if (searchDebounce.current) clearTimeout(searchDebounce.current);
         searchDebounce.current = setTimeout(() => fetchData(search, 1), 400);
         return () => { if (searchDebounce.current) clearTimeout(searchDebounce.current); };
@@ -61,7 +64,13 @@ export default function Historial() {
                 </div>
             </motion.div>
 
-            {loading ? (
+            {!fetchedOnce ? (
+                <div className="flex-1 min-h-[calc(100vh-280px)] flex flex-col items-center justify-center bg-zinc-900 border border-zinc-800 rounded-xl">
+                    <Search className="w-8 h-8 text-zinc-600 mb-3" />
+                    <p className="font-semibold">Busca un movimiento</p>
+                    <p className="text-sm text-zinc-500 mt-1">Usa búsqueda para empezar</p>
+                </div>
+            ) : loading ? (
                 <div className="flex-1 min-h-[calc(100vh-280px)] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 content-start overflow-y-auto custom-scrollbar pr-1">
                     {[1, 2, 3, 4, 5, 6].map(i => <div key={i} className="h-44 rounded-xl bg-zinc-900 border border-zinc-800 animate-pulse" />)}
                 </div>

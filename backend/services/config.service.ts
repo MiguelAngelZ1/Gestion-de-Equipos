@@ -95,20 +95,37 @@ class ConfigService {
     // --- MANTENIMIENTO ---
     async getSystemStats() {
         let databaseSize = "0 MB";
-        
         try {
-            const dbPaths = [
-              path.resolve(process.cwd(), 'backend/equipos.db'),
-            ];
-            
-            for (const p of dbPaths) {
-              if (fs.existsSync(p)) {
-                const stats = fs.statSync(p);
-                databaseSize = (stats.size / 1024 / 1024).toFixed(2) + " MB";
-                break;
-              }
+            const isPG = !!(db as any).client?.pool;
+            if (isPG) {
+                const r = await db.query("SELECT pg_size_pretty(pg_database_size(current_database())) as sz");
+                if (r.rows[0]?.sz) databaseSize = r.rows[0].sz;
+            } else {
+                try {
+                    const pc = await db.query("PRAGMA page_count");
+                    const ps = await db.query("PRAGMA page_size");
+                    const c = pc.rows[0]?.page_count ?? pc.rows[0]?.['page_count'];
+                    const s = ps.rows[0]?.page_size ?? ps.rows[0]?.['page_size'];
+                    if (c && s) databaseSize = (Number(c) * Number(s) / 1024 / 1024).toFixed(2) + " MB";
+                    else throw new Error('pragma empty');
+                } catch {
+                    const candidates = [
+                        process.env.DB_PATH ? path.resolve(process.env.DB_PATH) : null,
+                        path.resolve(process.cwd(), 'backend/equipos.db'),
+                        path.resolve(__dirname, '../equipos.db'),
+                        path.resolve(process.cwd(), 'equipos.db'),
+                    ].filter(Boolean) as string[];
+                    for (const p of candidates) {
+                        if (fs.existsSync(p)) {
+                            const stats = fs.statSync(p);
+                            const mb = stats.size / 1024 / 1024;
+                            databaseSize = mb < 0.01 ? (stats.size / 1024).toFixed(1) + " KB" : mb.toFixed(2) + " MB";
+                            break;
+                        }
+                    }
+                }
             }
-        } catch (e) {
+        } catch (e: any) {
             logger.warn({ err: e.message }, "No se pudo obtener el tamaño de la BD");
             databaseSize = "N/A";
         }
