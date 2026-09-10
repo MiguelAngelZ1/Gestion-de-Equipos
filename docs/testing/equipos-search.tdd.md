@@ -3,7 +3,7 @@
 **Branch:** `feature/tdd-ecc-setup`  
 **Fecha:** 2026-09-10  
 **Runner:** `pnpm test` (vitest 4.1.8, backend) + `pnpm typecheck` (tsc --noEmit)  
-**Commits:** `a27c5b5` (RED) -> `28e4bca` (GREEN)
+**Commits:** `a27c5b5` (RED) -> `28e4bca` (GREEN) -> `3ad5bc3` (docs) + coverage fix
 
 ## 1. Source Plan
 Sin `*.plan.md` externo. Journeys derivadas del requerimiento: búsqueda server-side paginada que cubra `especificaciones` (REGLA 14/15) + filtros, para >50 equipos.
@@ -32,8 +32,9 @@ Sin `*.plan.md` externo. Journeys derivadas del requerimiento: búsqueda server-
 | 6 | Búsqueda case-insensitive ine/nne/serie/grado | `busca case-insensitive` | unit | PASS | `LOWER(e.ine) LIKE LOWER(?)` |
 
 ## 5. Coverage y Gaps
-- `@vitest/coverage-v8` no instalado -> `pnpm exec vitest run --coverage` falla. Gap intencional: no bloquea TDD, pero instalar para verificar 80% global antes de merge.
-- Faltan integration/E2E reales con DB real y Playwright para flujo completo login->búsqueda->paginación. Próximo ciclo.
+- `pnpm exec vitest run --coverage` (v8 4.1.8) -> `All files 52.57% Stmts / 40.09% Branch / 63.15% Funcs` (equipos.service.ts 33.64% Stmts, 24.57% Branch). **No alcanza 80% global** porque faltan tests para `createOrUpdate/Delete/Bulk` en mismo archivo. Gap aceptado para este slice; 80% se alcanza al completar siguientes TDD slices del mismo service. La función `getAllEquipos` sí está 100% cubierta por los 6 casos.
+- `pnpm lint` -> 48 problemas preexistentes (18 errors, 30 warnings) no introducidos por este slice. No bloquea.
+- Faltan integration/E2E reales con DB real y Playwright para flujo completo login->búsqueda->paginación. Próximo ciclo `e2e-testing`.
 
 ## 6. Merge Evidence
 Squash permitido solo copiando este resumen al PR body. Checkpoints verificados en `28e4bca` reachable desde HEAD `feature/tdd-ecc-setup`.
