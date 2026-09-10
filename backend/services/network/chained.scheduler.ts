@@ -26,8 +26,7 @@ export class ChainedScheduler {
   start(): void {
     if (this.isRunning) return;
     this.isRunning = true;
-    logger.info({ scheduler: this.name, intervalMs: this.intervalMs }, `[Scheduler] Iniciando ${this.name}`);
-    this.scheduleNext(0); // Ejecutar primer ciclo de inmediato
+    this.scheduleNext(0);
   }
 
   /**

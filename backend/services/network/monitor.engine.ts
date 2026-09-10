@@ -54,9 +54,6 @@ export class NetworkMonitorEngine {
 
       // 2. Comprobación Canary Multi-vectorial de salud del servidor
       const canary = await CanaryProbe.checkHealth(primaryGateway);
-      if (!canary.isHealthy) {
-        logger.warn({ detail: canary.detail }, '[Monitor] Canary degradado: suspendiendo transiciones a OFFLINE');
-      }
 
       // 3. Obtener nodos a monitorizar (no ignorados)
       const nodes = await db.all(`

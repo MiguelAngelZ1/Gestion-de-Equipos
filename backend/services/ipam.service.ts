@@ -575,6 +575,8 @@ class IPAMService {
                 cell.border = { bottom: { style: 'medium', color: { argb: 'FF4f46e5' } } };
             });
 
+            sheet.views = [{ state: 'frozen', ySplit: 1 }];
+
             data.ips.forEach(ip => {
                 const row = sheet.addRow({
                     ip: ip.ip,
