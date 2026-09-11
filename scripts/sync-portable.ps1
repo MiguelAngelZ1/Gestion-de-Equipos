@@ -43,7 +43,7 @@ if (!(Test-Path "$portable/node.exe")) {
 
 if (-not $SkipInstall) {
   $needInstall=!(Test-Path "$portable/backend/node_modules")
-  if (Test-Path "backend/pnpm-lock.yaml" -and (Test-Path "$portable/backend/pnpm-lock.yaml")) {
+  if ((Test-Path "backend/pnpm-lock.yaml") -and (Test-Path "$portable/backend/pnpm-lock.yaml")) {
     if ((Get-Item "backend/pnpm-lock.yaml").LastWriteTime -gt (Get-Item "$portable/backend/pnpm-lock.yaml").LastWriteTime) { $needInstall=$true }
   }
   if ($needInstall) {
