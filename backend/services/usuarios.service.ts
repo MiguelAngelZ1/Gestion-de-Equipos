@@ -49,8 +49,10 @@ class UsuariosService {
     async createUsuario(data) {
         const { usuario, email, password, rol, permisos_json } = data;
 
-        const existing = await this.findByUsuarioOrEmail(usuario);
-        if (existing) throw new Error("El usuario o email ya existe");
+        const byName = await db.get(`SELECT id FROM usuarios WHERE usuario = ?`, [usuario]);
+        if (byName) throw new Error("El usuario ya existe");
+        const byEmail = await this.findByEmail(email);
+        if (byEmail) throw new Error("El email ya existe");
 
         const password_hash = await bcrypt.hash(password, 12);
         const targetRol = (rol || 'USER').toUpperCase();

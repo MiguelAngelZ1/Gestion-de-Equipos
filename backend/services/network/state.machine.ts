@@ -60,6 +60,26 @@ export class NetworkStateMachine {
       };
     }
     if (evidenceSet.hasL2Presence && evidenceSet.positiveCount > 0) {
+      if (evidenceSet.hasL2Presence && !evidenceSet.hasL3Response && !evidenceSet.hasL4Activity) {
+        const newFailures = consecutiveFailures + 1;
+        if (newFailures < offlineThreshold) {
+          return {
+            previousState: currentState,
+            nextState: 'WARNING' as NetworkNodeState,
+            consecutiveFailures: newFailures,
+            stateChanged: currentState !== 'WARNING',
+            reason: `Solo ARP sin L3/L4 (${newFailures}/${offlineThreshold}) -> WARNING`
+          };
+        }
+        return {
+          previousState: currentState,
+          nextState: 'OFFLINE' as NetworkNodeState,
+          consecutiveFailures: newFailures,
+          stateChanged: currentState !== 'OFFLINE',
+          reason: `Solo ARP sin L3/L4 (${newFailures}/${offlineThreshold}) -> OFFLINE`,
+          eventToEmit: currentState !== 'UNKNOWN' ? { type: 'CAIDA' as const, severity: 'CRITICAL' as const, message: `Dispositivo ${nodeIdentifier} OFFLINE tras ${newFailures} ciclos solo-ARP`, details: { targetIp: evidenceSet.targetIp, consecutiveFailures: newFailures } } : undefined
+        };
+      }
       return {
         previousState: currentState,
         nextState: currentState === 'ONLINE' ? currentState : 'WARNING',

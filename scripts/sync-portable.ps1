@@ -64,6 +64,7 @@ if (-not $SkipInstall) {
   }
 }
 
+if (!(Test-Path "$portable/iniciar.bat")) {
 $bat=@'
 @echo off
 setlocal
@@ -85,9 +86,8 @@ echo [ControlEquipos] http://localhost:%PORT%
 pause
 '@
 Set-Content -Path "$portable/iniciar.bat" -Value $bat -Encoding ASCII
-$stopBat='@echo off
-powershell -Command "try { Invoke-WebRequest http://localhost:3001/internal/shutdown -Method POST -TimeoutSec 2 | Out-Null; echo [stop] shutdown OK } catch { echo [stop] ya cerrado o puerto libre }"'
-Set-Content -Path "$portable/detener.bat" -Value $stopBat -Encoding ASCII
+}
+# detener.bat ya no se genera (integrado en iniciar.bat [X])
 
 Write-Host "`nOK - Version-Portable lista. Probá doble click Version-Portable/iniciar.bat" -F Green
 Write-Host "Destino cero-mod: copiar carpeta Version-Portable entera (USB, ~350MB) y doble click iniciar.bat" -F Cyan

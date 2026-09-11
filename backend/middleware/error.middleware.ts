@@ -9,6 +9,9 @@ const errorHandler = (err, req, res, next) => {
     if (err.status || err.statusCode) {
         statusCode = err.status || err.statusCode;
         userMessage = err.message;
+    } else if (err.message && err.message.includes('SQLITE_CONSTRAINT') && err.message.includes('usuarios.')) {
+        statusCode = 400;
+        userMessage = err.message.includes('usuarios.email') ? 'El email ya existe' : 'El usuario ya existe';
     } else if (err.message && [
         "obligatorio",
         "invalido",
@@ -21,7 +24,6 @@ const errorHandler = (err, req, res, next) => {
         "no encontrada",
         "no encontrado"
     ].some(fragment => err.message.toLowerCase().includes(fragment))) {
-        // Errores de validación de negocio manuales
         statusCode = 400;
         userMessage = err.message;
     }
