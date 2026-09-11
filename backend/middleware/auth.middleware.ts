@@ -1,6 +1,10 @@
-const logger = require('../utils/logger');
-const jwt = require('jsonwebtoken');
-const { ROLES_ADMIN } = require('../config/constants');
+// @ts-ignore
+import logger from '../utils/logger';
+// @ts-ignore
+import jwt from 'jsonwebtoken';
+// @ts-ignore
+import constants from '../config/constants';
+const { ROLES_ADMIN } = constants as any;
 
 // En producción esto DEBE venir de variables de entorno. 
 // No permitimos un fallback inseguro si estamos en Railway/Producción.
