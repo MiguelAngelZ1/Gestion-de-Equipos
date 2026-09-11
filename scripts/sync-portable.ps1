@@ -52,7 +52,15 @@ if (-not $SkipInstall) {
     pnpm install --prod --shamefully-hoist --frozen-lockfile; if ($LASTEXITCODE -ne 0) { pnpm install --prod --shamefully-hoist }
     Pop-Location
   } else { Write-Host "  deps al dia (skip)" -F DarkGray }
-}
+  if (!(Test-Path "$portable/backend/node_modules/sqlite3/build/Release/node_sqlite3.node")) {
+    Write-Host "  fix sqlite3 bindings (copia build)..." -F Yellow
+    if (Test-Path "backend/node_modules/sqlite3/build/Release/node_sqlite3.node") {
+      New-Item -ItemType Directory "$portable/backend/node_modules/sqlite3/build/Release" -Force | Out-Null
+      Copy-Item -Force "backend/node_modules/sqlite3/build/Release/node_sqlite3.node" "$portable/backend/node_modules/sqlite3/build/Release/node_sqlite3.node"
+    } else {
+      Push-Location "$portable/backend"; pnpm rebuild sqlite3 2>&1 | Out-Null; Pop-Location
+    }
+  }
 
 $bat=@'
 @echo off
