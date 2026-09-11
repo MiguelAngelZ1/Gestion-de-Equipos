@@ -1,5 +1,7 @@
-const db = require('../db/database');
-const bcrypt = require('bcryptjs');
+// @ts-ignore
+import db from '../db/database';
+// @ts-ignore
+import bcrypt from 'bcryptjs';
 
 const DEFAULT_USER_PERMISOS = [
     'equipos:ver',

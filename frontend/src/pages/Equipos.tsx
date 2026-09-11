@@ -14,6 +14,17 @@ import CommonCard from '../components/common/CommonCard';
 import ConfirmModal from '../components/common/ConfirmModal';
 import LoanModal from '../components/equipos/LoanModal';
 
+export function buildEquiposParams({ searchTerm, estadoFilter, ubicacionFilter, categoriaFilter, pageNum }: { searchTerm: string; estadoFilter: string; ubicacionFilter: string; categoriaFilter: string; pageNum: number }) {
+  const params = new URLSearchParams();
+  if (searchTerm && searchTerm.trim() !== '') params.set('q', searchTerm.trim());
+  if (estadoFilter !== 'TODOS') params.set('estado', estadoFilter);
+  if (ubicacionFilter !== 'TODAS') params.set('ubicacion', ubicacionFilter);
+  if (categoriaFilter !== 'TODOS') params.set('categoria', categoriaFilter);
+  params.set('page', String(pageNum));
+  params.set('limit', '50');
+  return params;
+}
+
 const spring = { type: 'spring' as const, stiffness: 400, damping: 30 };
 
 const EquipoItem = ({ eq, getStatusColor, setSelectedEquipo, setFormData, setIsFormOpen, setEquipoToDelete, setIsDeleteOpen, userRole, onLoan, isSelected, onToggleSelect }) => (
@@ -89,12 +100,7 @@ export default function Equipos() {
   const fetchData = async (searchTerm = "", estadoFilter = "TODOS", ubicacionFilter = "TODAS", categoriaFilter = "TODOS", pageNum = 1) => {
     try {
       setLoading(true);
-      const params = new URLSearchParams();
-      if (searchTerm) params.set('q', searchTerm);
-      if (estadoFilter !== "TODOS") params.set('estado', estadoFilter);
-      if (ubicacionFilter !== "TODAS") params.set('ubicacion', ubicacionFilter);
-      if (categoriaFilter !== "TODOS") params.set('categoria', categoriaFilter);
-      params.set('page', String(pageNum)); params.set('limit', '50');
+      const params = buildEquiposParams({ searchTerm, estadoFilter, ubicacionFilter, categoriaFilter, pageNum });
       const eData = await apiRequest(`/equipos?${params.toString()}`);
       setEquipos(eData?.data || eData || []);
       setTotal(eData?.pagination?.total || 0);

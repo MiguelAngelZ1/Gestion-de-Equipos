@@ -1,4 +1,5 @@
-const db = require('../db/database');
+// @ts-ignore
+import db from '../db/database';
 
 class EquiposService {
     async getAllEquipos(query) {
