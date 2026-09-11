@@ -70,7 +70,7 @@ if not exist "%APPDATA_DB%" (
 echo [ControlEquipos] DB_PATH=%DB_PATH%
 echo [ControlEquipos] STATIC_PATH=%STATIC_PATH%
 echo [ControlEquipos] http://localhost:%PORT%
-"%ROOT%node.exe" "%ROOT%backend\server.ts" 2>&1
+"%ROOT%node.exe" "%ROOT%backend\node_modules\tsx\dist\cli.mjs" "%ROOT%backend\server.ts" 2>&1
 pause
 '@
 Set-Content -Path "$portable/iniciar.bat" -Value $bat -Encoding ASCII
