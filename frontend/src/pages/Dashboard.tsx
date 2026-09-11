@@ -47,12 +47,6 @@ export default function Dashboard() {
     <div className="w-full max-w-full flex flex-col flex-1 min-h-0 overflow-hidden gap-6">
       <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Hanken+Grotesk:wght@100..900&display=swap" rel="stylesheet" />
       <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
-      <style>{`
-        .card-glass { background-color: #1C1C1E; border: 1px solid rgba(255,255,255,0.08); transition: all 0.2s ease-in-out; }
-        .card-glass:hover { border-color: rgba(255,255,255,0.18); }
-        .font-display { font-family: 'Hanken Grotesk', sans-serif; }
-        .font-geist { font-family: 'Geist', sans-serif; }
-      `}</style>
 
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6 shrink-0 w-full auto-rows-min">
         <div className="col-span-12 md:col-span-3 card-glass p-4 rounded-xl flex flex-col items-center justify-center text-center gap-2 py-5">
