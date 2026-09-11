@@ -8,16 +8,9 @@ const { sendRecoveryCode } = require('../services/email.service');
 
 const refreshTokenService = require('../services/refreshToken.service');
 
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 const IS_PROD = process.env.NODE_ENV === 'production';
 
 const DUMMY_HASH = bcrypt.hashSync('dummy-placeholder-' + crypto.randomUUID(), 10);
-
-if (!ADMIN_PASSWORD && IS_PROD) {
-    logger.error("ADMIN_PASSWORD no definido en producción. El acceso administrativo está deshabilitado por seguridad.");
-} else if (!ADMIN_PASSWORD) {
-    logger.warn("ADMIN_PASSWORD no definido. El bootstrap inicial de admin no estará disponible.");
-}
 
 const setTokenCookie = (res, token) => {
     res.cookie('token', token, {
@@ -62,27 +55,6 @@ const login = async (req, res, next) => {
             setRefreshTokenCookie(res, refreshToken);
 
             return res.json({ success: true, user: { id: user.id, usuario: user.usuario, rol: user.rol } });
-        }
-
-        const count = await usuariosService.countUsuarios();
-        if (ADMIN_PASSWORD && count === 0 && usuario === 'admin' && password === ADMIN_PASSWORD) {
-            let adminId;
-            try {
-                const created = await usuariosService.createUsuario({
-                    usuario: 'admin',
-                    email: 'admin@control-equipos.local',
-                    password: ADMIN_PASSWORD,
-                    rol: 'ADMIN',
-                    permisos_json: []
-                });
-                adminId = created.id;
-            } catch (_) {
-                const existing = await usuariosService.findByUsuarioOrEmail('admin');
-                adminId = existing?.id || 1;
-            }
-            const token = jwt.sign({ userId: adminId, rol: "admin", usuario: 'admin', permisos: [] }, JWT_SECRET, { expiresIn: "24h" });
-            setTokenCookie(res, token);
-            return res.json({ success: true, user: { id: adminId, usuario: 'admin', rol: 'admin' }, initial: true });
         }
 
         return res.status(401).json({ error: "Credenciales incorrectas" });

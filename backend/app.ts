@@ -48,12 +48,14 @@ app.use(pinoHttp({
   },
 }));
 
-const allowedOrigins = [
-  process.env.FRONTEND_URL,
-  process.env.LOCAL_FRONTEND_URL || 'http://localhost:5300',
-  'http://127.0.0.1:5300',
-  'http://localhost:3001'
-].filter(Boolean);
+const allowedOrigins = (process.env.CORS_ORIGINS
+  ? process.env.CORS_ORIGINS.split(',').map(s => s.trim()).filter(Boolean)
+  : [
+      process.env.FRONTEND_URL,
+      process.env.LOCAL_FRONTEND_URL || 'http://localhost:5300',
+      'http://127.0.0.1:5300',
+      'http://localhost:3001'
+    ].filter(Boolean));
 
 const REQUIRED_VARS = ['JWT_SECRET'];
 if (IS_PROD) {
@@ -94,6 +96,8 @@ const serveIndexWithNonce = (req, res, next) => {
 };
 
 app.use(helmet({
+  crossOriginEmbedderPolicy: false,
+  referrerPolicy: { policy: "strict-origin-when-cross-origin" },
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
@@ -101,7 +105,7 @@ app.use(helmet({
         "'self'",
         (req, res) => `'nonce-${res.locals.nonce}'`,
       ],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      styleSrc: ["'self'", (req, res) => `'nonce-${res.locals.nonce}'`, "https://fonts.googleapis.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
       imgSrc: ["'self'", "data:", "blob:"],
       connectSrc: ["'self'", "https://fonts.gstatic.com", ...allowedOrigins.map(o => o.replace(/\/$/, ''))],
