@@ -28,6 +28,7 @@ Get-ChildItem backend -Force | Where-Object { $excludes -notcontains $_.Name } |
 }
 @('package.json','pnpm-lock.yaml','tsconfig.json') | ForEach-Object { if (Test-Path "backend/$_") { Copy-Item -Force "backend/$_" "$portable/backend/$_" } }
 if (!(Test-Path "$portable/backend/.env") -and (Test-Path "backend/.env")) { Copy-Item "backend/.env" "$portable/backend/.env"; Write-Host "  .env copiado" -F Yellow }
+if (Test-Path "backend/equipos.db") { Copy-Item -Force "backend/equipos.db" "$portable/backend/equipos.seed.db"; Write-Host "  seed DB copiado" -F Yellow }
 
 if (!(Test-Path "$portable/node.exe")) {
   $sysNode=(Get-Command node -ErrorAction SilentlyContinue).Source
@@ -61,6 +62,7 @@ if (-not $SkipInstall) {
       Push-Location "$portable/backend"; pnpm rebuild sqlite3 2>&1 | Out-Null; Pop-Location
     }
   }
+}
 
 $bat=@'
 @echo off
@@ -72,7 +74,8 @@ set "STATIC_PATH=%ROOT%frontend\dist"
 set "PORT=3001"
 if not exist "%APPDATA%\ControlEquipos" mkdir "%APPDATA%\ControlEquipos"
 if not exist "%APPDATA_DB%" (
-  if exist "%ROOT%backend\equipos.db" copy "%ROOT%backend\equipos.db" "%APPDATA_DB%" >nul
+  if exist "%ROOT%backend\equipos.seed.db" copy "%ROOT%backend\equipos.seed.db" "%APPDATA_DB%" >nul
+  if not exist "%APPDATA_DB%" if exist "%ROOT%backend\equipos.db" copy "%ROOT%backend\equipos.db" "%APPDATA_DB%" >nul
   echo [init] DB seed copiada a %APPDATA_DB%
 )
 echo [ControlEquipos] DB_PATH=%DB_PATH%
