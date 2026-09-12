@@ -23,6 +23,7 @@ const Historial = lazy(() => import('./pages/Historial'));
 const Componentes = lazy(() => import('./pages/Componentes'));
 const Prestamos = lazy(() => import('./pages/Prestamos'));
 const IPAM = lazy(() => import('./pages/IPAM'));
+const NotFound = lazy(() => import('./pages/NotFound'));
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated } = useAuth();
@@ -92,6 +93,7 @@ function AppContent() {
             </RoleRoute>
           } />
         </Route>
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </Suspense>
   );
