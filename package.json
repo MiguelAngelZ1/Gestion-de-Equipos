@@ -6,8 +6,11 @@
     "build": "cd backend && pnpm install && cd ../frontend && pnpm install && pnpm run build",
     "start": "cd backend && pnpm start",
     "portable:sync": "powershell -ExecutionPolicy Bypass -File scripts/sync-portable.ps1",
+    "portable:sync:network": "powershell -ExecutionPolicy Bypass -File scripts/sync-portable.ps1 -Mode network",
     "portable:quick": "powershell -ExecutionPolicy Bypass -File scripts/sync-portable.ps1 -SkipBuild -SkipInstall",
-    "build:portable": "pnpm run build && pnpm run portable:sync"
+    "portable:quick:network": "powershell -ExecutionPolicy Bypass -File scripts/sync-portable.ps1 -Mode network -SkipBuild -SkipInstall",
+    "build:portable": "pnpm run build && pnpm run portable:sync",
+    "build:portable:network": "pnpm run portable:sync:network"
   },
   "engines": {
     "node": ">=22.0.0"

@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { OuiResolver } from '../services/network/probes/oui.resolver';
 import { EvidenceEngine } from '../services/network/evidence.engine';
 import { NetworkStateMachine } from '../services/network/state.machine';
+import { gatewayForRed } from '../services/network/gateway.selector';
 import { RawProbeResult } from '../services/network/probes/types';
 
 describe('Capa de Red V3 - Unit Tests', () => {
@@ -165,8 +166,7 @@ describe('Capa de Red V3 - Unit Tests', () => {
       expect(result.reason).toContain('Evaluación de caída suspendida');
     });
 
-    it('respeta el estado de MAINTENANCE y no emite alertas de caída', () => {
-      const zeroEvidences = {
+    it('respeta el estado de MAINTENANCE y no emite alertas de caída', () => {      const zeroEvidences = {
         targetIp: '10.2.61.100',
         evaluatedAt: new Date(),
         evidences: [],
@@ -187,6 +187,24 @@ describe('Capa de Red V3 - Unit Tests', () => {
 
       expect(result.nextState).toBe('MAINTENANCE');
       expect(result.stateChanged).toBe(false);
+    });
+  });
+
+  describe('gatewayForRed (canary por red)', () => {
+    it('cada red se evalua contra SU gateway y no contra el de otra red', () => {
+      // Regresion: el monitor usaba redes.find(r => r.gateway) global. Con la
+      // red del trabajo (10.22.16.254) creada antes que la de casa, el canary
+      // global chequeaba un gateway inalcanzable, quedaba insano y congelaba
+      // los OFFLINE de todas las redes (nodos clavados en WARNING).
+      const redes = [
+        { id: 'red_trabajo', gateway: '10.22.16.254' },
+        { id: 'red_casa', gateway: '192.168.100.1' },
+        { id: 'red_sin_gw', gateway: null },
+      ];
+      expect(gatewayForRed(redes, 'red_casa')).toBe('192.168.100.1');
+      expect(gatewayForRed(redes, 'red_trabajo')).toBe('10.22.16.254');
+      expect(gatewayForRed(redes, 'red_sin_gw')).toBeNull();
+      expect(gatewayForRed(redes, 'red_inexistente')).toBeNull();
     });
   });
 });

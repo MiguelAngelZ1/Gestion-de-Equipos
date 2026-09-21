@@ -25,6 +25,11 @@ const Prestamos = lazy(() => import('./pages/Prestamos'));
 const IPAM = lazy(() => import('./pages/IPAM'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
+// VITE_PORTABLE_MODE=network: build del portable de campo — solo módulo Red.
+// El resto de páginas no se enruta (el código sigue existiendo para el build full).
+const PORTABLE_MODE = (import.meta as any).env?.VITE_PORTABLE_MODE || 'full';
+const IS_NETWORK_ONLY = PORTABLE_MODE === 'network';
+
 function ProtectedRoute({ children }) {
   const { isAuthenticated } = useAuth();
   if (!isAuthenticated) return <Navigate to="/login" replace />;
@@ -40,6 +45,7 @@ function RoleRoute({ children, roles }) {
 
 function IndexRedirect() {
   const { user } = useAuth();
+  if (IS_NETWORK_ONLY) return <Navigate to="/ipam" replace />;
   const userRole = (user?.rol || ROLES.USER).toUpperCase();
   if (userRole === ROLES.ADMIN) return <Dashboard />;
   return <Navigate to="/equipos" replace />;
@@ -61,37 +67,47 @@ function AppContent() {
           </ProtectedRoute>
         }>
           <Route index element={<IndexRedirect />} />
-          <Route path="equipos" element={<Equipos />} />
-          <Route path="soporte" element={
-            <RoleRoute roles={[ROLES.ADMIN]}>
-              <Soporte />
-            </RoleRoute>
-          } />
-          <Route path="configuracion" element={
-            <RoleRoute roles={[ROLES.ADMIN]}>
-              <Configuracion />
-            </RoleRoute>
-          } />
-          <Route path="historial" element={
-            <RoleRoute roles={[ROLES.ADMIN]}>
-              <Historial />
-            </RoleRoute>
-          } />
-          <Route path="componentes" element={
-            <RoleRoute roles={[ROLES.ADMIN]}>
-              <Componentes />
-            </RoleRoute>
-          } />
-          <Route path="prestamos" element={
-            <RoleRoute roles={[ROLES.ADMIN]}>
-              <Prestamos />
-            </RoleRoute>
-          } />
-          <Route path="ipam" element={
-            <RoleRoute roles={[ROLES.ADMIN, ROLES.USER]}>
-              <IPAM />
-            </RoleRoute>
-          } />
+          {IS_NETWORK_ONLY ? (
+            <Route path="ipam" element={
+              <RoleRoute roles={[ROLES.ADMIN, ROLES.USER]}>
+                <IPAM />
+              </RoleRoute>
+            } />
+          ) : (
+            <>
+              <Route path="equipos" element={<Equipos />} />
+              <Route path="soporte" element={
+                <RoleRoute roles={[ROLES.ADMIN]}>
+                  <Soporte />
+                </RoleRoute>
+              } />
+              <Route path="configuracion" element={
+                <RoleRoute roles={[ROLES.ADMIN]}>
+                  <Configuracion />
+                </RoleRoute>
+              } />
+              <Route path="historial" element={
+                <RoleRoute roles={[ROLES.ADMIN]}>
+                  <Historial />
+                </RoleRoute>
+              } />
+              <Route path="componentes" element={
+                <RoleRoute roles={[ROLES.ADMIN]}>
+                  <Componentes />
+                </RoleRoute>
+              } />
+              <Route path="prestamos" element={
+                <RoleRoute roles={[ROLES.ADMIN]}>
+                  <Prestamos />
+                </RoleRoute>
+              } />
+              <Route path="ipam" element={
+                <RoleRoute roles={[ROLES.ADMIN, ROLES.USER]}>
+                  <IPAM />
+                </RoleRoute>
+              } />
+            </>
+          )}
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>

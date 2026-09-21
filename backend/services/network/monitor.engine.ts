@@ -8,6 +8,7 @@ import { TcpConnectProbe } from './probes/tcp.probe';
 import { EvidenceEngine } from './evidence.engine';
 import { NetworkStateMachine } from './state.machine';
 import { RawProbeResult } from './probes/types';
+import { gatewayForRed } from './gateway.selector';
 
 export class NetworkMonitorEngine {
   private static scheduler: ChainedScheduler | null = null;
@@ -48,14 +49,8 @@ export class NetworkMonitorEngine {
    */
   private static async runCycle() {
     try {
-      // 1. Obtener redes activas y sus gateways para comprobación Canary
+      // 1. Redes y nodos a monitorizar (no ignorados)
       const redes = await db.all('SELECT id, gateway FROM redes');
-      const primaryGateway = redes.find((r: any) => r.gateway)?.gateway || null;
-
-      // 2. Comprobación Canary Multi-vectorial de salud del servidor
-      const canary = await CanaryProbe.checkHealth(primaryGateway);
-
-      // 3. Obtener nodos a monitorizar (no ignorados)
       const nodes = await db.all(`
         SELECT d.*, r.gateway
         FROM dispositivos_red d
@@ -65,17 +60,45 @@ export class NetworkMonitorEngine {
 
       if (nodes.length === 0) return;
 
-      // 4. Lectura única y rápida de tabla ARP
+      // 2. Canary POR RED contra su propio gateway.
+      // Fix: antes se usaba un unico gateway global (el de la primera red con
+      // gateway). Si esa red era inalcanzable desde donde corre el monitor
+      // (ej. la red del trabajo vista desde casa), el canary global quedaba
+      // insano y la proteccion del state machine congelaba los OFFLINE de
+      // TODAS las redes (nodos clavados en WARNING). Cada red ahora se juzga
+      // con su propio gateway; el chequeo se cachea por gateway dentro del ciclo.
+      const canaryByRed = new Map<string, boolean>();
+      const checkedGateways = new Map<string, boolean>();
+      for (const node of nodes as any[]) {
+        const redId: string = node.red_id;
+        if (canaryByRed.has(redId)) continue;
+        const gateway = gatewayForRed(redes, redId);
+        if (!gateway) {
+          canaryByRed.set(redId, true);
+          continue;
+        }
+        if (!checkedGateways.has(gateway)) {
+          try {
+            checkedGateways.set(gateway, (await CanaryProbe.checkHealth(gateway)).isHealthy);
+          } catch (err: any) {
+            logger.error({ err: err?.message || err, gateway }, '[Monitor] Canary fallo, se asume insano para esa red');
+            checkedGateways.set(gateway, false);
+          }
+        }
+        canaryByRed.set(redId, checkedGateways.get(gateway)!);
+      }
+
+      // 3. Lectura única y rápida de tabla ARP
       const arpTable = await ArpProbe.readArpTable();
 
-      // 5. Sondeo concurrente limitado (16 hosts simultáneos)
+      // 4. Sondeo concurrente limitado (16 hosts simultáneos)
       const concurrencyLimit = 16;
       for (let i = 0; i < nodes.length; i += concurrencyLimit) {
         const chunk = nodes.slice(i, i + concurrencyLimit);
 
         await Promise.all(
           chunk.map(async (node: any) => {
-            await this.probeAndEvaluateNode(node, arpTable, canary.isHealthy);
+            await this.probeAndEvaluateNode(node, arpTable, canaryByRed.get(node.red_id) ?? true);
           })
         );
       }

@@ -11,8 +11,12 @@ export default function MainLayout() {
   const location = useLocation();
   const user = JSON.parse(localStorage.getItem("equipos_user_data") || "{}");
   const role = (user.rol || ROLES.USER).toUpperCase();
+  // Portable de campo: solo existe la ruta /ipam (ver App.tsx). Se oculta el
+  // resto del nav y la campana (el backend no monta /api/notificaciones).
+  const IS_NETWORK_ONLY = (import.meta as any).env?.VITE_PORTABLE_MODE === 'network';
 
   useEffect(() => {
+    if (IS_NETWORK_ONLY) return;
     const isPWA = window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone;
     const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
     if (!isPWA && !isMobile) return;
@@ -38,7 +42,9 @@ export default function MainLayout() {
     { label: 'Préstamos', to: '/prestamos', icon: 'handshake', roles: [ROLES.ADMIN] },
     { label: 'Red', to: '/ipam', icon: 'lan', roles: [ROLES.ADMIN, ROLES.USER] },
     { label: 'Ajustes', to: '/configuracion', icon: 'settings', roles: [ROLES.ADMIN] },
-  ].filter(i => i.roles.includes(role));
+  ]
+    .filter(i => i.roles.includes(role))
+    .filter(i => !IS_NETWORK_ONLY || i.to === '/ipam');
 
   const mobilePrimary = navItems.slice(0, 5);
   const mobileExtra = navItems.slice(5);
@@ -65,7 +71,7 @@ export default function MainLayout() {
           <span className="font-semibold text-sm">{titles[location.pathname] || 'IMPERIO'}</span>
         </div>
         <div className="flex items-center gap-1">
-          {role === ROLES.ADMIN && <NotificationBell />}
+          {role === ROLES.ADMIN && !IS_NETWORK_ONLY && <NotificationBell />}
           <button onClick={() => { removeAuthToken(); navigate('/login'); }} className="w-8 h-8 grid place-items-center rounded-full hover:bg-white/5 text-[#c4c5d9]"><span className="material-symbols-outlined text-[20px]">logout</span></button>
         </div>
       </header>
@@ -110,7 +116,7 @@ export default function MainLayout() {
       <div className="ml-0 md:ml-[260px] flex-1 flex flex-col h-screen w-full md:w-[calc(100%-260px)] overflow-hidden">
         <div className="hidden md:flex justify-end items-center px-8 pt-4 pb-2 shrink-0">
           <div className="flex items-center gap-1">
-            {role === ROLES.ADMIN && <NotificationBell plain />}
+            {role === ROLES.ADMIN && !IS_NETWORK_ONLY && <NotificationBell plain />}
           </div>
         </div>
 
