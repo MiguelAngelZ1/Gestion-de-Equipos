@@ -11,6 +11,9 @@ const fs = require("fs");
 const crypto = require('crypto');
 
 const IS_PROD = process.env.NODE_ENV === 'production';
+// PORTABLE_MODE=network: portable de campo — solo módulo Red (+ lectura de
+// equipos para vinculación). El resto de rutas no se monta.
+const PORTABLE_MODE = process.env.PORTABLE_MODE || 'full';
 
 const authRoutes = require('./routes/auth.routes');
 const equiposRoutes = require('./routes/equipos.routes');
@@ -204,19 +207,31 @@ app.post('/internal/shutdown', async (req, res) => {
 
 const dashboardController = require('./controllers/dashboard.controller');
 app.use('/api/auth', authRoutes);
-app.get('/api/dashboard/summary', verificarAutenticacion, dashboardController.getDashboardSummary);
-app.use('/api/equipos', equiposRoutes);
-app.use('/api/config', configRoutes);
-app.use('/api/historial', historialRoutes);
-app.use('/api/componentes', componentesRoutes);
-app.use('/api/usuarios', usuariosRoutes);
-app.use('/api/notificaciones', notificacionesRoutes);
-app.use('/api/soporte', soporteRoutes);
-app.use('/api/mantenimiento', mantenimientoRoutes);
-app.use('/api/prestamos', prestamosRoutes);
-app.use('/api/ipam', ipamRoutes);
-app.use('/api/network', networkRoutes);
-app.use('/api', exportRoutes);
+if (PORTABLE_MODE === 'network') {
+  // Portable Red: IPAM + descubrimiento/monitoreo + lectura de equipos
+  // (búsqueda y detalle para vincular) + config de lectura. Sin
+  // dashboard, historial, componentes, usuarios, notificaciones, soporte,
+  // mantenimiento, préstamos ni exportación general.
+  app.use('/api/equipos', equiposRoutes);
+  app.use('/api/config', configRoutes);
+  app.use('/api/ipam', ipamRoutes);
+  app.use('/api/network', networkRoutes);
+  logger.info('Modo portable RED: solo /api/auth, /api/equipos, /api/config, /api/ipam, /api/network');
+} else {
+  app.get('/api/dashboard/summary', verificarAutenticacion, dashboardController.getDashboardSummary);
+  app.use('/api/equipos', equiposRoutes);
+  app.use('/api/config', configRoutes);
+  app.use('/api/historial', historialRoutes);
+  app.use('/api/componentes', componentesRoutes);
+  app.use('/api/usuarios', usuariosRoutes);
+  app.use('/api/notificaciones', notificacionesRoutes);
+  app.use('/api/soporte', soporteRoutes);
+  app.use('/api/mantenimiento', mantenimientoRoutes);
+  app.use('/api/prestamos', prestamosRoutes);
+  app.use('/api/ipam', ipamRoutes);
+  app.use('/api/network', networkRoutes);
+  app.use('/api', exportRoutes);
+}
 
 if (distExists) {
   app.get("*", (req, res, next) => {
