@@ -41,6 +41,16 @@ if (Test-Path $penv) {
 }
 if (Test-Path "backend/equipos.db") { Copy-Item -Force "backend/equipos.db" "$portable/backend/equipos.seed.db"; Write-Host "  seed DB copiado" -F Yellow }
 
+# Runtime VC++ autocontenido: Windows carga DLLs primero desde la carpeta del
+# .exe, asi el portable no requiere instalar vc_redist en destino.
+foreach ($dll in @('vcruntime140.dll','msvcp140.dll')) {
+  if (!(Test-Path "$portable/$dll")) {
+    $sys = Join-Path $env:SystemRoot ("System32/" + $dll)
+    if (Test-Path $sys) { Copy-Item -Force $sys "$portable/$dll"; Write-Host "  $dll empaquetada" -F Yellow }
+    else { Write-Host "  AVISO: $sys no existe en esta PC; el portable puede fallar sin VC++ Redist" -F Red }
+  }
+}
+
 if (!(Test-Path "$portable/node.exe")) {
   $sysNode=(Get-Command node -ErrorAction SilentlyContinue).Source
   if ($sysNode) { Copy-Item $sysNode "$portable/node.exe"; Write-Host "  node.exe copiado de $sysNode" -F Yellow }
@@ -102,8 +112,10 @@ set "URL=http://localhost:3001"
 
 if not exist "%ROOT%node.exe" echo [ERROR] Falta node.exe en %ROOT% - carpeta portable incompleta. & pause & exit /b 1
 if not exist "%ROOT%backend\node_modules\tsx\dist\cli.mjs" echo [ERROR] Falta backend\node_modules\tsx - re-ejecutar scripts\sync-portable.ps1 o correr pnpm install --prod --shamefully-hoist dentro de Version-Portable\backend. & pause & exit /b 1
+if exist "%ROOT%vcruntime140.dll" goto skipvc
 where vcruntime140.dll >nul 2>&1
-if %errorlevel% neq 0 echo [AVISO] No se encontro VC++ Redistributable. Si el servidor no arranca, instalar vc_redist.x64.exe de https://aka.ms/vs/17/release/vc_redist.x64.exe & pause
+if %errorlevel% neq 0 echo [AVISO] No se encontro VC++ Redistributable ni DLL local. Si el servidor no arranca, instalar vc_redist.x64.exe de https://aka.ms/vs/17/release/vc_redist.x64.exe & pause
+:skipvc
 
 if not exist "%APPDATA%\ControlEquipos" mkdir "%APPDATA%\ControlEquipos" >nul 2>&1
 if not exist "%APPDATA_DB%" (
