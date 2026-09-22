@@ -39,7 +39,17 @@ if (Test-Path $penv) {
   else { $txt=$txt.TrimEnd()+"`r`nNODE_ENV=production`r`n" }
   [IO.File]::WriteAllText($penv, $txt, (New-Object Text.UTF8Encoding $false))
 }
-if (Test-Path "backend/equipos.db") { Copy-Item -Force "backend/equipos.db" "$portable/backend/equipos.seed.db"; Write-Host "  seed DB copiado" -F Yellow }
+# Seed seguro: checkpoint best-effort + copiar el set completo (db+wal+shm) para no
+# llevar una foto a medias de una DB viva en WAL mode.
+try { node -e "const s=require('./backend/node_modules/sqlite3');const db=new s.Database('backend/equipos.db');db.exec('PRAGMA wal_checkpoint(TRUNCATE);',()=>db.close());" 2>$null } catch {}
+if (Test-Path "backend/equipos.db") {
+  Remove-Item "$portable/backend/equipos.seed.db*" -Force -ErrorAction SilentlyContinue
+  foreach ($ext in @('', '-wal', '-shm')) {
+    $src = "backend/equipos.db$ext"
+    if (Test-Path $src) { Copy-Item -Force $src "$portable/backend/equipos.seed.db$ext" }
+  }
+  Write-Host "  seed DB copiado (set consistente)" -F Yellow
+}
 
 # Runtime VC++ autocontenido: Windows carga DLLs primero desde la carpeta del
 # .exe, asi el portable no requiere instalar vc_redist en destino.
@@ -121,6 +131,12 @@ if not exist "%APPDATA%\ControlEquipos" mkdir "%APPDATA%\ControlEquipos" >nul 2>
 if not exist "%APPDATA_DB%" (
   if exist "%ROOT%backend\equipos.seed.db" copy /Y "%ROOT%backend\equipos.seed.db" "%APPDATA_DB%" >nul
   if not exist "%APPDATA_DB%" if exist "%ROOT%backend\equipos.db" copy /Y "%ROOT%backend\equipos.db" "%APPDATA_DB%" >nul
+)
+rem Merge solo-usuarios seed->APPDATA (upsert por usuario, gana updated_at, nunca borra).
+rem Cura instalaciones existentes sin pisar datos de campo. Si falla, el arranque sigue.
+if exist "%ROOT%backend\equipos.seed.db" if exist "%ROOT%backend\scripts\merge-portable-users.js" (
+  "%ROOT%node.exe" "%ROOT%backend\scripts\merge-portable-users.js" "%ROOT%backend\equipos.seed.db" "%APPDATA_DB%" >> "%APPDATA%\ControlEquipos\merge-portable-users.log" 2>&1
+  if errorlevel 1 echo [aviso] Merge de usuarios fallo (ver merge-portable-users.log), el servidor arranca igual.
 )
 
 echo [ControlEquipos] Verificando puerto %PORT%...
