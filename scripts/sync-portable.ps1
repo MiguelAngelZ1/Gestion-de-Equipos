@@ -136,7 +136,7 @@ rem Merge solo-usuarios seed->APPDATA (upsert por usuario, gana updated_at, nunc
 rem Cura instalaciones existentes sin pisar datos de campo. Si falla, el arranque sigue.
 if exist "%ROOT%backend\equipos.seed.db" if exist "%ROOT%backend\scripts\merge-portable-users.js" (
   "%ROOT%node.exe" "%ROOT%backend\scripts\merge-portable-users.js" "%ROOT%backend\equipos.seed.db" "%APPDATA_DB%" >> "%APPDATA%\ControlEquipos\merge-portable-users.log" 2>&1
-  if errorlevel 1 echo [aviso] Merge de usuarios fallo (ver merge-portable-users.log), el servidor arranca igual.
+  if errorlevel 1 echo [aviso] Merge de usuarios fallo, ver merge-portable-users.log. El servidor arranca igual.
 )
 
 echo [ControlEquipos] Verificando puerto %PORT%...
