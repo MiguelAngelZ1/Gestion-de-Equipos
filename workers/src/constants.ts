@@ -1,0 +1,13 @@
+// Copia de backend/config/constants.ts (solo lo que usa el Worker).
+export const ROLES_ADMIN = ['ADMIN', 'SUPERADMIN'];
+
+export const PERMISOS = {
+  EQUIPOS: { VER: 'equipos:ver', CREAR: 'equipos:crear', EDITAR: 'equipos:editar', ELIMINAR: 'equipos:eliminar' },
+  COMPONENTES: { VER: 'componentes:ver', CREAR: 'componentes:crear', EDITAR: 'componentes:editar', ELIMINAR: 'componentes:eliminar', INSTALAR: 'componentes:instalar' },
+  SOPORTE: { VER: 'soporte:ver', CREAR: 'soporte:crear', EDITAR: 'soporte:editar', ELIMINAR: 'soporte:eliminar' },
+  PRESTAMOS: { VER: 'prestamos:ver', CREAR: 'prestamos:crear', DEVOLVER: 'prestamos:devolver', ELIMINAR: 'prestamos:eliminar' },
+  IPAM: { VER: 'ipam:ver', CREAR: 'ipam:crear', EDITAR: 'ipam:editar', ELIMINAR: 'ipam:eliminar', ASIGNAR: 'ipam:asignar', SCAN: 'ipam:scan', MONITOR: 'ipam:monitor' },
+  CONFIG: { VER: 'config:ver', CREAR: 'config:crear', EDITAR: 'config:editar', ELIMINAR: 'config:eliminar' },
+  USUARIOS: { VER: 'usuarios:ver', CREAR: 'usuarios:crear', EDITAR: 'usuarios:editar', ELIMINAR: 'usuarios:eliminar' },
+  BACKUPS: { VER: 'backups:ver', CREAR: 'backups:crear', DESCARGAR: 'backups:descargar', ELIMINAR: 'backups:eliminar' },
+};

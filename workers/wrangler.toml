@@ -1,0 +1,27 @@
+# Control de Equipos 3.0 — Worker API + frontend (mismo origen), D1 como DB.
+# Secrets (nunca en este archivo): wrangler secret put JWT_SECRET
+name = "app"
+main = "src/api.ts"
+compatibility_date = "2026-09-01"
+workers_dev = true
+
+[[d1_databases]]
+binding = "DB"
+database_name = "control-equipos-db"
+database_id = "eaae86c1-a468-401b-b1db-447183394b1f"
+
+# Fase 2: cron diario de notificaciones (reemplaza setInterval de server.ts).
+# Por ahora el handler scheduled() es no-op.
+[triggers]
+crons = ["0 6 * * *"]
+
+# Frontend (mismo origen): ../frontend/dist compilado. Sin esto, wrangler pide
+# Pages; con assets el Worker sirve API + estáticos con un solo dominio.
+[assets]
+directory = "../frontend/dist"
+binding = "ASSETS"
+not_found_handling = "single-page-application"
+# Todo (incluidos estáticos) pasa por el Worker: así el nonce/CSP se aplica
+# a cada HTML y el cache immutable a los assets (uso personal, muy por debajo
+# del límite free de 100k req/día).
+run_worker_first = true
