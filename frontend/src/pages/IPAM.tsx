@@ -415,12 +415,12 @@ const IPAM = () => {
     const handleExportExcel = async () => {
         try {
             const r = await fetch(`${API_BASE}/ipam/exportar-excel`, { credentials: 'include' });
-            if (r.ok) { const blob = await r.blob(); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `IPAM_${new Date().toISOString().split('T')[0]}.xlsx`; document.body.appendChild(a); a.click(); a.remove(); }
+            if (r.ok) { const blob = await r.blob(); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `IPAM_${new Date().toISOString().split('T')[0]}.csv`; document.body.appendChild(a); a.click(); a.remove(); }
         } catch { showToast("Error", "No se pudo exportar.", "error"); }
     };
     const handleExportDrive = async () => {
         try { showToast("Procesando", "Sincronizando con Drive...", "info"); const d = await apiRequest('/ipam/exportar-drive', { method: 'POST' }); if (d.success) showToast("Éxito", "Reporte subido a Drive.", "success"); }
-        catch { showToast("Error", "No se pudo sincronizar con Drive.", "error"); }
+        catch (e: any) { showToast("Error", e.message || "No se pudo sincronizar con Drive.", "error"); }
     };
 
     const filteredIps = (networkData?.ips || []).filter(ip => {
@@ -434,7 +434,7 @@ const IPAM = () => {
         <div className="flex-1 min-h-0 flex flex-col space-y-4 w-full max-w-full overflow-y-auto lg:overflow-hidden">
             <div className="flex justify-end gap-1.5 shrink-0">
                 <button onClick={handleExportExcel} className="bg-transparent hover:bg-white/5 text-zinc-400 hover:text-white px-3 py-2 rounded-xl text-xs font-semibold transition-colors flex items-center gap-2 cursor-pointer">
-                    <FileSpreadsheet className="w-4 h-4" /> <span className="hidden sm:inline">Exportar Excel</span><span className="sm:hidden">Excel</span>
+                    <FileSpreadsheet className="w-4 h-4" /> <span className="hidden sm:inline">Exportar CSV</span><span className="sm:hidden">CSV</span>
                 </button>
                 <button onClick={handleExportDrive} className="bg-transparent hover:bg-white/5 text-zinc-400 hover:text-white px-3 py-2 rounded-xl text-xs font-semibold transition-colors flex items-center gap-2 cursor-pointer">
                     <UploadCloud className="w-4 h-4" /> <span className="hidden sm:inline">Exportar Drive</span><span className="sm:hidden">Drive</span>

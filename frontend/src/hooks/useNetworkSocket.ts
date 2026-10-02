@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { io, Socket } from 'socket.io-client';
+import { apiRequest } from '../services/api';
 
 export interface NodeChangeEvent {
   dispositivoId: string;
@@ -22,59 +22,70 @@ export interface ScanProgressEvent {
   found: number;
 }
 
+// Versión polling (nube): el Worker no tiene Socket.IO. Misma interfaz pública
+// para no tocar los consumidores. El sondeo LAN en vivo solo existe en local;
+// aquí se detectan cambios de estado entre pasadas (cada 15s).
+const POLL_MS = 15000;
+
 export function useNetworkSocket(
   redId: string | null,
   onNodeChanged?: (evt: NodeChangeEvent) => void,
   onScanProgress?: (evt: ScanProgressEvent) => void,
   onScanCompleted?: (summary: any) => void
 ) {
-  const socketRef = useRef<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
 
-  // Estabilizamos los callbacks via ref para no reiniciar la suscripción en cada render
   const onNodeChangedRef = useRef(onNodeChanged);
-  const onScanProgressRef = useRef(onScanProgress);
-  const onScanCompletedRef = useRef(onScanCompleted);
   useEffect(() => { onNodeChangedRef.current = onNodeChanged; }, [onNodeChanged]);
-  useEffect(() => { onScanProgressRef.current = onScanProgress; }, [onScanProgress]);
-  useEffect(() => { onScanCompletedRef.current = onScanCompleted; }, [onScanCompleted]);
+  // onScanProgress/onScanCompleted se aceptan por compatibilidad pero no se
+  // disparan en la nube (el scan responde 501 "solo red local").
+  void onScanProgress;
+  void onScanCompleted;
+
+  const prevRef = useRef<Map<string, any>>(new Map());
 
   useEffect(() => {
     if (!redId) return;
+    let cancelled = false;
+    let timer: ReturnType<typeof setInterval> | null = null;
 
-    const socketURL = import.meta.env.VITE_API_URL || window.location.origin.replace(':5300', ':3001');
+    const poll = async () => {
+      try {
+        const rows: any[] = await apiRequest(`/network/redes/${redId}/dispositivos`);
+        if (cancelled) return;
+        setIsConnected(true);
+        const prev = prevRef.current;
+        const next = new Map<string, any>();
+        for (const d of rows || []) {
+          next.set(d.id, d);
+          const old = prev.get(d.id);
+          if (old && old.estado_monitoreo !== d.estado_monitoreo) {
+            onNodeChangedRef.current?.({
+              dispositivoId: d.id,
+              ip: d.ip,
+              mac: d.mac_actual,
+              hostname: d.hostname_actual,
+              estadoAnterior: old.estado_monitoreo,
+              nuevoEstado: d.estado_monitoreo,
+              fallosConsecutivos: d.fallos_consecutivos ?? 0,
+              latenciaMs: d.latencia_actual_ms ?? null,
+              summary: `${d.ip}: ${old.estado_monitoreo} → ${d.estado_monitoreo}`,
+              timestamp: new Date().toISOString(),
+            });
+          }
+        }
+        prevRef.current = next;
+      } catch {
+        if (!cancelled) setIsConnected(false);
+      }
+    };
 
-    const socket = io(socketURL, {
-      withCredentials: true,
-      transports: ['websocket', 'polling']
-    });
-    socketRef.current = socket;
-
-    socket.on('connect', () => {
-      setIsConnected(true);
-      socket.emit('network:subscribe', { redId });
-    });
-
-    socket.on('disconnect', () => {
-      setIsConnected(false);
-    });
-
-    socket.on('network:node_changed', (evt: NodeChangeEvent) => {
-      onNodeChangedRef.current?.(evt);
-    });
-
-    socket.on('network:scan_progress', (evt: ScanProgressEvent) => {
-      onScanProgressRef.current?.(evt);
-    });
-
-    socket.on('network:scan_completed', (summary: any) => {
-      onScanCompletedRef.current?.(summary);
-    });
-
+    prevRef.current = new Map();
+    poll();
+    timer = setInterval(poll, POLL_MS);
     return () => {
-      socket.emit('network:unsubscribe', { redId });
-      socket.disconnect();
-      socketRef.current = null;
+      cancelled = true;
+      if (timer) clearInterval(timer);
     };
   }, [redId]);
 

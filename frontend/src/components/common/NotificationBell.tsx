@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bell, BellOff, Package, Wrench, Info, CheckCheck, Trash2, MessageSquare } from 'lucide-react';
 import { createPortal } from 'react-dom';
-import { apiRequest, getUserData, getAuthToken } from '../../services/api';
+import { apiRequest, getUserData } from '../../services/api';
 
 const NotificationBell = ({ plain = false }: { plain?: boolean } = {}) => {
     const [isOpen, setIsOpen] = useState(false);
@@ -13,10 +13,7 @@ const NotificationBell = ({ plain = false }: { plain?: boolean } = {}) => {
     const [pos, setPos] = useState(null);
     const navigate = useNavigate();
 
-    // Determinar la URL del servidor de sockets (misma base que la API sin el /api)
-    const socketURL = import.meta.env.VITE_API_URL 
-        ? import.meta.env.VITE_API_URL.replace('/api', '') 
-        : window.location.origin.replace(':5300', ':3001');
+
 
     const fetchNotifications = async (offset = 0) => {
         try {
@@ -61,61 +58,18 @@ const NotificationBell = ({ plain = false }: { plain?: boolean } = {}) => {
         fetchNotifications();
     }, []);
 
+    // Nube sin Socket.IO: polling cada 20s (las alertas se persisten en D1).
     useEffect(() => {
         if (!userId) return;
-
-        let socket = null;
         let cancelled = false;
-        let reconnectAttempts = 0;
-        let reconnectTimer = null;
-
-        const connectSocket = () => {
-            import('socket.io-client').then(({ io }) => {
-                if (cancelled) return;
-
-                socket = io(socketURL, {
-                    auth: { token: getAuthToken() },
-                    reconnection: false,
-                    transports: ['websocket', 'polling']
-                });
-
-                socket.on('connect', () => {
-                    reconnectAttempts = 0;
-                    socket.emit('join', userId);
-                });
-
-                socket.on('new_notification', (newNotif) => {
-                    setNotifications(prev => [newNotif, ...prev]);
-                    setUnreadCount(prev => prev + 1);
-                });
-
-                socket.on('disconnect', () => {
-                    const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 30000);
-                    reconnectAttempts++;
-                    reconnectTimer = setTimeout(connectSocket, delay);
-                });
-
-                socket.on('connect_error', () => {
-                    const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 30000);
-                    reconnectAttempts++;
-                    reconnectTimer = setTimeout(connectSocket, delay);
-                });
-            });
-        };
-
-        connectSocket();
-
+        const timer = setInterval(() => {
+            if (!cancelled) fetchNotifications();
+        }, 20000);
         return () => {
             cancelled = true;
-            if (reconnectTimer) clearTimeout(reconnectTimer);
-            if (socket) {
-                socket.off('new_notification');
-                socket.off('disconnect');
-                socket.off('connect_error');
-                socket.disconnect();
-            }
+            clearInterval(timer);
         };
-    }, [userId, socketURL]);
+    }, [userId]);
 
     useEffect(() => {
         const handleClickOutside = (event) => {
