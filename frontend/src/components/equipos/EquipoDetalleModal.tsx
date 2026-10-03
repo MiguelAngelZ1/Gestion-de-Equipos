@@ -3,8 +3,9 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { User, MapPin, Tag, X, Package, Plus } from 'lucide-react';
 import InstalarRepuestoModal from '../componentes/InstalarRepuestoModal';
+import { DUR, EASE_IN_OUT } from '../../lib/motion';
 
-const EquipoDetalleModal = ({ isOpen, equipo, estados, onClose, onEquipoUpdated }) => {
+const EquipoDetalleModal = ({ isOpen, equipo, estados, onClose, onEquipoUpdated, sharedTitleId }) => {
   const [isInstallModalOpen, setIsInstallModalOpen] = useState(false);
 
   const userData = JSON.parse(localStorage.getItem("equipos_user_data") || "{}");
@@ -41,7 +42,11 @@ const EquipoDetalleModal = ({ isOpen, equipo, estados, onClose, onEquipoUpdated 
             <div className="p-4 border-b border-white/5 flex items-center gap-3 shrink-0">
               <span className="material-symbols-outlined text-[#e4e2e4] text-[24px]">inventory_2</span>
               <div className="min-w-0 flex-1">
-                <h2 className="text-[16px] font-semibold text-[#e4e2e4] leading-snug break-words">{equipo.ine || 'Sin INE'}</h2>
+                {sharedTitleId ? (
+                  <motion.h2 layoutId={sharedTitleId} transition={{ duration: DUR.max, ease: EASE_IN_OUT }} className="text-[16px] font-semibold text-[#e4e2e4] leading-snug break-words">{equipo.ine || 'Sin INE'}</motion.h2>
+                ) : (
+                  <h2 className="text-[16px] font-semibold text-[#e4e2e4] leading-snug break-words">{equipo.ine || 'Sin INE'}</h2>
+                )}
                 <p className="text-xs text-[#c4c5d9] mt-0.5">Detalles del equipo</p>
               </div>
               <button onClick={onClose} className="ml-auto w-8 h-8 grid place-items-center rounded-full hover:bg-white/5 text-[#c4c5d9] shrink-0">

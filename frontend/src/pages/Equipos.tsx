@@ -27,14 +27,15 @@ export function buildEquiposParams({ searchTerm, estadoFilter, ubicacionFilter, 
 
 const spring = { type: 'spring' as const, stiffness: 400, damping: 30 };
 
-const EquipoItem = ({ eq, getStatusColor, setSelectedEquipo, setFormData, setIsFormOpen, setEquipoToDelete, setIsDeleteOpen, userRole, onLoan, isSelected, onToggleSelect }) => (
+const EquipoItem = ({ eq, getStatusColor, setSelectedEquipo, setSharedEqId, sharedEqId, setFormData, setIsFormOpen, setEquipoToDelete, setIsDeleteOpen, userRole, onLoan, isSelected, onToggleSelect }) => (
   <CommonCard
     layoutId={`eq-${eq.id}`}
+    sharedTitleId={sharedEqId === eq.id ? `eq-title-${eq.id}` : undefined}
     title={eq.ine || 'Sin INE'}
     badge={eq.estado}
     badgeColor={getStatusColor(eq.estado)}
     icon={Server}
-    onView={() => setSelectedEquipo(eq)}
+    onView={() => { setSharedEqId(eq.id); setSelectedEquipo(eq); }}
     onEdit={userRole === ROLES.ADMIN ? () => { setFormData(eq); setIsFormOpen(true); } : null}
     onDelete={userRole === ROLES.ADMIN ? () => { setEquipoToDelete(eq); setIsDeleteOpen(true); } : null}
     selectable={userRole === ROLES.ADMIN}
@@ -71,6 +72,7 @@ export default function Equipos() {
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [selectedEquipo, setSelectedEquipo] = useState<any>(null);
+  const [sharedEqId, setSharedEqId] = useState<number | null>(null);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [equipoToDelete, setEquipoToDelete] = useState<any>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -241,7 +243,7 @@ export default function Equipos() {
           <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar pr-1">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 content-start">
               {equipos.map((eq: any) => (
-                <EquipoItem key={eq.id} eq={eq} getStatusColor={getStatusColor} setSelectedEquipo={setSelectedEquipo} setFormData={setFormData} setIsFormOpen={setIsFormOpen} setEquipoToDelete={setEquipoToDelete} setIsDeleteOpen={setIsDeleteOpen} userRole={userRole} onLoan={(e: any) => { setEquipoForLoan(e); setIsLoanModalOpen(true); }} isSelected={selectedIds.includes(eq.id)} onToggleSelect={toggleSelect} />
+                <EquipoItem key={eq.id} eq={eq} getStatusColor={getStatusColor} setSelectedEquipo={setSelectedEquipo} setSharedEqId={setSharedEqId} sharedEqId={sharedEqId} setFormData={setFormData} setIsFormOpen={setIsFormOpen} setEquipoToDelete={setEquipoToDelete} setIsDeleteOpen={setIsDeleteOpen} userRole={userRole} onLoan={(e: any) => { setEquipoForLoan(e); setIsLoanModalOpen(true); }} isSelected={selectedIds.includes(eq.id)} onToggleSelect={toggleSelect} />
               ))}
             </div>
           </div>
@@ -261,7 +263,7 @@ export default function Equipos() {
       )}
 
       <ConfirmModal isOpen={isBulkDeleteOpen} title="Eliminar selección" message={`Mover ${selectedIds.length} equipos a papelera.`} onConfirm={handleBulkDelete} onClose={() => setIsBulkDeleteOpen(false)} type="danger" isLoading={isProcessingBulk} />
-      <EquipoDetalleModal isOpen={!!selectedEquipo} equipo={selectedEquipo} estados={estados} onClose={() => setSelectedEquipo(null)} onEquipoUpdated={() => fetchData(search, filterEstado, filterUbicacion, filterGrupo, currentPage)} />
+      <EquipoDetalleModal isOpen={!!selectedEquipo} equipo={selectedEquipo} estados={estados} sharedTitleId={selectedEquipo ? `eq-title-${selectedEquipo.id}` : undefined} onClose={() => setSelectedEquipo(null)} onEquipoUpdated={() => fetchData(search, filterEstado, filterUbicacion, filterGrupo, currentPage)} />
       <EquipoFormModal isOpen={isFormOpen} initialData={formData} onClose={() => setIsFormOpen(false)} onSave={async (data: any) => {
         try { const id = data.id || formData.id; await apiRequest('/equipos', { method: 'POST', body: { ...data, id, responsable_id: data.responsable_id || formData.responsable_id } }); setIsFormOpen(false); fetchData(search, filterEstado, filterUbicacion, filterGrupo, currentPage); showToast(id ? 'Actualizado' : 'Creado', `"${data.ine}" guardado.`, 'success'); }
         catch (err: any) { showToast("Error", err.message || "No se pudo guardar.", "error"); }
