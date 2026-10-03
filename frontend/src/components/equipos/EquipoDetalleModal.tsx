@@ -6,7 +6,7 @@ import { User, MapPin, Tag, X, Package, Plus } from 'lucide-react';
 import InstalarRepuestoModal from '../componentes/InstalarRepuestoModal';
 import { DUR, EASE_IN_OUT } from '../../lib/motion';
 
-const EquipoDetalleModal = ({ isOpen, equipo, estados, onClose, onEquipoUpdated, sharedTitleId }) => {
+const EquipoDetalleModal = ({ isOpen, equipo, estados, onClose, onEquipoUpdated, sharedTitleId }: any) => {
   const [isInstallModalOpen, setIsInstallModalOpen] = useState(false);
 
   const userData = JSON.parse(localStorage.getItem("equipos_user_data") || "{}");
