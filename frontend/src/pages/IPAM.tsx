@@ -417,7 +417,7 @@ const IPAM = () => {
     const handleExportExcel = async () => {
         try {
             const r = await fetch(`${API_BASE}/ipam/exportar-excel`, { credentials: 'include' });
-            if (r.ok) { const blob = await r.blob(); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `IPAM_${new Date().toISOString().split('T')[0]}.csv`; document.body.appendChild(a); a.click(); a.remove(); }
+            if (r.ok) { const blob = await r.blob(); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `IPAM_${new Date().toISOString().split('T')[0]}.xlsx`; document.body.appendChild(a); a.click(); a.remove(); }
         } catch { showToast("Error", "No se pudo exportar.", "error"); }
     };
     const handleExportDrive = async () => {

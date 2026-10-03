@@ -11,6 +11,10 @@ export interface Env {
   ASSETS: Fetcher;
   BREVO_API_KEY?: string;
   BREVO_FROM?: string;
+  GOOGLE_CLIENT_ID?: string;
+  GOOGLE_CLIENT_SECRET?: string;
+  GOOGLE_REFRESH_TOKEN?: string;
+  GOOGLE_DRIVE_FOLDER_ID?: string;
 }
 
 function secret(c: Context<{ Bindings: Env }>): string {

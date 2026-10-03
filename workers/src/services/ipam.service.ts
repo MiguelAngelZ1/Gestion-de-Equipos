@@ -1,6 +1,6 @@
 // Puerto de backend/services/ipam.service.ts: helpers + inventario.
-// Excluidos (Fase 2 / sin equivalente en nube): pingIP/pingWithOutput (execFile),
-// generateExcelBuffer (exceljs > límite bundle), exportToDrive (googleapis).
+// Excluidos (sin equivalente en nube): pingIP/pingWithOutput (execFile).
+// Excel/Drive viven en routes/export.ts (lib/xlsx.ts + lib/drive.ts).
 import type { Db } from '../db';
 
 const IP_KEYS = ['ip', 'direccion ip', 'direccion_ipv4', 'ipv4'];

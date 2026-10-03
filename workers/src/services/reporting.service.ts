@@ -1,6 +1,5 @@
-// Puerto de backend/services/reporting.service.ts + exports CSV.
-// Fase 1: CSV en vez de xlsx (exceljs excede el límite del bundle). El frontend
-// (Fase 3) descarga con extensión .csv. Drive vuelve en Fase 2.
+// Puerto de backend/services/reporting.service.ts (datos para el .xlsx).
+// El .xlsx se arma en lib/xlsx.ts (builder propio, exceljs excede el bundle).
 import type { Db } from '../db';
 
 const csvCell = (v: unknown) => {
