@@ -47,12 +47,12 @@ export default function Dashboard() {
   const maxChart = Math.max(1, ...chartData.map(c => c.value));
 
   return (
-    <div className="w-full max-w-full flex flex-col flex-1 min-h-0 md:overflow-hidden gap-3 md:gap-6">
+    <div className="w-full max-w-full flex flex-col flex-1 min-h-0 md:overflow-hidden gap-2.5 md:gap-6">
       <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Hanken+Grotesk:wght@100..900&display=swap" rel="stylesheet" />
       <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
 
-      <div className="grid grid-cols-2 md:grid-cols-12 gap-3 md:gap-6 shrink-0 w-full auto-rows-min">
-        <div className="col-span-1 md:col-span-3 card-glass p-3 md:p-4 rounded-xl flex flex-col items-center justify-center text-center gap-1.5 md:gap-2 md:py-5">
+      <div className="grid grid-cols-2 md:grid-cols-12 gap-2 md:gap-6 shrink-0 w-full auto-rows-min">
+        <div className="col-span-1 md:col-span-3 card-glass p-2.5 md:p-4 rounded-xl flex flex-col items-center justify-center text-center gap-1 md:gap-2 md:py-5">
           <div className="flex items-center justify-center gap-2">
             <span className="material-symbols-outlined text-[#b8c3ff] text-lg md:text-[20px]">devices</span>
             <p className="font-geist text-[10px] md:text-[11px] font-semibold tracking-wide text-[#c4c5d9] uppercase leading-tight">Total Inventario</p>
@@ -60,7 +60,7 @@ export default function Dashboard() {
           <h3 className="font-display text-2xl md:text-[32px] leading-none font-bold tracking-tight text-[#e4e2e4]">{loading ? '—' : <CountUp key={stats.total} value={stats.total} />}</h3>
         </div>
 
-        <div className="col-span-1 md:col-span-3 card-glass p-3 md:p-4 rounded-xl flex flex-col items-center justify-center text-center gap-1.5 md:gap-2 md:py-5">
+        <div className="col-span-1 md:col-span-3 card-glass p-2.5 md:p-4 rounded-xl flex flex-col items-center justify-center text-center gap-1 md:gap-2 md:py-5">
           <div className="flex items-center justify-center gap-2">
             <span className="material-symbols-outlined text-[#42e355] text-lg md:text-[20px]">check_circle</span>
             <p className="font-geist text-[10px] md:text-[11px] font-semibold tracking-wide text-[#c4c5d9] uppercase leading-tight">En Servicio</p>
@@ -68,7 +68,7 @@ export default function Dashboard() {
           <h3 className="font-display text-2xl md:text-[32px] leading-none font-bold tracking-tight text-[#e4e2e4]">{loading ? '—' : <CountUp key={stats.servicio} value={stats.servicio} />}</h3>
         </div>
 
-        <div className="col-span-1 md:col-span-3 card-glass p-3 md:p-4 rounded-xl flex flex-col items-center justify-center text-center gap-1.5 md:gap-2 md:py-5">
+        <div className="col-span-1 md:col-span-3 card-glass p-2.5 md:p-4 rounded-xl flex flex-col items-center justify-center text-center gap-1 md:gap-2 md:py-5">
           <div className="flex items-center justify-center gap-2">
             <span className="material-symbols-outlined text-[#ffb4ab] text-lg md:text-[20px]">warning</span>
             <p className="font-geist text-[10px] md:text-[11px] font-semibold tracking-wide text-[#c4c5d9] uppercase leading-tight">Fuera de Servicio</p>
@@ -76,7 +76,7 @@ export default function Dashboard() {
           <h3 className="font-display text-2xl md:text-[32px] leading-none font-bold tracking-tight text-[#ffb4ab]">{loading ? '—' : <CountUp key={stats.fuera} value={stats.fuera} />}</h3>
         </div>
 
-        <div className="col-span-1 md:col-span-3 card-glass p-3 md:p-4 rounded-xl flex flex-col items-center justify-center text-center gap-1.5 md:gap-2 md:py-5">
+        <div className="col-span-1 md:col-span-3 card-glass p-2.5 md:p-4 rounded-xl flex flex-col items-center justify-center text-center gap-1 md:gap-2 md:py-5">
           <div className="flex items-center justify-center gap-2">
             <span className="material-symbols-outlined text-[#ffb59b] text-lg md:text-[20px]">transfer_within_a_station</span>
             <p className="font-geist text-[10px] md:text-[11px] font-semibold tracking-wide text-[#c4c5d9] uppercase leading-tight">En Préstamo</p>
@@ -87,7 +87,7 @@ export default function Dashboard() {
 
       <div className="grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-6 md:flex-1 md:min-h-0 items-stretch">
         <div className="col-span-12 md:col-span-4 card-glass p-0 rounded-2xl flex flex-col md:overflow-hidden min-h-0 md:h-full md:max-h-[calc(100dvh-200px)]">
-          <div className="p-4 md:p-6 flex items-center justify-between shrink-0">
+          <div className="p-3 md:p-6 flex items-center justify-between shrink-0">
             <h3 className="font-display text-lg md:text-[20px] font-semibold text-[#e4e2e4] flex items-center gap-2">
               <span className="material-symbols-outlined text-[#ffb4ab]">campaign</span> Alertas Críticas
             </h3>
@@ -111,7 +111,7 @@ export default function Dashboard() {
                         const full = await apiRequest(`/equipos/${eq.id}`);
                         setSelectedEquipo(full?.data || full);
                       } catch { setSelectedEquipo(eq); }
-                    }} className="p-4 m-2 rounded-xl bg-[#ffb4ab]/5 border border-[#ffb4ab]/10 hover:bg-[#ffb4ab]/10 hover:border-[#ffb4ab]/20 transition-colors cursor-pointer active:scale-[0.98]">
+                    }} className="p-3 m-1.5 md:p-4 md:m-2 rounded-xl bg-[#ffb4ab]/5 border border-[#ffb4ab]/10 hover:bg-[#ffb4ab]/10 hover:border-[#ffb4ab]/20 transition-colors cursor-pointer active:scale-[0.98]">
                       <p className="font-geist text-[12px] font-bold tracking-wide text-[#ffb4ab] uppercase leading-tight break-words whitespace-normal">{eq.ine || 'SIN INE'}</p>
                       <div className="space-y-1 text-[13px] leading-5 mt-2">
                         <p className="text-[#e4e2e4]"><span className="text-[#c4c5d9] text-xs">Responsable:</span> <span className="font-medium">{eq.responsable_actual || eq.responsable || 'Sin responsable'}</span></p>
@@ -123,7 +123,7 @@ export default function Dashboard() {
                   );
                 })}
                 {lowStock.slice(0, 2).map((c: any) => (
-                  <div key={c.id} className="p-4 m-2 rounded-xl bg-[#2C2C2E] border border-white/5 hover:bg-[#353437] transition-colors cursor-pointer">
+                  <div key={c.id} className="p-3 m-1.5 md:p-4 md:m-2 rounded-xl bg-[#2C2C2E] border border-white/5 hover:bg-[#353437] transition-colors cursor-pointer">
                     <div className="flex justify-between items-start mb-1">
                       <span className="font-geist text-[13px] font-medium text-[#ffb59b]">{c.nombre?.slice(0, 12).toUpperCase()}</span>
                       <span className="font-geist text-[12px] font-semibold tracking-wide text-[#c4c5d9]">Hace 2h</span>
@@ -138,18 +138,18 @@ export default function Dashboard() {
         </div>
 
         <div className="col-span-12 md:col-span-8 card-glass p-4 md:p-6 rounded-2xl flex flex-col md:overflow-hidden min-h-0 md:h-full md:max-h-[calc(100dvh-200px)]">
-          <div className="flex items-start justify-between mb-4 md:mb-6 shrink-0">
+          <div className="flex items-start justify-between mb-3 md:mb-6 shrink-0">
             <h3 className="font-display text-lg md:text-[20px] font-semibold text-[#e4e2e4] flex items-center gap-2">
               <span className="material-symbols-outlined text-lg md:text-[20px] text-[#b8c3ff]">location_on</span>Distribución por Ubicaciones
             </h3>
           </div>
-          <div className="md:flex-1 md:min-h-0 rounded-xl border border-white/5 bg-[#131315] p-4 md:p-6 flex flex-col md:overflow-hidden">
+          <div className="md:flex-1 md:min-h-0 rounded-xl border border-white/5 bg-[#131315] p-3 md:p-6 flex flex-col md:overflow-hidden">
             {loading ? (
               <div className="flex-1 grid place-items-center"><div className="w-6 h-6 rounded-full border-2 border-white/10 border-t-[#b8c3ff] animate-spin" /></div>
             ) : chartData.length === 0 ? (
               <p className="font-geist text-sm text-[#c4c5d9] text-center py-12">Sin datos de ubicaciones</p>
             ) : (
-              <div className="flex flex-col gap-4 md:overflow-y-auto md:flex-1 md:min-h-0 md:custom-scrollbar pr-1">
+              <div className="flex flex-col gap-3 md:gap-4 md:overflow-y-auto md:flex-1 md:min-h-0 md:custom-scrollbar pr-1">
                 {(showAllDist ? chartData : chartData.slice(0, DIST_VISIBLE)).map((loc: any) => {
                   const pct = Math.round((loc.value / maxChart) * 100);
                   return (
@@ -172,7 +172,7 @@ export default function Dashboard() {
             {chartData.length > DIST_VISIBLE && (
               <button
                 onClick={() => setShowAllDist(v => !v)}
-                className="mt-3 w-full py-2.5 rounded-xl text-[13px] font-semibold text-[#b8c3ff] hover:text-white hover:bg-white/5 transition-colors shrink-0"
+                className="mt-3 w-full py-2 md:py-2.5 rounded-xl text-[13px] font-semibold text-[#b8c3ff] hover:text-white hover:bg-white/5 transition-colors shrink-0"
               >
                 {showAllDist ? 'Ver menos ↑' : `Ver más (${chartData.length - DIST_VISIBLE}) ↓`}
               </button>
