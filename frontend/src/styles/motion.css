@@ -23,6 +23,13 @@
   }
 }
 
+/* Excepción: blur siempre (móvil incluido). Solo para overlays donde el
+   texto debe leerse sobre contenido vivo (ej. nav circular de ajustes). */
+.modal-overlay-blur {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
 /* Enter fade para overlays SIN framer-motion (divs planos: IPAM, EvidenceModal).
    La salida es instantánea (sin exit); la regla global de reduced-motion lo neutraliza. */
 @keyframes m-overlay-in { from { opacity: 0; } }

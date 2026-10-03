@@ -64,7 +64,7 @@ export function ConfigCircularNav({
           onClick={onClose}
           role="menu"
           aria-label="Secciones de ajustes"
-          className="lg:hidden fixed inset-0 z-[50] flex items-center justify-center modal-overlay h-[100dvh]"
+          className="lg:hidden fixed inset-0 z-[50] flex items-center justify-center modal-overlay modal-overlay-blur h-[100dvh]"
         >
           <motion.div
             initial={{ opacity: 0, scale: 0.85 }}
