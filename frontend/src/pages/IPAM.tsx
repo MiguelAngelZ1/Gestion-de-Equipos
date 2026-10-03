@@ -646,7 +646,7 @@ const IPAM = () => {
                             </AnimatePresence>
 
                             {isMapModalOpen && createPortal(
-                                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={() => setIsMapModalOpen(false)}>
+                                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 modal-overlay modal-overlay-enter" onClick={() => setIsMapModalOpen(false)}>
                                     <div onClick={e => e.stopPropagation()} className="bg-zinc-950 border border-zinc-800 rounded-2xl w-[92vw] max-w-6xl h-[82dvh] flex flex-col overflow-hidden shadow-2xl">
                                         <div className="px-4 py-3 border-b border-zinc-800 flex items-center justify-between shrink-0">
                                             <h3 className="text-sm font-bold text-white">Mapa de Red — {selectedRed ? `${(selectedRed.gateway || selectedRed.segmento?.replace(/\.0$/, '.1') || selectedRed.segmento)}/${selectedRed.cidr ?? 24} (${(() => { const c = selectedRed.cidr ?? 24; const m = c === 0 ? 0 : (0xFFFFFFFF << (32 - c)) >>> 0; return [(m >>> 24) & 255, (m >>> 16) & 255, (m >>> 8) & 255, m & 255].join('.'); })()})` : ''} <span className="text-zinc-500 font-normal ml-2">{graphedDevices.length} nodos</span></h3>
@@ -713,7 +713,7 @@ const IPAM = () => {
             {selectedEquipo && <EquipoDetalleModal isOpen={isDetalleModalOpen} onClose={() => { setIsDetalleModalOpen(false); setSelectedEquipo(null); }} equipo={selectedEquipo} estados={estados} onEquipoUpdated={() => {}} />}
             <AsignarIpModal isOpen={isAssignModalOpen} ip={assigningIp} redId={selectedRed?.id} onClose={() => { setIsAssignModalOpen(false); setAssigningIp(null); }} onAssign={handleAssign} />
             {isPingOpen && createPortal(
-                <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={closePing}>
+                <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 modal-overlay modal-overlay-enter" onClick={closePing}>
                     <div onClick={e => e.stopPropagation()} className="bg-black border border-zinc-700 rounded-lg w-full max-w-2xl h-[min(420px,80dvh)] flex flex-col overflow-hidden shadow-2xl">
                         <div className="px-3 py-2 bg-zinc-800 border-b border-zinc-700 flex items-center justify-between select-none shrink-0">
                             <span className="text-xs font-medium text-zinc-300">Ventana de comandos</span>
@@ -725,7 +725,7 @@ const IPAM = () => {
                 document.body
             )}
             {isTracertOpen && createPortal(
-                <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={() => setIsTracertOpen(false)}>
+                <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 modal-overlay modal-overlay-enter" onClick={() => setIsTracertOpen(false)}>
                     <div onClick={e => e.stopPropagation()} className="bg-black border border-zinc-700 rounded-lg w-full max-w-2xl h-[min(420px,80dvh)] flex flex-col overflow-hidden shadow-2xl">
                         <div className="px-3 py-2 bg-zinc-800 border-b border-zinc-700 flex items-center justify-between select-none shrink-0">
                             <span className="text-xs font-medium text-zinc-300">Ventana de comandos</span>

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Package, History, Plus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { overlayFade } from '../../lib/motion';
 
 const ComponenteDetalleModal = ({ isOpen, onClose, componente, onViewHistory, onQuickStockAdd }) => {
     const [quickStock, setQuickStock] = useState(1);
@@ -26,11 +27,9 @@ const ComponenteDetalleModal = ({ isOpen, onClose, componente, onViewHistory, on
         <AnimatePresence>
             {isOpen && componente && (
                 <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
+                    {...overlayFade}
                     onClick={onClose}
-                    className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6 bg-black/85 backdrop-blur-md h-[100dvh] pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]"
+                    className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6 modal-overlay h-[100dvh] pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]"
                 >
                     <motion.div
                         initial={{ opacity: 0, scale: 0.97, y: 8 }}

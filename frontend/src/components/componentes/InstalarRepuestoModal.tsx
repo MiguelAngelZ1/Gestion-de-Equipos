@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Search, Package, Plus, CheckCircle2, AlertCircle, Info, ArrowRight, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { overlayFade } from '../../lib/motion';
 import { apiRequest } from '../../services/api';
 
 const InstalarRepuestoModal = ({ isOpen, onClose, equipo, onInstalled }) => {
@@ -116,7 +117,7 @@ const InstalarRepuestoModal = ({ isOpen, onClose, equipo, onInstalled }) => {
     return createPortal(
         <AnimatePresence>
             {isOpen && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+                <motion.div {...overlayFade} onClick={onClose} className="fixed inset-0 z-[200] flex items-center justify-center p-4 modal-overlay">
                     <motion.div initial={{ opacity: 0, scale: 0.97, y: 8 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.97, y: 8 }} transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }} onClick={e => e.stopPropagation()} className="bg-[#1C1C1E] border border-white/5 w-full max-w-xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90dvh]">
                         <div className="p-4 border-b border-white/5 flex items-center gap-3 shrink-0">
                             <span className="material-symbols-outlined text-[#e4e2e4] text-[24px]">{step === 1 ? 'search' : 'package_2'}</span>

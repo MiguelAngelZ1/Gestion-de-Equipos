@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { overlayFade } from '../../lib/motion';
 import { Search, X, Loader2, Monitor, User, MapPin, Tag, ChevronRight, Save, Globe } from 'lucide-react';
 import { apiRequest } from '../../services/api';
 import SearchInput from '../common/SearchInput';
@@ -59,10 +60,8 @@ const AsignarIpModal = ({ isOpen, ip, redId, onClose, onAssign }) => {
     return createPortal(
         <AnimatePresence>
             <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
+                {...overlayFade}
+                className="fixed inset-0 z-[150] flex items-center justify-center p-4 modal-overlay"
                 onClick={onClose}
             >
                 <motion.div

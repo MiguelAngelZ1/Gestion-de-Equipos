@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { overlayFade } from '../../lib/motion';
 import { X } from 'lucide-react';
 
 export interface ConfigNavItem {
@@ -59,14 +60,11 @@ export function ConfigCircularNav({
     <AnimatePresence>
       {open && (
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
+          {...overlayFade}
           onClick={onClose}
           role="menu"
           aria-label="Secciones de ajustes"
-          className="lg:hidden fixed inset-0 z-[50] flex items-center justify-center bg-black/85 backdrop-blur-md h-[100dvh]"
+          className="lg:hidden fixed inset-0 z-[50] flex items-center justify-center modal-overlay h-[100dvh]"
         >
           <motion.div
             initial={{ opacity: 0, scale: 0.85 }}

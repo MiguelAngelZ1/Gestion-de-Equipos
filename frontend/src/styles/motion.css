@@ -23,6 +23,11 @@
   }
 }
 
+/* Enter fade para overlays SIN framer-motion (divs planos: IPAM, EvidenceModal).
+   La salida es instantánea (sin exit); la regla global de reduced-motion lo neutraliza. */
+@keyframes m-overlay-in { from { opacity: 0; } }
+.modal-overlay-enter { animation: m-overlay-in var(--m-overlay) var(--m-ease); }
+
 /* Feedback táctil: SOLO pantallas táctiles, clase explícita, nunca global.
    Excluye :disabled y elementos que ya usan whileTap de framer-motion. */
 @media (pointer: coarse) {

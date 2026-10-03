@@ -1,6 +1,7 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { overlayFade } from '../../lib/motion';
 import { AlertTriangle, Loader2 } from 'lucide-react';
 
 interface ConfirmModalProps {
@@ -100,14 +101,12 @@ const ConfirmModal = ({ isOpen, title, message, children, onConfirm, onClose, co
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
+          {...overlayFade}
           onClick={!isLoading ? onClose : undefined}
           role="dialog"
           aria-modal="true"
           aria-labelledby={titleId}
-          className="fixed inset-0 z-[200] flex items-center justify-center p-6 sm:p-6 bg-black/85 backdrop-blur-md h-[100dvh] pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]"
+          className="fixed inset-0 z-[200] flex items-center justify-center p-6 sm:p-6 modal-overlay h-[100dvh] pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]"
         >
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 12 }}

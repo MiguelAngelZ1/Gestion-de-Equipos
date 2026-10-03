@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Plus, Trash2, Save, Package, Activity, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { overlayFade } from '../../lib/motion';
 import Select from '../common/Select';
 
 const ComponenteFormModal = ({ isOpen, onClose, onSave, initialData }) => {
@@ -66,11 +67,9 @@ const ComponenteFormModal = ({ isOpen, onClose, onSave, initialData }) => {
         <AnimatePresence>
             {isOpen && (
                 <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
+                    {...overlayFade}
                     onClick={!isSaving ? onClose : undefined}
-                    className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+                    className="fixed inset-0 z-[110] flex items-center justify-center p-4 modal-overlay"
                 >
                     <motion.div
                         initial={{ opacity: 0, scale: 0.97, y: 8 }}

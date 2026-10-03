@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { overlayFade } from '../../lib/motion';
 import { X, History, ArrowUpRight, ArrowDownLeft, Server, ClipboardList } from 'lucide-react';
 import { apiRequest } from '../../services/api';
 
@@ -32,11 +33,9 @@ const MovimientosStockModal = ({ isOpen, componente, onClose }) => {
     <AnimatePresence>
       {isOpen && componente && (
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
+          {...overlayFade}
           onClick={onClose}
-          className="fixed inset-0 z-[300] flex items-center justify-center p-4 sm:p-6 bg-black/85 backdrop-blur-md h-[100dvh]"
+          className="fixed inset-0 z-[300] flex items-center justify-center p-4 sm:p-6 modal-overlay h-[100dvh]"
         >
           <motion.div
             initial={{ opacity: 0, scale: 0.97, y: 8 }}

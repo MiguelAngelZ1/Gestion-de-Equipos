@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { overlayFade } from '../../lib/motion';
 import { AlertCircle, Loader2, CheckCircle2, X } from 'lucide-react';
 import { apiRequest } from '../../services/api';
 
@@ -55,11 +56,9 @@ const ReceiveLoanModal = ({ isOpen, onClose, prestamo, onConfirm }) => {
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
+          {...overlayFade}
           onClick={onClose}
-          className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md h-[100dvh]"
+          className="fixed inset-0 z-[300] flex items-center justify-center p-4 modal-overlay h-[100dvh]"
         >
           <motion.div
             initial={{ opacity: 0, scale: 0.97, y: 8 }}

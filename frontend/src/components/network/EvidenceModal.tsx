@@ -17,7 +17,7 @@ const EvidenceModal: React.FC<EvidenceModalProps> = ({ isOpen, onClose, node }) 
 
   return (
     <AnimatePresence>
-      <div onClick={onClose} className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs">
+      <div onClick={onClose} className="fixed inset-0 z-[150] flex items-center justify-center p-4 modal-overlay modal-overlay-enter">
         <motion.div
           onClick={e => e.stopPropagation()}
           initial={{ opacity: 0, scale: 0.95, y: 8 }}

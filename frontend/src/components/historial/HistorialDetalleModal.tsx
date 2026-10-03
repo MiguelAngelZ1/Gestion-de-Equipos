@@ -1,5 +1,6 @@
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { overlayFade } from '../../lib/motion';
 import { X } from 'lucide-react';
 import { getEventStyle } from '../../utils/historialEventos';
 
@@ -12,11 +13,9 @@ const HistorialDetalleModal = ({ isOpen, evento, onClose }: any) => {
     <AnimatePresence>
       {isOpen && evento && style && (
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
+          {...overlayFade}
           onClick={onClose}
-          className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6 bg-black/85 backdrop-blur-md h-[100dvh] pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]"
+          className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6 modal-overlay h-[100dvh] pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]"
         >
           <motion.div initial={{ opacity: 0, scale: 0.97, y: 8 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.97, y: 8 }} transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }} onClick={e => e.stopPropagation()} className="bg-[#1C1C1E] border border-white/5 rounded-2xl w-full max-w-3xl overflow-hidden flex flex-col max-h-[90dvh] shadow-2xl">
             <div className="p-4 border-b border-white/5 flex items-center gap-3 shrink-0">
