@@ -135,7 +135,7 @@ const Prestamos = () => {
   const allPastSelected = pastLoans.length > 0 && pastLoans.every(p => selectedHistoryIds.includes(p.id));
 
   return (
-    <div className="flex-1 min-h-0 flex flex-col space-y-4 w-full max-w-full overflow-y-auto lg:overflow-hidden">
+    <div className="flex-1 min-h-0 flex flex-col space-y-3 lg:space-y-4 w-full max-w-full overflow-y-auto lg:overflow-hidden">
 
       <ReceiveLoanModal
         isOpen={returnConfirm.isOpen}
@@ -150,7 +150,7 @@ const Prestamos = () => {
 
       <div className="flex flex-col lg:grid lg:grid-cols-2 gap-3 lg:gap-6 flex-1 min-h-0 lg:overflow-hidden w-full">
 
-        <section className="flex flex-col min-h-[300px] lg:min-h-0 lg:overflow-hidden">
+        <section className="flex flex-col min-h-[220px] lg:min-h-0 lg:overflow-hidden">
           <div className="flex items-center gap-3 text-xs text-zinc-500 mb-3 shrink-0">
             <span className="inline-flex items-center gap-2 text-zinc-300 font-semibold">
               <Calendar className="w-4 h-4 text-zinc-400" /> En Préstamo
@@ -174,7 +174,7 @@ const Prestamos = () => {
             {loading ? (
               <div className="space-y-3">{[1,2,3].map(i => <div key={i} className="h-36 rounded-xl bg-zinc-900 border border-zinc-800 animate-pulse" />)}</div>
             ) : activeLoans.length === 0 ? (
-              <div className="min-h-[240px] h-full flex flex-col items-center justify-center bg-zinc-900 border border-zinc-800 rounded-xl">
+              <div className="min-h-[190px] lg:min-h-[240px] h-full flex flex-col items-center justify-center bg-zinc-900 border border-zinc-800 rounded-xl">
                 <CheckCircle className="w-8 h-8 text-zinc-600 mb-3" />
                 <p className="font-semibold">Sin préstamos activos</p>
                 <p className="text-sm text-zinc-500 mt-1">Todos los equipos están en su lugar</p>
@@ -244,7 +244,7 @@ const Prestamos = () => {
           </div>
         </section>
 
-        <section className="flex flex-col min-h-[300px] lg:min-h-0 lg:overflow-hidden">
+        <section className="flex flex-col min-h-[220px] lg:min-h-0 lg:overflow-hidden">
           <div className="flex items-center gap-3 text-xs text-zinc-500 mb-3 shrink-0">
             <span className="inline-flex items-center gap-2 text-zinc-300 font-semibold">
               <RotateCcw className="w-4 h-4 text-zinc-400" /> Historial
@@ -268,7 +268,7 @@ const Prestamos = () => {
 
           <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar pr-1">
             {pastLoans.length === 0 ? (
-              <div className="min-h-[240px] h-full flex flex-col items-center justify-center bg-zinc-900 border border-zinc-800 rounded-xl">
+              <div className="min-h-[190px] lg:min-h-[240px] h-full flex flex-col items-center justify-center bg-zinc-900 border border-zinc-800 rounded-xl">
                 <AlertCircle className="w-8 h-8 text-zinc-600 mb-3" />
                 <p className="font-semibold">Sin registros</p>
                 <p className="text-sm text-zinc-500 mt-1">Aún no hay devoluciones</p>
