@@ -32,7 +32,7 @@
    Excluye :disabled y elementos que ya usan whileTap de framer-motion. */
 @media (pointer: coarse) {
   .tap-feedback {
-    transition: transform var(--m-tap) ease-out;
+    transition: transform var(--m-tap) ease-out, background-color 150ms, border-color 150ms, color 150ms;
   }
   .tap-feedback:active:not(:disabled):not([data-no-tap]) {
     transform: scale(0.95);

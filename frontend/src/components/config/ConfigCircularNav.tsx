@@ -23,7 +23,7 @@ export function ConfigNavTrigger({
   return (
     <button
       onClick={onOpen}
-      className="lg:hidden fixed bottom-20 right-4 z-[60] w-12 h-12 rounded-full flex items-center justify-center bg-zinc-900 border border-zinc-800 shadow-xl active:scale-[0.95] transition-transform"
+      className="tap-feedback lg:hidden fixed bottom-20 right-4 z-[60] w-12 h-12 rounded-full flex items-center justify-center bg-zinc-900 border border-zinc-800 shadow-xl"
       aria-haspopup="menu"
       aria-label="Abrir menú de ajustes"
     >

@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Shield, Server, Laptop, Smartphone, Wifi, Link2, Trash2, Router, Monitor, Antenna, Activity, Network } from 'lucide-react';
 import { createPortal } from 'react-dom';
+import { useCoarsePointer } from '../../hooks/useCoarsePointer';
 
 interface TopologyMapProps {
   nodes: any[];
@@ -56,6 +57,7 @@ const TopologyMap: React.FC<TopologyMapProps> = ({ nodes, gatewayIp, links = [],
   const linkedTo = (ip: string) => links.filter(l => l.from === ip || l.to === ip).map(l => l.from === ip ? l.to : l.from);
 
   const [menu, setMenu] = React.useState<{ x: number; y: number; ip: string } | null>(null);
+  const coarse = useCoarsePointer();
   React.useEffect(() => {
     const close = () => setMenu(null);
     window.addEventListener('click', close);
@@ -107,7 +109,7 @@ const TopologyMap: React.FC<TopologyMapProps> = ({ nodes, gatewayIp, links = [],
         onTap={handleSelect}
         onClick={handleSelect}
         onContextMenu={e => { e.preventDefault(); e.stopPropagation(); setMenu({ x: e.clientX, y: e.clientY, ip: node.ip }); }}
-        whileHover={{ scale: draggable ? 1 : 1.02 }}
+        whileHover={coarse ? undefined : { scale: draggable ? 1 : 1.02 }}
         className={`absolute flex flex-col ${small ? 'gap-1 p-2.5' : 'gap-1.5 p-3'} rounded-xl border ${border(node.estado_monitoreo)} ${isLinking ? 'ring-2 ring-cyan-400' : ''} ${small ? 'min-w-[140px] max-w-[155px]' : 'min-w-[170px] max-w-[190px]'} ${draggable ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'} select-none shadow-lg`}
         {...(!draggable ? {} : { layout: false })}
       >
@@ -170,7 +172,7 @@ const TopologyMap: React.FC<TopologyMapProps> = ({ nodes, gatewayIp, links = [],
         {allNodes.map(n => {
           const isLinking = linkingFrom === n.ip; const label = n.hostname_actual || n.equipo_ine;
           return (
-            <motion.div key={n.id} onClick={() => onSelectNode(n)} onContextMenu={e => { e.preventDefault(); e.stopPropagation(); setMenu({ x: e.clientX, y: e.clientY, ip: n.ip }); }} whileHover={{ scale: 1.02 }} className={`flex flex-col gap-1.5 p-3 rounded-xl border ${border(n.estado_monitoreo)} ${isLinking ? 'ring-2 ring-cyan-400' : ''} min-w-[170px] max-w-[190px] cursor-pointer select-none`}>
+            <motion.div key={n.id} onClick={() => onSelectNode(n)} onContextMenu={e => { e.preventDefault(); e.stopPropagation(); setMenu({ x: e.clientX, y: e.clientY, ip: n.ip }); }} whileHover={coarse ? undefined : { scale: 1.02 }} className={`flex flex-col gap-1.5 p-3 rounded-xl border ${border(n.estado_monitoreo)} ${isLinking ? 'ring-2 ring-cyan-400' : ''} min-w-[170px] max-w-[190px] cursor-pointer select-none`}>
               <div className="flex items-center justify-between"><div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 grid place-items-center">{getNodeIcon(n.rol, n.fabricante_actual)}</div>{dot(n.estado_monitoreo)}</div>
               <p className="text-xs font-bold text-white truncate">{label || n.ip}</p><p className="text-[11px] font-mono text-zinc-500 truncate">{n.ip}</p>
             </motion.div>
