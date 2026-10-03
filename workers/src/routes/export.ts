@@ -1,6 +1,7 @@
 // Exports: .xlsx real (builder propio, sin dependencias) + Drive vía REST.
 import { Hono } from 'hono';
-import { requireAuth, rateLimit, W15M } from '../middleware';
+import { requireAuth, requirePermission, rateLimit, W15M } from '../middleware';
+import { PERMISOS } from '../constants';
 import { reportingService } from '../services/reporting.service';
 import { ipamService } from '../services/ipam.service';
 import { buildXlsx, XLSX_MIME, type XlsxSheet } from '../lib/xlsx';
@@ -13,6 +14,10 @@ type Vars = { db: Db; user: any };
 const r = new Hono<{ Bindings: Env; Variables: Vars }>();
 
 r.use('*', requireAuth);
+// El inventario incluye cuentas/claves admin: solo quien pueda descargar backups.
+// (Antes bastaba estar autenticado: cualquier USER podía llevarse las credenciales.)
+const canDownload = requirePermission(PERMISOS.BACKUPS.DESCARGAR);
+const canBackup = requirePermission(PERMISOS.BACKUPS.CREAR);
 const exportLimit = (c: any, n: any) => rateLimit(20, W15M, 'Demasiadas exportaciones. Intenta en 15 minutos.')(c, n);
 const uid = (c: any) => c.get('user')?.userId ?? c.get('user')?.id;
 const stamp = () => new Date().toISOString().split('T')[0];
@@ -68,7 +73,7 @@ async function ipamSheets(db: Db, userId: any): Promise<XlsxSheet[]> {
   return sheets;
 }
 
-r.get('/exportar-excel', exportLimit, async (c) => {
+r.get('/exportar-excel', exportLimit, canDownload, async (c) => {
   try {
     const bytes = buildXlsx([await inventarioSheet(c.get('db'))]);
     c.header('Content-Type', XLSX_MIME);
@@ -79,7 +84,7 @@ r.get('/exportar-excel', exportLimit, async (c) => {
   }
 });
 
-r.post('/respaldo-drive', exportLimit, async (c) => {
+r.post('/respaldo-drive', exportLimit, canBackup, async (c) => {
   try {
     const bytes = buildXlsx([await inventarioSheet(c.get('db'))]);
     await uploadToDrive(c.env, `Copia_Seguridad_Inventario_${stamp()}.xlsx`, bytes);
@@ -89,7 +94,7 @@ r.post('/respaldo-drive', exportLimit, async (c) => {
   }
 });
 
-r.get('/ipam/exportar-excel', async (c) => {
+r.get('/ipam/exportar-excel', exportLimit, canDownload, async (c) => {
   try {
     const bytes = buildXlsx(await ipamSheets(c.get('db'), uid(c)));
     c.header('Content-Type', XLSX_MIME);
@@ -100,7 +105,7 @@ r.get('/ipam/exportar-excel', async (c) => {
   }
 });
 
-r.post('/ipam/exportar-drive', async (c) => {
+r.post('/ipam/exportar-drive', exportLimit, canBackup, async (c) => {
   try {
     const bytes = buildXlsx(await ipamSheets(c.get('db'), uid(c)));
     await uploadToDrive(c.env, `Reporte_IPAM_${stamp()}.xlsx`, bytes);

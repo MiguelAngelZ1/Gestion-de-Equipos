@@ -101,7 +101,7 @@ auth.post('/logout', requireAuth, async (c) => {
   return c.json({ success: true, message: 'Sesión cerrada.' });
 });
 
-auth.post('/refresh', async (c) => {
+auth.post('/refresh', limiters.auth, async (c) => {
   const token = getCookie(c, 'refreshToken');
   const clear = () => {
     deleteCookie(c, 'token', { ...tokenCookie, maxAge: undefined });

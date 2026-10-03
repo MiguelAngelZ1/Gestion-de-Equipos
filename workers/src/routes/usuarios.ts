@@ -10,10 +10,7 @@ type Vars = { db: Db; user: any; validatedBody: any };
 const r = new Hono<{ Bindings: Env; Variables: Vars }>();
 
 r.get('/perfil', requireAuth, async (c) => {
-  const { userId, usuario: username } = c.get('user');
-  if (userId === 0) {
-    return c.json({ id: 0, usuario: username || 'admin', email: 'admin@sistema.cl', rol: 'admin', is_initial: true });
-  }
+  const { userId } = c.get('user');
   const usuario = await usuariosService(c.get('db')).getUsuarioById(userId);
   if (!usuario) return c.json({ error: 'Usuario no encontrado' }, 404);
   return c.json(usuario);
@@ -22,9 +19,6 @@ r.get('/perfil', requireAuth, async (c) => {
 r.put('/perfil', requireAuth, async (c) => {
   const { userId } = c.get('user');
   const { usuario, email, password } = await c.req.json().catch(() => ({}));
-  if (userId === 0) {
-    return c.json({ error: 'El admin inicial no puede actualizarse. Por favor cree un usuario admin real en Gestión de Usuarios.' }, 400);
-  }
   if (usuario || email) {
     const existing = await usuariosService(c.get('db')).findByUsuarioOrEmail(usuario || email);
     if (existing && existing.id !== userId) {

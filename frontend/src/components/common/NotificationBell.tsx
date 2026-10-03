@@ -37,20 +37,6 @@ const NotificationBell = ({ plain: _plain = false }: { plain?: boolean } = {}) =
         if (userData && userData.id !== undefined) {
             return userData.id;
         }
-        const token = localStorage.getItem("equipos_admin_token");
-        if (token) {
-            try {
-                const payload = JSON.parse(atob(token.split('.')[1]));
-                const extractedId = payload.userId;
-                if (userData && extractedId) {
-                    userData.id = extractedId;
-                    localStorage.setItem("equipos_user_data", JSON.stringify(userData));
-                }
-                return extractedId;
-            } catch {
-                // silent
-            }
-        }
         return null;
     })();
 

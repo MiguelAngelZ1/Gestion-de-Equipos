@@ -30,7 +30,7 @@ app.use('/api/*', limiters.api);
 app.get('/health', async (c) => {
   try {
     await createDb(c.env.DB).query('SELECT 1');
-    return c.json({ status: 'ok', timestamp: new Date().toISOString(), database: 'connected (d1)', environment: 'production' });
+    return c.json({ status: 'ok', timestamp: new Date().toISOString(), database: 'connected (d1)' });
   } catch (e) {
     console.error('[health]', e);
     return c.json({ status: 'error', message: 'Service unavailable', timestamp: new Date().toISOString() }, 503);
@@ -89,6 +89,8 @@ function cspHeader(n: string): string {
     "font-src 'self' https://fonts.gstatic.com",
     "img-src 'self' data: blob:",
     "connect-src 'self' https://fonts.gstatic.com",
+    "frame-ancestors 'none'",
+    "base-uri 'self'",
   ].join('; ');
 }
 

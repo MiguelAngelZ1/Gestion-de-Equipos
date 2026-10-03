@@ -13,7 +13,7 @@ export const forgotPasswordSchema = z.object({
 export const resetPasswordSchema = z.object({
   email: z.string().email('Email inválido'),
   code: z.string().length(6, 'Código debe tener 6 caracteres'),
-  newPassword: z.string().min(6, 'Nueva contraseña debe tener al menos 6 caracteres'),
+  newPassword: z.string().min(12, 'Nueva contraseña debe tener al menos 12 caracteres'),
 });
 
 // Copia de backend/schemas/config.schema.ts
@@ -67,14 +67,14 @@ export const createSoporteSchema = z.object({
 export const createUsuarioSchema = z.object({
   usuario: z.string().min(3, 'Usuario debe tener al menos 3 caracteres'),
   email: z.string().email('Email inválido'),
-  password: z.string().min(6, 'Contraseña debe tener al menos 6 caracteres'),
+  password: z.string().min(12, 'Contraseña debe tener al menos 12 caracteres'),
   rol: z.string().optional(),
   permisos_json: z.array(z.string()).optional(),
 });
 export const updateUsuarioSchema = z.object({
   usuario: z.string().min(3).optional(),
   email: z.string().email('Email inválido').optional(),
-  password: z.string().min(6).optional(),
+  password: z.string().min(12).optional(),
   rol: z.string().optional(),
   permisos_json: z.array(z.string()).optional(),
 });
