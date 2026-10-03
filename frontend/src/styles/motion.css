@@ -1,0 +1,45 @@
+/* Tokens de movimiento — única fuente de verdad para duraciones/easings.
+   Espejo JS en src/lib/motion.ts. Ninguna animación supera 250ms.
+   Solo se animan transform y opacity. */
+
+:root {
+  --m-tap: 100ms;      /* feedback táctil :active */
+  --m-overlay: 150ms;  /* fade de overlays de modal/menú */
+  --m-swap: 200ms;     /* crossfade entre pestañas/contenido */
+  --m-max: 250ms;      /* techo absoluto (shared element) */
+  --m-ease: ease-in-out;
+}
+
+/* Overlay de modales/menús: oscuro semitransparente, sin blur en móvil. */
+.modal-overlay {
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+/* Blur SOLO en escritorio con puntero fino (dispositivos potentes). */
+@media (hover: hover) and (pointer: fine) {
+  .modal-overlay {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+}
+
+/* Feedback táctil: SOLO pantallas táctiles, clase explícita, nunca global.
+   Excluye :disabled y elementos que ya usan whileTap de framer-motion. */
+@media (pointer: coarse) {
+  .tap-feedback {
+    transition: transform var(--m-tap) ease-out;
+  }
+  .tap-feedback:active:not(:disabled):not([data-no-tap]) {
+    transform: scale(0.95);
+    will-change: transform;
+  }
+}
+
+/* Movimiento reducido: fade instantáneo (framer-motion lo maneja vía
+   MotionConfig reducedMotion="user"; esto cubre el resto del CSS). */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
