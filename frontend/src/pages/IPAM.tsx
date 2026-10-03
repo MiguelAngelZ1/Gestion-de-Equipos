@@ -20,6 +20,7 @@ import {
     Filter
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { crossfade } from '../lib/motion';
 import { API_BASE, apiRequest } from '../services/api';
 import { useToast } from '../context/ToastContext';
 import SearchInput from '../components/common/SearchInput';
@@ -563,7 +564,9 @@ const IPAM = () => {
                                 </div>
                             </div>
 
+                            <AnimatePresence mode="popLayout">
                             {activeTab === 'SCANNER' && (
+                                <motion.div key="tab-scanner" {...crossfade}>
                                 <ScannerTable
                                     nodes={dispositivos}
                                     isScanning={isScanning}
@@ -575,49 +578,11 @@ const IPAM = () => {
                                     onGraph={handleGraphScanner}
                                     onReserve={handleScannerReserve}
                                 />
-                            )}
-
-                            {isMapModalOpen && createPortal(
-                                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={() => setIsMapModalOpen(false)}>
-                                    <div onClick={e => e.stopPropagation()} className="bg-zinc-950 border border-zinc-800 rounded-2xl w-[92vw] max-w-6xl h-[82dvh] flex flex-col overflow-hidden shadow-2xl">
-                                        <div className="px-4 py-3 border-b border-zinc-800 flex items-center justify-between shrink-0">
-                                            <h3 className="text-sm font-bold text-white">Mapa de Red — {selectedRed ? `${(selectedRed.gateway || selectedRed.segmento?.replace(/\.0$/, '.1') || selectedRed.segmento)}/${selectedRed.cidr ?? 24} (${(() => { const c = selectedRed.cidr ?? 24; const m = c === 0 ? 0 : (0xFFFFFFFF << (32 - c)) >>> 0; return [(m >>> 24) & 255, (m >>> 16) & 255, (m >>> 8) & 255, m & 255].join('.'); })()})` : ''} <span className="text-zinc-500 font-normal ml-2">{graphedDevices.length} nodos</span></h3>
-                                            <button onClick={() => setIsMapModalOpen(false)} className="w-8 h-8 grid place-items-center rounded-xl hover:bg-white/5 text-zinc-400"><X className="w-4 h-4" /></button>
-                                        </div>
-                                        <div className="flex-1 min-h-[320px] sm:min-h-[520px] overflow-hidden flex flex-col relative">
-                                            <TopologyMap
-                                                nodes={graphedDevices}
-                                                gatewayIp={selectedRed?.gateway}
-                                                links={graphLinks}
-                                                linkingFrom={linkingFrom}
-                                                draggable
-                                                compactCards
-                                                noChrome
-                                                positions={graphPositions}
-                                                onPositionChange={(ip, pos) => setGraphPositions(prev => ({ ...prev, [ip]: pos }))}
-                                                onSelectNode={(node) => {
-                                                    if (!linkingFrom) return;
-                                                    if (linkingFrom === node.ip) { setLinkingFrom(null); return; }
-                                                    const exists = graphLinks.some(l => (l.from === linkingFrom && l.to === node.ip) || (l.from === node.ip && l.to === linkingFrom));
-                                                    if (!exists) setGraphLinks(prev => [...prev, { from: linkingFrom, to: node.ip }]);
-                                                    setLinkingFrom(null);
-                                                }}
-                                                onRemove={(ip) => { setGraphedDevices(prev => prev.filter(n => n.ip !== ip)); setGraphLinks(prev => prev.filter(l => l.from !== ip && l.to !== ip)); setGraphPositions(prev => { const c = { ...prev }; delete c[ip]; return c; }); }}
-                                                onChangeIcon={(ip, rol) => setGraphedDevices(prev => prev.map(n => n.ip === ip ? { ...n, rol } : n))}
-                                                onStartLink={(ip) => setLinkingFrom(prev => prev === ip ? null : ip)}
-                                                onClearLinks={() => setGraphLinks([])}
-                                                onUnlink={(a,b) => setGraphLinks(prev => prev.filter(l => !((l.from===a && l.to===b) || (l.from===b && l.to===a))))}
-                                                onPing={handleScannerPing}
-                                                onTracert={handleTracert}
-                                            />
-                                        </div>
-                                    </div>
-                                </div>,
-                                document.body
+                                </motion.div>
                             )}
 
                             {activeTab === 'GRID' && (
-                                <>
+                                <motion.div key="tab-grid" {...crossfade}>
                                     <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-1.5 flex items-center gap-1.5 shrink-0">
                                         <SearchInput value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar IP o equipo..." className="flex-1 min-w-0" />
                                         <div className="w-[104px] sm:w-[136px] shrink-0 -ml-0.5"><Select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} options={[{ value: 'ALL', label: 'Todas' }, { value: 'LIBRE', label: 'Libres' }, { value: 'OCUPADA', label: 'Ocupadas' }, { value: 'RESERVADA', label: 'Reservadas' }]} placeholder="Estado" /></div>
@@ -676,7 +641,47 @@ const IPAM = () => {
                                             </div>
                                         )}
                                     </div>
-                                </>
+                                </motion.div>
+                            )}
+                            </AnimatePresence>
+
+                            {isMapModalOpen && createPortal(
+                                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={() => setIsMapModalOpen(false)}>
+                                    <div onClick={e => e.stopPropagation()} className="bg-zinc-950 border border-zinc-800 rounded-2xl w-[92vw] max-w-6xl h-[82dvh] flex flex-col overflow-hidden shadow-2xl">
+                                        <div className="px-4 py-3 border-b border-zinc-800 flex items-center justify-between shrink-0">
+                                            <h3 className="text-sm font-bold text-white">Mapa de Red — {selectedRed ? `${(selectedRed.gateway || selectedRed.segmento?.replace(/\.0$/, '.1') || selectedRed.segmento)}/${selectedRed.cidr ?? 24} (${(() => { const c = selectedRed.cidr ?? 24; const m = c === 0 ? 0 : (0xFFFFFFFF << (32 - c)) >>> 0; return [(m >>> 24) & 255, (m >>> 16) & 255, (m >>> 8) & 255, m & 255].join('.'); })()})` : ''} <span className="text-zinc-500 font-normal ml-2">{graphedDevices.length} nodos</span></h3>
+                                            <button onClick={() => setIsMapModalOpen(false)} className="w-8 h-8 grid place-items-center rounded-xl hover:bg-white/5 text-zinc-400"><X className="w-4 h-4" /></button>
+                                        </div>
+                                        <div className="flex-1 min-h-[320px] sm:min-h-[520px] overflow-hidden flex flex-col relative">
+                                            <TopologyMap
+                                                nodes={graphedDevices}
+                                                gatewayIp={selectedRed?.gateway}
+                                                links={graphLinks}
+                                                linkingFrom={linkingFrom}
+                                                draggable
+                                                compactCards
+                                                noChrome
+                                                positions={graphPositions}
+                                                onPositionChange={(ip, pos) => setGraphPositions(prev => ({ ...prev, [ip]: pos }))}
+                                                onSelectNode={(node) => {
+                                                    if (!linkingFrom) return;
+                                                    if (linkingFrom === node.ip) { setLinkingFrom(null); return; }
+                                                    const exists = graphLinks.some(l => (l.from === linkingFrom && l.to === node.ip) || (l.from === node.ip && l.to === linkingFrom));
+                                                    if (!exists) setGraphLinks(prev => [...prev, { from: linkingFrom, to: node.ip }]);
+                                                    setLinkingFrom(null);
+                                                }}
+                                                onRemove={(ip) => { setGraphedDevices(prev => prev.filter(n => n.ip !== ip)); setGraphLinks(prev => prev.filter(l => l.from !== ip && l.to !== ip)); setGraphPositions(prev => { const c = { ...prev }; delete c[ip]; return c; }); }}
+                                                onChangeIcon={(ip, rol) => setGraphedDevices(prev => prev.map(n => n.ip === ip ? { ...n, rol } : n))}
+                                                onStartLink={(ip) => setLinkingFrom(prev => prev === ip ? null : ip)}
+                                                onClearLinks={() => setGraphLinks([])}
+                                                onUnlink={(a,b) => setGraphLinks(prev => prev.filter(l => !((l.from===a && l.to===b) || (l.from===b && l.to===a))))}
+                                                onPing={handleScannerPing}
+                                                onTracert={handleTracert}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>,
+                                document.body
                             )}
                         </div>
                     )}

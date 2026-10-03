@@ -3,6 +3,8 @@ import { useLocation } from 'react-router-dom';
 import { ROLES } from '../config/constants';
 import { MapPin, Tag, Shield, Activity, HeartPulse, Users, UserCircle, Bell, HardDrive } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useCoarsePointer } from '../hooks/useCoarsePointer';
+import { crossfade } from '../lib/motion';
 
 const GruposComodidadPanel = lazy(() => import('../components/config/GruposComodidadPanel'));
 const EstadosPanel = lazy(() => import('../components/config/EstadosPanel'));
@@ -32,6 +34,7 @@ export default function Configuracion() {
   const location = useLocation() as any;
   const [tab, setTab] = useState(location.state?.activeTab || 'perfil');
   const [navOpen, setNavOpen] = useState(false);
+  const coarse = useCoarsePointer();
   const user = JSON.parse(localStorage.getItem("equipos_user_data") || "{}");
   const isAdmin = (user.rol || ROLES.USER).toUpperCase() === ROLES.ADMIN;
   const filtered = TABS.filter(t => !t.admin || isAdmin);
@@ -53,13 +56,15 @@ export default function Configuracion() {
       <ConfigCircularNav tabs={filtered} active={tab} open={navOpen} onClose={() => setNavOpen(false)} onSelect={setTab} />
 
       <main className="md:flex-1 md:min-h-0 min-w-0 bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden flex flex-col">
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode="popLayout">
           <motion.div
             key={tab}
-            initial={{ opacity: 0, x: -28, scale: 0.96, filter: 'blur(6px)' }}
-            animate={{ opacity: 1, x: 0, scale: 1, filter: 'blur(0px)' }}
-            exit={{ opacity: 0, x: -16, scale: 0.97, filter: 'blur(4px)' }}
-            transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
+            {...(coarse ? crossfade : {
+              initial: { opacity: 0, x: -28, scale: 0.96, filter: 'blur(6px)' },
+              animate: { opacity: 1, x: 0, scale: 1, filter: 'blur(0px)' },
+              exit: { opacity: 0, x: -16, scale: 0.97, filter: 'blur(4px)' },
+              transition: { duration: 0.42, ease: [0.22, 1, 0.36, 1] as const },
+            })}
             className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden custom-scrollbar p-4 lg:p-6"
           >
             <Suspense fallback={<div className="py-16 grid place-items-center"><div className="w-6 h-6 rounded-full border-2 border-zinc-800 border-t-white animate-spin" /></div>}>
