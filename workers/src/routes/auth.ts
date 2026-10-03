@@ -53,23 +53,24 @@ auth.post('/forgot-password', limiters.forgot, validateBody(forgotPasswordSchema
   if (user) {
     const code = random6();
     await svc.saveRecoveryCode(email, await sha256hex(code), new Date(Date.now() + 15 * 60 * 1000));
-    // Resend por HTTP (Workers no tiene SMTP). Sin RESEND_API_KEY se deja
+    // Brevo por HTTP (Workers no tiene SMTP). Sin BREVO_API_KEY se deja
     // constancia en log; la respuesta sigue siendo genérica anti-enumeración.
     try {
-      if (c.env.RESEND_API_KEY) {
-        const res = await fetch('https://api.resend.com/emails', {
+      if (c.env.BREVO_API_KEY) {
+        const fromEmail = c.env.BREVO_FROM || 'miguelangelimperio@gmail.com';
+        const res = await fetch('https://api.brevo.com/v3/smtp/email', {
           method: 'POST',
-          headers: { Authorization: `Bearer ${c.env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+          headers: { 'api-key': c.env.BREVO_API_KEY, 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            from: c.env.RESEND_FROM || 'IMPERIO - Gestion de Equipos <onboarding@resend.dev>',
-            to: [email],
+            sender: { name: 'IMPERIO - Gestion de Equipos', email: fromEmail },
+            to: [{ email }],
             subject: 'Codigo de recuperacion - IMPERIO',
-            html: `<p>Tu codigo de recuperacion es: <strong>${code}</strong></p><p>Vence en 15 minutos. Si no lo pediste, ignora este mensaje.</p>`,
+            htmlContent: `<p>Tu codigo de recuperacion es: <strong>${code}</strong></p><p>Vence en 15 minutos. Si no lo pediste, ignora este mensaje.</p>`,
           }),
         });
-        if (!res.ok) console.error('[auth] Resend error', res.status, await res.text().catch(() => ''));
+        if (!res.ok) console.error('[auth] Brevo error', res.status, await res.text().catch(() => ''));
       } else {
-        console.log(`[auth] recovery code para ${email} (sin RESEND_API_KEY, mail omitido)`);
+        console.log(`[auth] recovery code para ${email} (sin BREVO_API_KEY, mail omitido)`);
       }
     } catch (e) {
       console.error('[auth] fallo envio recovery', e);
