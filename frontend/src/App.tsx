@@ -2,6 +2,7 @@ import React, { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
+import { MotionConfig } from 'framer-motion';
 import { ToastProvider } from './context/ToastContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ROLES } from './config/constants';
@@ -117,6 +118,7 @@ function AppContent() {
 
 function App() {
   return (
+    <MotionConfig reducedMotion="user">
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <ToastProvider>
@@ -127,6 +129,7 @@ function App() {
         </AuthProvider>
       </ToastProvider>
     </ThemeProvider>
+    </MotionConfig>
   );
 }
 
