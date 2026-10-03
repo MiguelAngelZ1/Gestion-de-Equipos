@@ -5,10 +5,16 @@ import { verifyJwt } from './auth-crypto';
 import { ROLES_ADMIN } from './constants';
 import type { Db } from './db';
 
+export interface RateLimitBinding {
+  limit(opts: { key: string }): Promise<{ success: boolean }>;
+}
+
 export interface Env {
   DB: D1Database;
   JWT_SECRET: string;
   ASSETS: Fetcher;
+  AUTH_LIMITER?: RateLimitBinding;
+  API_LIMITER?: RateLimitBinding;
   BREVO_API_KEY?: string;
   BREVO_FROM?: string;
   GOOGLE_CLIENT_ID?: string;
@@ -81,10 +87,27 @@ export async function validateOrigin(c: Context, next: Next) {
   await next();
 }
 
-// Rate limit por aislado (defensa en profundidad; la capa real es WAF rate rule).
+// Rate limit en dos capas:
+// 1) Binding de Cloudflare (AUTH_LIMITER/API_LIMITER, ver wrangler.toml): cuenta
+//    global por colo, frena fuerza bruta distribuida. Solo existe en producción;
+//    en `wrangler dev` local se salta y queda la capa 2.
+// 2) Bucket en memoria por aislado: conserva los límites sostenidos de 15 min
+//    (el binding solo admite ventanas de 10/60 s).
 const buckets = new Map<string, { count: number; reset: number }>();
-export function rateLimit(max: number, windowMs: number, message: string) {
+export function rateLimit(max: number, windowMs: number, message: string, binding?: 'AUTH_LIMITER' | 'API_LIMITER') {
   return async (c: Context, next: Next) => {
+    if (binding) {
+      try {
+        const rl = (c.env as Env)?.[binding];
+        if (rl?.limit) {
+          const ip = c.req.header('cf-connecting-ip') || 'unknown';
+          const { success } = await rl.limit({ key: `${ip}:${c.req.path}` });
+          if (!success) return c.json({ error: message }, 429);
+        }
+      } catch {
+        // Sin binding (dev local): sigue el bucket en memoria.
+      }
+    }
     const ip = c.req.header('cf-connecting-ip') || 'unknown';
     const key = `${ip}:${c.req.path}`;
     const now = Date.now();
@@ -102,8 +125,8 @@ export function rateLimit(max: number, windowMs: number, message: string) {
 export const W15M = 15 * 60 * 1000;
 export const limiters = {
   // Mismos umbrales que backend/utils/rateLimiter.ts
-  auth: (c: Context, n: Next) => rateLimit(10, W15M, 'Demasiados intentos de login. Intenta mas tarde.')(c, n),
-  forgot: (c: Context, n: Next) => rateLimit(5, W15M, 'Demasiados intentos de envío de código. Intenta de nuevo en 15 minutos.')(c, n),
-  reset: (c: Context, n: Next) => rateLimit(3, W15M, 'Demasiados intentos de restablecimiento de contraseña. Intenta de nuevo en 15 minutos.')(c, n),
-  api: (c: Context, n: Next) => rateLimit(2000, W15M, 'Demasiadas peticiones. Intenta mas tarde.')(c, n),
+  auth: (c: Context, n: Next) => rateLimit(10, W15M, 'Demasiados intentos de login. Intenta mas tarde.', 'AUTH_LIMITER')(c, n),
+  forgot: (c: Context, n: Next) => rateLimit(5, W15M, 'Demasiados intentos de envío de código. Intenta de nuevo en 15 minutos.', 'AUTH_LIMITER')(c, n),
+  reset: (c: Context, n: Next) => rateLimit(3, W15M, 'Demasiados intentos de restablecimiento de contraseña. Intenta de nuevo en 15 minutos.', 'AUTH_LIMITER')(c, n),
+  api: (c: Context, n: Next) => rateLimit(2000, W15M, 'Demasiadas peticiones. Intenta mas tarde.', 'API_LIMITER')(c, n),
 };

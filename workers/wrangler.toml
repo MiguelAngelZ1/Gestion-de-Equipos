@@ -10,6 +10,24 @@ binding = "DB"
 database_name = "control-equipos-db"
 database_id = "eaae86c1-a468-401b-b1db-447183394b1f"
 
+# Rate limiting real (misma infra que el WAF, pero callable desde el Worker;
+# funciona en workers.dev sin dominio propio). Ventanas: solo 10/60 s, por eso
+# el middleware conserva además el bucket en memoria para el límite de 15 min.
+# namespace_id: entero único por cuenta (1001/1002 no colisionan con nada).
+[[ratelimits]]
+name = "AUTH_LIMITER"
+namespace_id = "1001"
+[ratelimits.simple]
+limit = 10
+period = 60
+
+[[ratelimits]]
+name = "API_LIMITER"
+namespace_id = "1002"
+[ratelimits.simple]
+limit = 2000
+period = 60
+
 # Fase 2: cron diario de notificaciones (reemplaza setInterval de server.ts).
 # Por ahora el handler scheduled() es no-op.
 [triggers]
