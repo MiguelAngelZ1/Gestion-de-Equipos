@@ -39,11 +39,8 @@ export default defineConfig({
           if (id.includes('node_modules/react-dom')) return 'vendor-dom'
           if (id.includes('node_modules/react/')) return 'vendor-react'
           if (id.includes('node_modules/framer-motion')) return 'vendor-anim'
-          if (id.includes('node_modules/recharts')) return 'vendor-charts'
           if (id.includes('node_modules/lucide-react')) return 'vendor-icons'
           if (id.includes('node_modules/react-router')) return 'vendor-router'
-          if (id.includes('node_modules/socket.io-client')) return 'vendor-socket'
-          if (id.includes('node_modules/date-fns')) return 'vendor-date'
         }
       }
     }

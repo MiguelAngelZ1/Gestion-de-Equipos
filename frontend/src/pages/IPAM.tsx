@@ -411,7 +411,6 @@ const IPAM = () => {
             latencia_actual_ms: null,
         };
         setGraphedDevices(prev => [...prev, node]);
-        setActiveTab('TOPOLOGY');
         showToast("Graficado", `${ip.ip} añadido al mapa.`, "success");
     };
     const handleExportExcel = async () => {
