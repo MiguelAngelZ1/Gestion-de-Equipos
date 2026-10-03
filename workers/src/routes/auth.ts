@@ -53,8 +53,27 @@ auth.post('/forgot-password', limiters.forgot, validateBody(forgotPasswordSchema
   if (user) {
     const code = random6();
     await svc.saveRecoveryCode(email, await sha256hex(code), new Date(Date.now() + 15 * 60 * 1000));
-    // Fase 2: enviar por Resend. El código queda inutilizable sin el mail.
-    console.log(`[auth] recovery code generado para ${email} (envío pendiente Fase 2)`);
+    // Resend por HTTP (Workers no tiene SMTP). Sin RESEND_API_KEY se deja
+    // constancia en log; la respuesta sigue siendo genérica anti-enumeración.
+    try {
+      if (c.env.RESEND_API_KEY) {
+        const res = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${c.env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            from: c.env.RESEND_FROM || 'IMPERIO - Gestion de Equipos <onboarding@resend.dev>',
+            to: [email],
+            subject: 'Codigo de recuperacion - IMPERIO',
+            html: `<p>Tu codigo de recuperacion es: <strong>${code}</strong></p><p>Vence en 15 minutos. Si no lo pediste, ignora este mensaje.</p>`,
+          }),
+        });
+        if (!res.ok) console.error('[auth] Resend error', res.status, await res.text().catch(() => ''));
+      } else {
+        console.log(`[auth] recovery code para ${email} (sin RESEND_API_KEY, mail omitido)`);
+      }
+    } catch (e) {
+      console.error('[auth] fallo envio recovery', e);
+    }
   }
   return c.json({ success: true, message: 'Si el correo existe, se enviará un código.' });
 });

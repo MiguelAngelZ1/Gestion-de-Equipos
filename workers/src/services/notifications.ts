@@ -3,7 +3,7 @@
 // (la campanita las lee por polling) y el push real vuelve en Fase 2.
 import type { Db } from '../db';
 
-const DEFAULT_PREFS = { stock: true, taller: true, prestamo: true, sistema: true };
+const DEFAULT_PREFS = { stock: true, tickets: true, mantenimiento: true, backups: false, seguridad: true };
 
 export function notificationService(db: Db) {
   const svc = {
@@ -72,7 +72,7 @@ export function notificationService(db: Db) {
       const result = await db.get(`SELECT notification_preferences FROM usuarios WHERE id = ?`, [parseInt(String(userId))]);
       if (!result?.notification_preferences) return { ...DEFAULT_PREFS };
       try {
-        return JSON.parse(result.notification_preferences);
+        return { ...DEFAULT_PREFS, ...JSON.parse(result.notification_preferences) };
       } catch {
         return { ...DEFAULT_PREFS };
       }

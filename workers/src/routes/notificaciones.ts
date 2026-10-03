@@ -43,7 +43,7 @@ r.put('/preferences', async (c) => {
   const userId = c.get('user')?.userId ?? c.get('user')?.id;
   const prefs = await c.req.json().catch(() => ({}));
   const sanitized: Record<string, boolean> = {};
-  for (const key of ['stock', 'taller', 'prestamo', 'sistema']) {
+  for (const key of ['stock', 'tickets', 'mantenimiento', 'backups', 'seguridad']) {
     if (typeof prefs[key] === 'boolean') sanitized[key] = prefs[key];
   }
   await c.get('db').run(`UPDATE usuarios SET notification_preferences = ? WHERE id = ?`, [JSON.stringify(sanitized), parseInt(userId)]);

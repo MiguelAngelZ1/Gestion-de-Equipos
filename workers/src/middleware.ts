@@ -9,6 +9,8 @@ export interface Env {
   DB: D1Database;
   JWT_SECRET: string;
   ASSETS: Fetcher;
+  RESEND_API_KEY?: string;
+  RESEND_FROM?: string;
 }
 
 function secret(c: Context<{ Bindings: Env }>): string {

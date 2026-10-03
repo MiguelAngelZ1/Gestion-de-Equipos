@@ -26,11 +26,12 @@ const NotificationsPanel = () => {
     const handleRequestPermission = async () => { setLoading(true); const p = await notificationManager.requestPermission(); setPermission(p); setLoading(false); };
     const sendTestNotification = () => { notificationManager.showLocalNotification('¡Funciona! 🎉', { body: 'Notificación de prueba', tag: 'test-notification' }); setTestSent(true); setTimeout(() => setTestSent(false), 3000); };
     const togglePreference = async (key) => {
-        const v = !preferences[key];
-        setPreferences(prev => ({ ...prev, [key]: v }));
-        localStorage.setItem('notification_preferences', JSON.stringify({ ...preferences, [key]: v }));
-        try { await apiRequest('/notificaciones/preferences', { method: 'PUT', body: { ...preferences, [key]: v } }); }
-        catch { setPreferences(prev => ({ ...prev, [key]: !v })); toast.error('No se pudo guardar'); }
+        const next = { ...preferences, [key]: !preferences[key] };
+        const prev = preferences;
+        setPreferences(next);
+        localStorage.setItem('notification_preferences', JSON.stringify(next));
+        try { await apiRequest('/notificaciones/preferences', { method: 'PUT', body: next }); }
+        catch { setPreferences(prev); localStorage.setItem('notification_preferences', JSON.stringify(prev)); toast.error('No se pudo guardar'); }
     };
 
     const categories = [
