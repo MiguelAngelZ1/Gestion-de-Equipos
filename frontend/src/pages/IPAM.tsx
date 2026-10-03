@@ -28,6 +28,7 @@ import Select from '../components/common/Select';
 import EquipoDetalleModal from '../components/equipos/EquipoDetalleModal';
 import AsignarIpModal from '../components/equipos/AsignarIpModal';
 import ScannerTable from '../components/network/ScannerTable';
+import CountUp from '../components/common/CountUp';
 import EvidenceModal from '../components/network/EvidenceModal';
 import TopologyMap from '../components/network/TopologyMap';
 import { useNetworkSocket } from '../hooks/useNetworkSocket';
@@ -431,18 +432,18 @@ const IPAM = () => {
     const showResults = search.trim() !== '' || filterStatus !== '';
 
     return (
-        <div className="flex-1 min-h-0 flex flex-col space-y-4 w-full max-w-full overflow-y-auto lg:overflow-hidden">
+        <div className="flex-1 min-h-0 flex flex-col space-y-3 lg:space-y-4 w-full max-w-full overflow-y-auto lg:overflow-hidden">
             <div className="flex justify-end gap-1.5 shrink-0">
                 <button onClick={handleExportExcel} className="bg-transparent hover:bg-white/5 text-zinc-400 hover:text-white px-3 py-2 rounded-xl text-xs font-semibold transition-colors flex items-center gap-2 cursor-pointer">
-                    <FileSpreadsheet className="w-4 h-4" /> <span className="hidden sm:inline">Exportar CSV</span><span className="sm:hidden">CSV</span>
+                    <FileSpreadsheet className="w-4 h-4" /> <span className="hidden sm:inline">Exportar Excel</span><span className="sm:hidden">Excel</span>
                 </button>
                 <button onClick={handleExportDrive} className="bg-transparent hover:bg-white/5 text-zinc-400 hover:text-white px-3 py-2 rounded-xl text-xs font-semibold transition-colors flex items-center gap-2 cursor-pointer">
                     <UploadCloud className="w-4 h-4" /> <span className="hidden sm:inline">Exportar Drive</span><span className="sm:hidden">Drive</span>
                 </button>
             </div>
 
-            <div className="flex flex-col lg:grid lg:grid-cols-[260px_1fr] gap-4 flex-1 min-h-0 lg:overflow-hidden">
-                <section className="flex flex-col min-h-[280px] lg:min-h-0 lg:overflow-hidden">
+            <div className="flex flex-col lg:grid lg:grid-cols-[260px_1fr] gap-3 lg:gap-4 flex-1 min-h-0 lg:overflow-hidden">
+                <section className="flex flex-col min-h-0 lg:min-h-0 lg:overflow-hidden">
                     <div className="flex items-center gap-2 text-xs text-zinc-500 mb-3 shrink-0">
                         <span className="inline-flex items-center gap-2 text-zinc-300 font-semibold shrink-0"><Network className="w-4 h-4 text-zinc-400" /> Segmentos</span>
                         <span className="flex-1 text-center text-xs text-zinc-500 truncate">{redes.length} redes</span>
@@ -454,7 +455,7 @@ const IPAM = () => {
                     </div>
 
                     <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar pr-1">
-                        <div className="grid grid-cols-1 gap-2">
+                        <div className="grid grid-cols-2 lg:grid-cols-1 gap-2">
                             {loading ? [1, 2, 3, 4].map(i => <div key={i} className="h-20 rounded-xl bg-zinc-900 border border-zinc-800 animate-pulse" />)
                                 : redes.length === 0 ? (
                                     <div className="col-span-2 flex flex-col items-center justify-center py-16 bg-zinc-900 border border-zinc-800 rounded-xl">
@@ -482,14 +483,14 @@ const IPAM = () => {
                                                 <div className="min-w-0">
                                                     {red.nombre ? (
                                                         <>
-                                                            <p className={`text-[13px] font-bold tracking-tight truncate ${isSelected ? 'text-zinc-900' : 'text-white'}`}>{red.nombre}</p>
-                                                            <p className={`text-[11px] font-medium truncate ${isSelected ? 'text-zinc-700' : 'text-zinc-300'}`}>{cidrLabel}</p>
-                                                            {mask && <p className={`text-[10px] truncate ${isSelected ? 'text-zinc-500' : 'text-zinc-500'}`}>{mask}</p>}
+                                                            <p className={`text-[13px] font-bold tracking-tight break-words ${isSelected ? 'text-zinc-900' : 'text-white'}`}>{red.nombre}</p>
+                                                            <p className={`text-[11px] font-medium break-words ${isSelected ? 'text-zinc-700' : 'text-zinc-300'}`}>{cidrLabel}</p>
+                                                            {mask && <p className={`text-[10px] break-words ${isSelected ? 'text-zinc-500' : 'text-zinc-500'}`}>{mask}</p>}
                                                         </>
                                                     ) : (
                                                         <>
-                                                            <p className={`text-[13px] font-bold tracking-tight truncate ${isSelected ? 'text-zinc-900' : 'text-white'}`}>{cidrLabel}</p>
-                                                            {mask && <p className={`text-[11px] font-medium truncate ${isSelected ? 'text-zinc-500' : 'text-zinc-400'}`}>{mask}</p>}
+                                                            <p className={`text-[13px] font-bold tracking-tight break-words ${isSelected ? 'text-zinc-900' : 'text-white'}`}>{cidrLabel}</p>
+                                                            {mask && <p className={`text-[11px] font-medium break-words ${isSelected ? 'text-zinc-500' : 'text-zinc-400'}`}>{mask}</p>}
                                                         </>
                                                     )}
                                                 </div>
@@ -507,7 +508,7 @@ const IPAM = () => {
                     </div>
                 </section>
 
-                <section className="flex flex-col min-h-[400px] lg:min-h-0 lg:overflow-hidden">
+                <section className="flex flex-col min-h-0 lg:min-h-0 lg:overflow-hidden">
                     {!selectedRed ? (
                         <div className="flex-1 flex flex-col items-center justify-center bg-zinc-900 border border-zinc-800 rounded-xl py-16">
                             <Server className="w-10 h-10 text-zinc-600 mb-3" />
@@ -515,7 +516,7 @@ const IPAM = () => {
                             <p className="text-sm text-zinc-500 mt-1">Elige una red para ver su ocupación</p>
                         </div>
                     ) : (
-                        <div className="flex flex-col flex-1 min-h-0 gap-4">
+                        <div className="flex flex-col flex-1 min-h-0 gap-3 lg:gap-4">
                             <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 shrink-0">
                                 {[
                                     { label: 'Total', value: networkData?.stats?.total ?? '-' },
@@ -526,16 +527,16 @@ const IPAM = () => {
                                     <motion.div key={s.label} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04, ...spring }}
                                         className="bg-zinc-900 border border-zinc-800 rounded-xl p-3">
                                         <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mb-1">{s.label}</p>
-                                        <p className="text-xl font-bold text-white tracking-tight">{s.value}</p>
+                                        <p className="text-xl font-bold text-white tracking-tight">{typeof s.value === 'number' ? <CountUp key={`${selectedRed?.id}-${s.label}-${s.value}`} value={s.value} /> : s.value}</p>
                                     </motion.div>
                                 ))}
                             </div>
 
-                            <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
-                                <div className="flex items-center gap-1.5">
+                            <div className="flex items-center justify-between border-b border-zinc-800 pb-2 gap-2">
+                                <div className="flex items-center gap-1.5 max-w-full">
                                     <button
                                         onClick={() => setActiveTab('SCANNER')}
-                                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                                        className={`px-2 md:px-3 py-1.5 rounded-xl text-[11px] md:text-xs font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                                             activeTab === 'SCANNER'
                                                 ? 'bg-white text-zinc-950 shadow-sm'
                                                 : 'text-zinc-400 hover:text-white hover:bg-white/5'
@@ -545,13 +546,13 @@ const IPAM = () => {
                                     </button>
                                     <button
                                         onClick={() => setIsMapModalOpen(true)}
-                                        className="px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer text-zinc-400 hover:text-white hover:bg-white/5"
+                                        className="px-2 md:px-3 py-1.5 rounded-xl text-[11px] md:text-xs font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 text-zinc-400 hover:text-white hover:bg-white/5"
                                     >
                                         Mapa de Red
                                     </button>
                                     <button
                                         onClick={() => setActiveTab('GRID')}
-                                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                                        className={`px-2 md:px-3 py-1.5 rounded-xl text-[11px] md:text-xs font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                                             activeTab === 'GRID'
                                                 ? 'bg-white text-zinc-950 shadow-sm'
                                                 : 'text-zinc-400 hover:text-white hover:bg-white/5'
@@ -578,12 +579,12 @@ const IPAM = () => {
 
                             {isMapModalOpen && createPortal(
                                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={() => setIsMapModalOpen(false)}>
-                                    <div onClick={e => e.stopPropagation()} className="bg-zinc-950 border border-zinc-800 rounded-2xl w-[92vw] max-w-6xl h-[82vh] flex flex-col overflow-hidden shadow-2xl">
+                                    <div onClick={e => e.stopPropagation()} className="bg-zinc-950 border border-zinc-800 rounded-2xl w-[92vw] max-w-6xl h-[82dvh] flex flex-col overflow-hidden shadow-2xl">
                                         <div className="px-4 py-3 border-b border-zinc-800 flex items-center justify-between shrink-0">
                                             <h3 className="text-sm font-bold text-white">Mapa de Red — {selectedRed ? `${(selectedRed.gateway || selectedRed.segmento?.replace(/\.0$/, '.1') || selectedRed.segmento)}/${selectedRed.cidr ?? 24} (${(() => { const c = selectedRed.cidr ?? 24; const m = c === 0 ? 0 : (0xFFFFFFFF << (32 - c)) >>> 0; return [(m >>> 24) & 255, (m >>> 16) & 255, (m >>> 8) & 255, m & 255].join('.'); })()})` : ''} <span className="text-zinc-500 font-normal ml-2">{graphedDevices.length} nodos</span></h3>
                                             <button onClick={() => setIsMapModalOpen(false)} className="w-8 h-8 grid place-items-center rounded-xl hover:bg-white/5 text-zinc-400"><X className="w-4 h-4" /></button>
                                         </div>
-                                        <div className="flex-1 min-h-[520px] overflow-hidden flex flex-col relative">
+                                        <div className="flex-1 min-h-[320px] sm:min-h-[520px] overflow-hidden flex flex-col relative">
                                             <TopologyMap
                                                 nodes={graphedDevices}
                                                 gatewayIp={selectedRed?.gateway}
@@ -618,8 +619,8 @@ const IPAM = () => {
                             {activeTab === 'GRID' && (
                                 <>
                                     <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-1.5 flex items-center gap-1.5 shrink-0">
-                                        <SearchInput value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar IP o equipo..." className="shrink-0" />
-                                        <div className="w-[136px] shrink-0 -ml-0.5"><Select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} options={[{ value: 'ALL', label: 'Todas' }, { value: 'LIBRE', label: 'Libres' }, { value: 'OCUPADA', label: 'Ocupadas' }, { value: 'RESERVADA', label: 'Reservadas' }]} placeholder="Estado" /></div>
+                                        <SearchInput value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar IP o equipo..." className="flex-1 min-w-0" />
+                                        <div className="w-[104px] sm:w-[136px] shrink-0 -ml-0.5"><Select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} options={[{ value: 'ALL', label: 'Todas' }, { value: 'LIBRE', label: 'Libres' }, { value: 'OCUPADA', label: 'Ocupadas' }, { value: 'RESERVADA', label: 'Reservadas' }]} placeholder="Estado" /></div>
                                         <AnimatePresence>{showResults && <motion.button initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} onClick={() => { setSearch(''); setFilterStatus(''); }} className="w-8 h-8 grid place-items-center rounded-xl bg-transparent hover:bg-white/5 text-zinc-400 hover:text-white transition-colors cursor-pointer shrink-0"><X className="w-4 h-4" /></motion.button>}</AnimatePresence>
                                         <button onClick={() => fetchNetworkMap(selectedRed.id)} className="w-8 h-8 grid place-items-center rounded-xl bg-transparent hover:bg-white/5 text-zinc-400 hover:text-white transition-colors cursor-pointer shrink-0"><RefreshCw className={`w-4 h-4 ${mapLoading ? 'animate-spin' : ''}`} /></button>
                                     </div>
@@ -646,7 +647,7 @@ const IPAM = () => {
                                                         <div className="flex items-center gap-2 pr-4">
                                                             <span className="text-sm font-bold text-white tracking-tight">{ip.ip}</span>
                                                         </div>
-                                                        {ip.estado === 'RESERVADA' && ip.notas && <p className="text-xs text-zinc-500 truncate pr-2">{ip.notas}</p>}
+                                                        {ip.estado === 'RESERVADA' && ip.notas && <p className="text-xs text-zinc-500 break-words pr-2">{ip.notas}</p>}
 
                                                         <div className="flex items-center gap-1.5 pt-2.5 border-t border-zinc-800 mt-1">
                                                             {ip.estado === 'OCUPADA' && <>
@@ -708,7 +709,7 @@ const IPAM = () => {
             <AsignarIpModal isOpen={isAssignModalOpen} ip={assigningIp} redId={selectedRed?.id} onClose={() => { setIsAssignModalOpen(false); setAssigningIp(null); }} onAssign={handleAssign} />
             {isPingOpen && createPortal(
                 <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={closePing}>
-                    <div onClick={e => e.stopPropagation()} className="bg-black border border-zinc-700 rounded-lg w-full max-w-2xl h-[420px] flex flex-col overflow-hidden shadow-2xl">
+                    <div onClick={e => e.stopPropagation()} className="bg-black border border-zinc-700 rounded-lg w-full max-w-2xl h-[min(420px,80dvh)] flex flex-col overflow-hidden shadow-2xl">
                         <div className="px-3 py-2 bg-zinc-800 border-b border-zinc-700 flex items-center justify-between select-none shrink-0">
                             <span className="text-xs font-medium text-zinc-300">Ventana de comandos</span>
                             <button onClick={closePing} className="w-7 h-7 grid place-items-center rounded hover:bg-white/10 text-zinc-400 hover:text-white"><X className="w-3.5 h-3.5" /></button>
@@ -720,7 +721,7 @@ const IPAM = () => {
             )}
             {isTracertOpen && createPortal(
                 <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={() => setIsTracertOpen(false)}>
-                    <div onClick={e => e.stopPropagation()} className="bg-black border border-zinc-700 rounded-lg w-full max-w-2xl h-[420px] flex flex-col overflow-hidden shadow-2xl">
+                    <div onClick={e => e.stopPropagation()} className="bg-black border border-zinc-700 rounded-lg w-full max-w-2xl h-[min(420px,80dvh)] flex flex-col overflow-hidden shadow-2xl">
                         <div className="px-3 py-2 bg-zinc-800 border-b border-zinc-700 flex items-center justify-between select-none shrink-0">
                             <span className="text-xs font-medium text-zinc-300">Ventana de comandos</span>
                             <button onClick={() => setIsTracertOpen(false)} className="w-7 h-7 grid place-items-center rounded hover:bg-white/10 text-zinc-400 hover:text-white"><X className="w-3.5 h-3.5" /></button>
@@ -732,7 +733,7 @@ const IPAM = () => {
             )}
 
             {typeof document !== 'undefined' && createPortal(
-                <AnimatePresence>{showScrollTop && <motion.button initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} onClick={handleScrollToTop} className="fixed bottom-6 left-1/2 -translate-x-1/2 md:left-[280px] md:translate-x-0 z-50 w-9 h-9 grid place-items-center rounded-full bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white shadow-xl cursor-pointer"><ChevronUp className="w-5 h-5" /></motion.button>}</AnimatePresence>, document.body
+                <AnimatePresence>{showScrollTop && <motion.button initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} onClick={handleScrollToTop} className="fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 md:left-[280px] md:translate-x-0 z-50 w-9 h-9 grid place-items-center rounded-full bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white shadow-xl cursor-pointer"><ChevronUp className="w-5 h-5" /></motion.button>}</AnimatePresence>, document.body
             )}
         </div>
     );

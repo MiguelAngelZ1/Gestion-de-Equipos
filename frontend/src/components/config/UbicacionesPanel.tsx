@@ -54,15 +54,15 @@ const UbicacionesPanel = () => {
             )}
 
             <div ref={formRef} className={`bg-zinc-900 border border-zinc-800 rounded-xl p-3 flex items-center gap-2 ${isSaving ? 'opacity-50' : ''}`}>
-                <form onSubmit={handleSave} className="flex items-center gap-2 w-full">
-                    <input type="text" disabled={isSaving} value={formData.nombre || ''} onChange={(e) => setFormData({ nombre: e.target.value })} placeholder="Ej. 'Oficina Principal Planta Baja'" size={30}
-                        className="flex-1 w-auto field-sizing-content max-w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm text-white placeholder:text-zinc-500 focus:border-zinc-600 focus:outline-none transition-colors" required />
-                    <button type="submit" disabled={isSaving} className="inline-flex items-center gap-1.5 bg-transparent hover:bg-white/5 text-zinc-400 hover:text-white px-3 py-2 rounded-xl text-xs font-semibold transition-colors disabled:opacity-50 cursor-pointer shrink-0">
+                <form onSubmit={handleSave} className="flex items-center gap-2 w-full flex-wrap">
+                    <input type="text" disabled={isSaving} value={formData.nombre || ''} onChange={(e) => setFormData({ nombre: e.target.value })} placeholder="Ej. 'Oficina Principal Planta Baja'"
+                        className="flex-1 min-w-0 bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm text-white placeholder:text-zinc-500 focus:border-zinc-600 focus:outline-none transition-colors" required />
+                    <button type="submit" disabled={isSaving} className="inline-flex items-center gap-1.5 bg-transparent hover:bg-white/5 text-zinc-400 hover:text-white px-3 py-2 rounded-xl text-xs font-semibold transition-colors disabled:opacity-50 cursor-pointer shrink-0 whitespace-nowrap">
                         {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />} {editingNode ? 'Actualizar' : 'Añadir'}
                     </button>
                     {editingNode && (
                         <button type="button" disabled={isSaving} onClick={() => { setEditingNode(null); setFormData({ nombre: '' }); }}
-                            className="w-8 h-8 grid place-items-center rounded-lg bg-transparent hover:bg-white/5 text-zinc-500 hover:text-white transition-colors disabled:opacity-50 cursor-pointer shrink-0">
+                            className="w-9 h-9 grid place-items-center rounded-lg bg-transparent hover:bg-white/5 text-zinc-500 hover:text-white transition-colors disabled:opacity-50 cursor-pointer shrink-0">
                             <X className="w-4 h-4" />
                         </button>
                     )}
@@ -86,21 +86,21 @@ const UbicacionesPanel = () => {
                                 Seleccionar todo
                             </label>
                         </div>
-                        <div className="grid grid-cols-2 gap-3 auto-rows-min items-start content-start">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 auto-rows-min items-start content-start">
                             <AnimatePresence>
                                 {ubicaciones.map(ubi => (
                                     <motion.div key={ubi.id} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
                                         className={`bg-zinc-900 border rounded-xl px-3 py-2.5 flex items-center gap-2 transition-colors h-fit ${selectedIds.includes(ubi.id) ? 'border-white bg-white text-zinc-900' : 'border-zinc-800 hover:border-zinc-700'}`}>
                                         <input type="checkbox" checked={selectedIds.includes(ubi.id)} onChange={() => toggleSelect(ubi.id)}
                                             className="w-4 h-4 rounded border-zinc-700 bg-zinc-800 text-white focus:ring-0 cursor-pointer shrink-0" />
-                                        <span className={`text-sm font-medium flex-1 truncate ${selectedIds.includes(ubi.id) ? 'text-zinc-900' : 'text-white'}`}>{ubi.nombre}</span>
+                                        <span className={`text-sm font-medium flex-1 truncate break-words ${selectedIds.includes(ubi.id) ? 'text-zinc-900' : 'text-white'}`}>{ubi.nombre}</span>
                                         <div className="flex items-center gap-1 shrink-0">
                                             <button onClick={() => { setEditingNode(ubi); setFormData({ nombre: ubi.nombre }); formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }}
-                                                className={`w-7 h-7 grid place-items-center rounded-lg bg-transparent hover:bg-white/5 transition-colors ${selectedIds.includes(ubi.id) ? 'text-zinc-600 hover:text-zinc-900' : 'text-zinc-500 hover:text-white'}`}>
+                                                className={`w-9 h-9 grid place-items-center rounded-lg bg-transparent hover:bg-white/5 transition-colors ${selectedIds.includes(ubi.id) ? 'text-zinc-600 hover:text-zinc-900' : 'text-zinc-500 hover:text-white'}`}>
                                                 <Edit2 className="w-3.5 h-3.5" />
                                             </button>
                                             <button onClick={() => { setItemToDelete(ubi); setIsDeleteOpen(true); }}
-                                                className={`w-7 h-7 grid place-items-center rounded-lg bg-transparent hover:bg-white/5 transition-colors ${selectedIds.includes(ubi.id) ? 'text-zinc-600 hover:text-red-600' : 'text-zinc-500 hover:text-red-400'}`}>
+                                                className={`w-9 h-9 grid place-items-center rounded-lg bg-transparent hover:bg-white/5 transition-colors ${selectedIds.includes(ubi.id) ? 'text-zinc-600 hover:text-red-600' : 'text-zinc-500 hover:text-red-400'}`}>
                                                 <Trash2 className="w-3.5 h-3.5" />
                                             </button>
                                         </div>

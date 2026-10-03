@@ -27,7 +27,7 @@ export default function CommonCard({ icon: Icon, title, badge, badgeColor, child
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
           {Icon && <div className="relative shrink-0 grid place-items-center"><Icon className={`w-5 h-5 ${isSelected ? 'text-zinc-900' : 'text-zinc-400'}`} />{badge && badgeColor && <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2" style={{ background: badgeColor, borderColor: isSelected ? '#fff' : '#18181b' }} />}</div>}
-          <h3 className={`text-sm font-semibold truncate ${isSelected ? 'text-zinc-900' : 'text-zinc-50'}`} title={title}>{title}</h3>
+          <h3 className={`text-sm font-semibold break-words min-w-0 ${isSelected ? 'text-zinc-900' : 'text-zinc-50'}`} title={title}>{title}</h3>
         </div>
         {selectable && (
           <button onClick={e => { e.stopPropagation(); onSelect?.(); }} className={`w-7 h-7 grid place-items-center shrink-0 ${isSelected ? 'text-zinc-900' : 'text-zinc-500 hover:text-zinc-300'}`}>

@@ -50,7 +50,7 @@ const EvidenceModal: React.FC<EvidenceModalProps> = ({ isOpen, onClose, node }) 
           </div>
 
           {/* Body */}
-          <div className="p-4 space-y-4 text-xs overflow-y-auto max-h-[70vh]">
+          <div className="p-4 space-y-4 text-xs overflow-y-auto max-h-[70dvh]">
             {/* Panel de Estado y Por Qué */}
             <div className="bg-zinc-900/80 border border-zinc-800/80 rounded-xl p-3">
               <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-1.5 flex items-center gap-1.5">

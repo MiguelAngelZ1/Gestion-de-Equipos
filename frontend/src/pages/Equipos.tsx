@@ -43,9 +43,9 @@ const EquipoItem = ({ eq, getStatusColor, setSelectedEquipo, setFormData, setIsF
     onLoan={userRole === ROLES.ADMIN ? () => onLoan(eq) : undefined}
   >
     <div className="flex flex-col gap-1.5">
-      <div className="flex items-center gap-1.5 text-xs text-zinc-400"><Tag className="w-3 h-3 text-zinc-500 shrink-0" /><span className="truncate">{eq.tipo || 'Sin Tipo'}</span></div>
-      <div className="flex items-center gap-1.5 text-xs text-zinc-300"><User className="w-3 h-3 text-zinc-500 shrink-0" /><span className="truncate font-medium">{eq.responsable || 'Sin Responsable'}</span></div>
-      <div className="flex items-center gap-1.5 text-xs text-zinc-400"><MapPin className="w-3 h-3 text-zinc-500 shrink-0" /><span className="truncate">{eq.ubicacion || 'Sin Ubicación'}</span></div>
+      <div className="flex items-center gap-1.5 text-xs text-zinc-400"><Tag className="w-3 h-3 text-zinc-500 shrink-0" /><span className="break-words min-w-0">{eq.tipo || 'Sin Tipo'}</span></div>
+      <div className="flex items-center gap-1.5 text-xs text-zinc-300"><User className="w-3 h-3 text-zinc-500 shrink-0" /><span className="break-words min-w-0 font-medium">{eq.responsable || 'Sin Responsable'}</span></div>
+      <div className="flex items-center gap-1.5 text-xs text-zinc-400"><MapPin className="w-3 h-3 text-zinc-500 shrink-0" /><span className="break-words min-w-0">{eq.ubicacion || 'Sin Ubicación'}</span></div>
     </div>
   </CommonCard>
 );
@@ -157,18 +157,18 @@ export default function Equipos() {
 
   return (
     <div className="flex-1 min-h-0 flex flex-col space-y-4 w-full max-w-full overflow-hidden">
-      <div className="flex flex-col sm:flex-row gap-2">
-        <div className="min-w-0 w-auto max-w-full"><SearchInput value={search} onChange={(e: any) => setSearch(e.target.value)} placeholder="Busca un equipo por cualquier característica..." /></div>
-        <div className="flex gap-2 shrink-0">
+      <div className="flex flex-row gap-2">
+        <div className="min-w-0 flex-1"><SearchInput value={search} onChange={(e: any) => setSearch(e.target.value)} placeholder="Buscar equipo..." /></div>
+        <div className="flex gap-1 sm:gap-2 shrink-0 items-center">
           <div ref={filterRef} className="relative">
             <button onClick={() => setIsSidebarOpen(v => !v)} className={`inline-flex items-center justify-center gap-2 px-2 py-2.5 text-sm font-medium transition-colors ${isSidebarOpen ? 'text-white' : 'text-[#c4c5d9] hover:text-white'}`}>
               <Sliders className="w-4 h-4" /> Filtros {hasActiveFilters && <span className="w-2 h-2 rounded-full bg-emerald-500" />}
             </button>
             <AnimatePresence>
               {isSidebarOpen && (
-                <motion.div initial={{ opacity: 0, scale: 0.96, y: -6 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: -6 }} transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }} className="absolute top-full left-0 mt-2.5 z-50 origin-top-left max-w-[calc(100vw-16px)]">
+                <motion.div initial={{ opacity: 0, scale: 0.96, y: -6 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: -6 }} transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }} className="fixed inset-x-4 top-[120px] sm:absolute sm:inset-x-auto sm:top-full sm:left-0 z-50 origin-top w-auto sm:w-[calc(100vw-32px)] sm:max-w-[340px] max-h-[calc(100dvh-160px)] overflow-y-auto custom-scrollbar rounded-2xl">
                   <div className="absolute -top-1 left-6 w-2 h-2 bg-[#27272A] border-l border-t border-zinc-700 rotate-45 shadow-sm" />
-                  <div className="bg-[#27272A] border border-zinc-700 rounded-2xl p-3 shadow-2xl flex flex-col sm:flex-row gap-2 items-end min-w-[320px] sm:min-w-[520px] max-w-[calc(100vw-16px)]">
+                  <div className="bg-[#27272A] border border-zinc-700 rounded-2xl p-3 shadow-2xl flex flex-col sm:flex-row gap-2 sm:items-end min-w-0 sm:min-w-[520px] w-full">
                     <div className="flex-1 min-w-[140px]"><Select label="Estado" icon={Info} value={filterEstado} onChange={(e: any) => setFilterEstado(e.target.value)} options={[{ value: "TODOS", label: "Todos" }, ...estados.map((e: any) => ({ value: e.nombre, label: e.nombre }))]} /></div>
                     <div className="flex-1 min-w-[140px]"><Select label="Ubicación" icon={MapPin} value={filterUbicacion} onChange={(e: any) => setFilterUbicacion(e.target.value)} options={[{ value: "TODAS", label: "Todas" }, ...ubicaciones.map((u: any) => ({ value: u.nombre, label: u.nombre }))]} /></div>
                     <div className="flex-1 min-w-[140px]"><Select label="Categoría" icon={Tag} value={filterGrupo} onChange={(e: any) => setFilterGrupo(e.target.value)} options={[{ value: "TODOS", label: "Todas" }, ...gruposComodidad.map((c: any) => ({ value: c.nombre, label: c.nombre }))]} /></div>
@@ -199,17 +199,17 @@ export default function Equipos() {
       )}
 
       {!fetchedOnce ? (
-        <div className="flex-1 min-h-[calc(100vh-280px)] flex flex-col items-center justify-center bg-zinc-900 border border-zinc-800 rounded-xl">
+        <div className="flex-1 min-h-[calc(100dvh-280px)] flex flex-col items-center justify-center bg-zinc-900 border border-zinc-800 rounded-xl">
           <Search className="w-8 h-8 text-zinc-600 mb-3" />
           <p className="font-semibold">Busca un equipo</p>
           <p className="text-sm text-zinc-500 mt-1">Usa búsqueda o filtros para empezar</p>
         </div>
       ) : loading ? (
-        <div className="flex-1 min-h-[calc(100vh-280px)] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 content-start overflow-y-auto custom-scrollbar pr-1">
+        <div className="flex-1 min-h-[calc(100dvh-280px)] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 content-start overflow-y-auto custom-scrollbar pr-1">
           {[1,2,3,4,5,6].map(i => <div key={i} className="h-44 rounded-xl bg-zinc-900 border border-zinc-800 animate-pulse" />)}
         </div>
       ) : equipos.length === 0 ? (
-        <div className="flex-1 min-h-[calc(100vh-280px)] flex flex-col items-center justify-center bg-zinc-900 border border-dashed border-zinc-800 rounded-xl">
+        <div className="flex-1 min-h-[calc(100dvh-280px)] flex flex-col items-center justify-center bg-zinc-900 border border-dashed border-zinc-800 rounded-xl">
           <Server className="w-8 h-8 text-zinc-600 mb-3" />
           <p className="font-semibold">Sin resultados</p>
           <p className="text-sm text-zinc-500">Prueba otros filtros</p>
@@ -217,9 +217,9 @@ export default function Equipos() {
         </div>
       ) : (
         <div className="flex-1 min-h-0 flex flex-col space-y-3 overflow-hidden">
-          <div className="flex items-center gap-3 text-xs text-zinc-500">
-            <div className="h-px flex-1 bg-zinc-800" />
-            <span className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-zinc-500">
+            <div className="h-px flex-1 min-w-4 bg-zinc-800" />
+            <span className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
               {userRole === ROLES.ADMIN && (
                 <button onClick={toggleAll} className="inline-flex items-center gap-1.5 font-semibold hover:text-zinc-300">
                   <span className={`w-4 h-4 rounded border grid place-items-center ${equipos.every((e: any) => selectedIds.includes(e.id)) ? 'bg-white border-white text-zinc-900' : 'border-zinc-700'}`}>
@@ -227,15 +227,15 @@ export default function Equipos() {
                   </span> Seleccionar todo
                 </button>
               )}
-              <span>{total} resultados · Pág {currentPage}/{totalPages || 1}</span>
+              <span className="whitespace-nowrap">{total} resultados · Pág {currentPage}/{totalPages || 1}</span>
               {totalPages > 1 && (
                 <span className="inline-flex gap-1">
-                  <button onClick={() => goToPage(currentPage - 1)} disabled={currentPage <= 1} className="w-7 h-7 grid place-items-center rounded-lg bg-zinc-800 border border-zinc-700 disabled:opacity-30"><ChevronLeft className="w-4 h-4" /></button>
-                  <button onClick={() => goToPage(currentPage + 1)} disabled={currentPage >= totalPages} className="w-7 h-7 grid place-items-center rounded-lg bg-zinc-800 border border-zinc-700 disabled:opacity-30"><ChevronRight className="w-4 h-4" /></button>
+                  <button onClick={() => goToPage(currentPage - 1)} disabled={currentPage <= 1} className="w-9 h-9 md:w-7 md:h-7 grid place-items-center rounded-lg bg-zinc-800 border border-zinc-700 disabled:opacity-30"><ChevronLeft className="w-4 h-4" /></button>
+                  <button onClick={() => goToPage(currentPage + 1)} disabled={currentPage >= totalPages} className="w-9 h-9 md:w-7 md:h-7 grid place-items-center rounded-lg bg-zinc-800 border border-zinc-700 disabled:opacity-30"><ChevronRight className="w-4 h-4" /></button>
                 </span>
               )}
             </span>
-            <div className="h-px flex-1 bg-zinc-800" />
+            <div className="h-px flex-1 min-w-4 bg-zinc-800" />
           </div>
 
           <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar pr-1">

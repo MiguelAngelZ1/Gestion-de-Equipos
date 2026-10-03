@@ -60,12 +60,12 @@ const LoanModal = ({ isOpen, equipo, onClose, onConfirm }) => {
     <AnimatePresence>
       {isOpen && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={!isSaving ? onClose : undefined} className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-          <motion.div initial={{ opacity: 0, scale: 0.97, y: 8 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.97, y: 8 }} transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }} onClick={e => e.stopPropagation()} className="bg-[#1C1C1E] border border-white/5 rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+          <motion.div initial={{ opacity: 0, scale: 0.97, y: 8 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.97, y: 8 }} transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }} onClick={e => e.stopPropagation()} className="bg-[#1C1C1E] border border-white/5 rounded-2xl w-full max-w-2xl max-h-[90dvh] flex flex-col shadow-2xl overflow-hidden">
             <div className="p-4 border-b border-white/5 flex items-center gap-3 shrink-0">
               <span className="material-symbols-outlined text-[#e4e2e4] text-[24px]">calendar_month</span>
               <div className="min-w-0">
                 <h2 className="text-[16px] font-semibold text-[#e4e2e4] leading-none">Registrar Préstamo</h2>
-                <p className="text-xs text-[#c4c5d9] mt-0.5 truncate">Equipo: <span className="text-[#b8c3ff] font-semibold">{equipo?.ine || equipo?.nne || equipo?.serie || '—'}</span></p>
+                <p className="text-xs text-[#c4c5d9] mt-0.5 break-words">Equipo: <span className="text-[#b8c3ff] font-semibold">{equipo?.ine || equipo?.nne || equipo?.serie || '—'}</span></p>
               </div>
               <button onClick={onClose} disabled={isSaving} className="ml-auto w-8 h-8 grid place-items-center rounded-full hover:bg-white/5 text-[#c4c5d9] disabled:opacity-50">
                 <X className="w-4 h-4" />

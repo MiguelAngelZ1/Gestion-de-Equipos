@@ -44,13 +44,13 @@ const MovimientosStockModal = ({ isOpen, componente, onClose }) => {
             exit={{ opacity: 0, scale: 0.97, y: 8 }}
             transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
             onClick={e => e.stopPropagation()}
-            className="bg-[#1C1C1E] border border-white/5 rounded-2xl w-full max-w-3xl overflow-hidden flex flex-col max-h-[90vh] shadow-2xl"
+            className="bg-[#1C1C1E] border border-white/5 rounded-2xl w-full max-w-3xl overflow-hidden flex flex-col max-h-[90dvh] shadow-2xl"
           >
             <div className="p-4 border-b border-white/5 flex items-center gap-3 shrink-0">
               <History className="w-5 h-5 text-[#e4e2e4] shrink-0" />
               <div className="min-w-0">
                 <h2 className="text-[16px] font-semibold text-[#e4e2e4] leading-none truncate">Historial de Stock</h2>
-                <p className="text-xs text-[#c4c5d9] mt-0.5 truncate">{componente.nombre} · S/N: {componente.serie || 'N/A'}</p>
+                <p className="text-xs text-[#c4c5d9] mt-0.5 break-words">{componente.nombre} · S/N: {componente.serie || 'N/A'}</p>
               </div>
               <button onClick={onClose} className="ml-auto w-8 h-8 grid place-items-center rounded-full hover:bg-white/5 text-[#c4c5d9]"><X className="w-4 h-4" /></button>
             </div>
@@ -91,11 +91,11 @@ const MovimientosStockModal = ({ isOpen, componente, onClose }) => {
                               {new Date(mov.fecha).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                             </span>
                           </div>
-                          <p className="text-[#e4e2e4] text-sm font-medium leading-tight truncate">{mov.notas || 'Sin descripción'}</p>
+                          <p className="text-[#e4e2e4] text-sm font-medium leading-tight break-words">{mov.notas || 'Sin descripción'}</p>
                           {mov.equipo_id && (
                              <div className="flex items-center gap-1.5 mt-1 text-zinc-400 text-[11px]">
                                 <Server className="w-3 h-3 text-zinc-500 shrink-0" />
-                                <span className="truncate">Destino: {mov.equipo_tipo} ({mov.equipo_id})</span>
+                                <span className="break-words min-w-0">Destino: {mov.equipo_tipo} ({mov.equipo_id})</span>
                              </div>
                           )}
                         </div>

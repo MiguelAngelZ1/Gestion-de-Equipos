@@ -37,11 +37,11 @@ const EquipoDetalleModal = ({ isOpen, equipo, estados, onClose, onEquipoUpdated 
     <AnimatePresence>
       {isOpen && equipo && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-          <motion.div initial={{ opacity: 0, scale: 0.97, y: 8 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.97, y: 8 }} transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }} onClick={e => e.stopPropagation()} className="bg-[#1C1C1E] border border-white/5 rounded-2xl w-full max-w-3xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+          <motion.div initial={{ opacity: 0, scale: 0.97, y: 8 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.97, y: 8 }} transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }} onClick={e => e.stopPropagation()} className="bg-[#1C1C1E] border border-white/5 rounded-2xl w-full max-w-3xl max-h-[90dvh] flex flex-col shadow-2xl overflow-hidden">
             <div className="p-4 border-b border-white/5 flex items-center gap-3 shrink-0">
               <span className="material-symbols-outlined text-[#e4e2e4] text-[24px]">inventory_2</span>
               <div className="min-w-0 flex-1">
-                <h2 className="text-[16px] font-semibold text-[#e4e2e4] leading-none truncate">{equipo.ine || 'Sin INE'}</h2>
+                <h2 className="text-[16px] font-semibold text-[#e4e2e4] leading-snug break-words">{equipo.ine || 'Sin INE'}</h2>
                 <p className="text-xs text-[#c4c5d9] mt-0.5">Detalles del equipo</p>
               </div>
               <button onClick={onClose} className="ml-auto w-8 h-8 grid place-items-center rounded-full hover:bg-white/5 text-[#c4c5d9] shrink-0">
@@ -85,9 +85,9 @@ const EquipoDetalleModal = ({ isOpen, equipo, estados, onClose, onEquipoUpdated 
                   {equipo.especificaciones && equipo.especificaciones.length > 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
                       {equipo.especificaciones.map((spec, i) => (
-                        <div key={spec.id || `spec-${i}`} className="flex items-center justify-between py-2 border-b border-white/5">
-                          <span className="text-[10px] font-semibold text-[#c4c5d9] uppercase">{spec.clave}</span>
-                          <span className="text-xs font-semibold text-[#e4e2e4]">{spec.valor}</span>
+                        <div key={spec.id || `spec-${i}`} className="flex items-center justify-between gap-3 py-2 border-b border-white/5">
+                          <span className="text-[10px] font-semibold text-[#c4c5d9] uppercase break-words min-w-0">{spec.clave}</span>
+                          <span className="text-xs font-semibold text-[#e4e2e4] text-right break-words min-w-0">{spec.valor}</span>
                         </div>
                       ))}
                     </div>

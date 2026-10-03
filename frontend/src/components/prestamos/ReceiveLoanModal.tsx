@@ -67,7 +67,7 @@ const ReceiveLoanModal = ({ isOpen, onClose, prestamo, onConfirm }) => {
             exit={{ opacity: 0, scale: 0.97, y: 8 }}
             transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
             onClick={(e) => e.stopPropagation()}
-            className="bg-[#1C1C1E] border border-white/5 rounded-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[90vh] shadow-2xl"
+            className="bg-[#1C1C1E] border border-white/5 rounded-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[90dvh] shadow-2xl"
           >
             <div className="p-4 border-b border-white/5 flex items-center gap-3 shrink-0">
               <CheckCircle2 className="w-5 h-5 text-[#e4e2e4] shrink-0" />

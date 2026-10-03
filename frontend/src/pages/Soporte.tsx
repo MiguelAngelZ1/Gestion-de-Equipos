@@ -91,11 +91,10 @@ const Soporte = () => {
 
   useEffect(() => {
     if (selectedTarea || isFormOpen || isDeleteOpen) {
+      const prev = document.body.style.overflow;
       document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
+      return () => { document.body.style.overflow = prev; };
     }
-    return () => { document.body.style.overflow = 'unset'; };
   }, [selectedTarea, isFormOpen, isDeleteOpen]);
 
   const filteredTareas = tareas.filter(t => matchesSearch(t, search));
@@ -104,8 +103,8 @@ const Soporte = () => {
     <div className="flex flex-col gap-3 w-full overflow-x-hidden flex-1 min-h-0">
 
       {/* ─── Search Bar Row ─── */}
-      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={spring} className="flex flex-col sm:flex-row gap-2">
-        <div className="min-w-0 w-auto max-w-full"><SearchInput value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar por Equipo o Responsable..." /></div>
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={spring} className="flex flex-row gap-2">
+        <div className="min-w-0 flex-1"><SearchInput value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar equipo..." /></div>
         {userRole === ROLES.ADMIN && (
           <button onClick={() => { setFormData({}); setIsFormOpen(true); }} className="inline-flex items-center justify-center gap-2 px-2 py-2.5 text-sm font-semibold text-[#c4c5d9] hover:text-white transition-colors shrink-0">
             <Plus className="w-4 h-4" /> <span className="hidden sm:inline">Nuevo</span><span className="sm:hidden">Nuevo</span>
@@ -146,7 +145,7 @@ const Soporte = () => {
           </>
         ) : filteredTareas.length === 0 ? (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-            className="col-span-full flex-1 min-h-[calc(100vh-280px)] flex flex-col items-center justify-center bg-zinc-900 border border-zinc-800 rounded-xl py-16">
+            className="col-span-full flex-1 min-h-[calc(100dvh-280px)] flex flex-col items-center justify-center bg-zinc-900 border border-zinc-800 rounded-xl py-16">
             <ClipboardList className="w-8 h-8 text-zinc-600 mb-3" />
             <p className="font-semibold text-zinc-100">Sin resultados</p>
           </motion.div>
@@ -174,11 +173,11 @@ const Soporte = () => {
                 >
                   <p className="text-[#c4c5d9] text-[10px] font-semibold tracking-wide uppercase mb-2">Ticket: {tarea.ticket_id}</p>
                   <div className="space-y-1.5">
-                    <div className="flex items-center gap-2 text-[#e4e2e4] text-[11px]"><MapPin className="w-3 h-3 text-zinc-500 shrink-0" /><span className="font-medium truncate">{tarea.equipo_ubicacion || 'Central'}</span></div>
+                    <div className="flex items-center gap-2 text-[#e4e2e4] text-[11px]"><MapPin className="w-3 h-3 text-zinc-500 shrink-0" /><span className="font-medium break-words min-w-0">{tarea.equipo_ubicacion || 'Central'}</span></div>
                     <div className="flex items-center gap-2 text-[#e4e2e4] text-[11px]"><Calendar className="w-3 h-3 text-zinc-500 shrink-0" /><span className="font-medium">{new Date(tarea.fecha.split('T')[0] + 'T12:00:00').toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })}</span></div>
-                    <div className="flex items-center gap-2 text-[#e4e2e4] text-[11px]"><User className="w-3 h-3 text-zinc-500 shrink-0" /><span className="font-medium truncate">{tarea.responsable}</span></div>
+                    <div className="flex items-center gap-2 text-[#e4e2e4] text-[11px]"><User className="w-3 h-3 text-zinc-500 shrink-0" /><span className="font-medium break-words min-w-0">{tarea.responsable}</span></div>
                     <div className="mt-2 p-2.5 bg-[#131315] border border-white/5 rounded-xl">
-                      <p className="text-zinc-400 text-[11px] leading-relaxed line-clamp-2 italic">&quot;{tarea.tarea_realizada}&quot;</p>
+                      <p className="text-zinc-400 text-[11px] leading-relaxed italic break-words">&quot;{tarea.tarea_realizada}&quot;</p>
                     </div>
                   </div>
                 </CommonCard>

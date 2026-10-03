@@ -4,7 +4,7 @@ import { Bell, BellOff, Package, Wrench, Info, CheckCheck, Trash2, MessageSquare
 import { createPortal } from 'react-dom';
 import { apiRequest, getUserData } from '../../services/api';
 
-const NotificationBell = ({ plain = false }: { plain?: boolean } = {}) => {
+const NotificationBell = ({ plain: _plain = false }: { plain?: boolean } = {}) => {
     const [isOpen, setIsOpen] = useState(false);
     const [notifications, setNotifications] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
@@ -161,12 +161,12 @@ const NotificationBell = ({ plain = false }: { plain?: boolean } = {}) => {
         <div className="relative" ref={dropdownRef}>
             <button
                 onClick={toggleOpen}
-                className={plain ? "relative p-2 text-[#c4c5d9] hover:text-white transition-colors" : "relative p-2.5 rounded-2xl bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-all cursor-pointer active:scale-95"}
+                className="relative p-2 text-[#c4c5d9] hover:text-white transition-colors"
                 aria-label={`Notificaciones ${unreadCount > 0 ? `(${unreadCount} sin leer)` : ''}`}
                 aria-haspopup="true"
                 aria-expanded={isOpen}
             >
-                {plain ? <span className="material-symbols-outlined text-[20px]">notifications</span> : <Bell className="w-6 h-6" aria-hidden="true" />}
+                <span className="material-symbols-outlined text-[20px]" aria-hidden="true">notifications</span>
                 {unreadCount > 0 && (
                     <span className="absolute top-1.5 right-1.5 min-w-[16px] h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center px-1">
                         {unreadCount > 9 ? '+9' : unreadCount}

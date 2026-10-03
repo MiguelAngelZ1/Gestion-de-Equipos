@@ -52,45 +52,47 @@ const NotificationsPanel = () => {
     };
 
     return (
-        <div className="flex flex-col gap-4">
-            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 space-y-4">
-                <div className="flex items-center justify-between gap-3">
-                    <h3 className="text-xs font-bold uppercase tracking-widest text-zinc-500 flex items-center gap-2">
+            <>
+            <section className="flex flex-col gap-4">
+                <header className="flex items-center justify-between gap-3">
+                    <h3 className="text-xs font-bold uppercase tracking-widest text-zinc-500 flex items-center gap-2 whitespace-nowrap">
                         <Bell className="w-4 h-4 text-zinc-500" /> Notificaciones PWA
                     </h3>
                     <span className={`px-2.5 py-1 rounded-full text-xs font-semibold border ${permission === 'granted' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-zinc-800 text-zinc-500 border-zinc-700'}`}>{getStatusText()}</span>
-                </div>
+                </header>
 
-                {!usePush ? (
-                    <p className="text-sm text-zinc-400">En escritorio las alertas aparecen en la campana. Se actualizan cada 2 minutos. El Push nativo es solo para móvil/PWA.</p>
-                ) : permission !== 'granted' ? (
-                    <div className="space-y-3">
-                        <p className="text-sm text-zinc-400">Activa las notificaciones para recibir alertas directas en tu móvil.</p>
-                        <button onClick={handleRequestPermission} disabled={loading} className="inline-flex items-center gap-2 bg-transparent hover:bg-white/5 text-zinc-400 hover:text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors disabled:opacity-50 cursor-pointer">
-                            {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                            {permission === 'denied' ? 'Cómo desbloquear' : 'Permitir Push'}
-                        </button>
-                        {permission === 'denied' && <p className="text-xs text-red-400">Has bloqueado las notificaciones. Resetea permisos en tu navegador.</p>}
-                    </div>
-                ) : (
-                    <div className="flex items-center gap-3">
-                        <p className="text-sm text-zinc-400 flex-1">Notificaciones activas.</p>
-                        <button onClick={sendTestNotification} className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-colors cursor-pointer ${testSent ? 'bg-emerald-500 text-white' : 'bg-transparent hover:bg-white/5 text-zinc-400 hover:text-white'}`}>
-                            {testSent ? <Check className="w-4 h-4" /> : <Bell className="w-4 h-4" />}
-                            {testSent ? '¡Enviada!' : 'Probar'}
-                        </button>
-                    </div>
-                )}
-            </div>
+                <div className="flex flex-col gap-3">
+                    {!usePush ? (
+                        <p className="text-sm text-zinc-400">En escritorio las alertas aparecen en la campana. Se actualizan cada 2 minutos. El Push nativo es solo para móvil/PWA.</p>
+                    ) : permission !== 'granted' ? (
+                        <>
+                            <p className="text-sm text-zinc-400">Activa las notificaciones para recibir alertas directas en tu móvil.</p>
+                            <button onClick={handleRequestPermission} disabled={loading} className="inline-flex items-center gap-2 bg-transparent hover:bg-white/5 text-zinc-400 hover:text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors disabled:opacity-50 cursor-pointer whitespace-nowrap">
+                                {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                                {permission === 'denied' ? 'Cómo desbloquear' : 'Permitir Push'}
+                            </button>
+                            {permission === 'denied' && <p className="text-xs text-red-400">Has bloqueado las notificaciones. Resetea permisos en tu navegador.</p>}
+                        </>
+                    ) : (
+                        <div className="flex items-center gap-3">
+                            <p className="text-sm text-zinc-400 flex-1">Notificaciones activas.</p>
+                            <button onClick={sendTestNotification} className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-colors cursor-pointer ${testSent ? 'bg-emerald-500 text-white' : 'bg-transparent hover:bg-white/5 text-zinc-400 hover:text-white'}`}>
+                                {testSent ? <Check className="w-4 h-4" /> : <Bell className="w-4 h-4" />}
+                                {testSent ? '¡Enviada!' : 'Probar'}
+                            </button>
+                        </div>
+                    )}
+                </div>
+            </section>
 
             {permission === 'granted' && (
-                <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
-                    <div className="px-5 py-3 border-b border-zinc-800">
+                <section className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden flex flex-col gap-0">
+                    <header className="px-5 py-4 border-b border-zinc-800">
                         <h4 className="text-xs font-bold uppercase tracking-widest text-zinc-500">Categorías</h4>
-                    </div>
-                    <div className="divide-y divide-zinc-800">
+                    </header>
+                    <div className="flex flex-col divide-y divide-zinc-800">
                         {categories.map(item => (
-                            <div key={item.id} className="flex items-center justify-between px-4 py-3 hover:bg-white/[0.02] transition-colors gap-3">
+                            <div key={item.id} className="flex items-center justify-between px-5 py-4 hover:bg-white/[0.02] transition-colors gap-3">
                                 <div className="flex items-center gap-3 min-w-0">
                                     <item.icon className={`w-4 h-4 shrink-0 ${preferences[item.id] ? 'text-zinc-300' : 'text-zinc-600'}`} />
                                     <div className="min-w-0">
@@ -104,9 +106,9 @@ const NotificationsPanel = () => {
                             </div>
                         ))}
                     </div>
-                </div>
+                </section>
             )}
-        </div>
+            </>
     );
 };
 export default NotificationsPanel;

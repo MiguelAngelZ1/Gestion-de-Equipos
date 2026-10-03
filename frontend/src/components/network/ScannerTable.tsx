@@ -74,9 +74,9 @@ const ScannerTable: React.FC<ScannerTableProps> = ({
 
   return (
     <div className="flex flex-col flex-1 min-h-0 bg-zinc-950 border border-zinc-800 rounded-2xl overflow-hidden">
-      <div className="p-3 border-b border-zinc-800 bg-zinc-900/40 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <input value={customRange} onChange={e => setCustomRange(e.target.value)} placeholder="192.168.100.0-255" className="w-[170px] bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm font-mono text-white placeholder:text-zinc-500 outline-none focus:border-zinc-700 focus:bg-zinc-800 transition-colors" />
+      <div className="p-3 border-b border-zinc-800 bg-zinc-900/40 flex flex-col sm:flex-row sm:flex-wrap sm:items-center sm:justify-between gap-2 sm:gap-3">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto sm:flex-1 sm:min-w-0">
+          <input value={customRange} onChange={e => setCustomRange(e.target.value)} placeholder="192.168.100.0-255" className="flex-1 min-w-[140px] sm:w-[170px] sm:flex-none bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm font-mono text-white placeholder:text-zinc-500 outline-none focus:border-zinc-700 focus:bg-zinc-800 transition-colors" />
           <button
             onClick={() => onStartScan(customRange.trim() || undefined)}
             disabled={isScanning}
@@ -86,8 +86,8 @@ const ScannerTable: React.FC<ScannerTableProps> = ({
             {isScanning ? 'Escaneando...' : customRange.trim() ? 'Escanear Rango' : 'Escanear Red'}
           </button>
         </div>
-        <div className="flex items-center gap-2 flex-1 max-w-md justify-end">
-          <SearchInput value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar IP, MAC, nombre, fabricante..." className="w-full max-w-xs" />
+        <div className="flex items-center gap-2 w-full sm:w-auto sm:flex-1 sm:max-w-md sm:justify-end">
+          <SearchInput value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar dispositivo..." className="flex-1 min-w-0 sm:w-full sm:max-w-xs" />
           <div className="w-36 shrink-0">
             <Select value={filterState} onChange={(e) => setFilterState(e.target.value)} options={[{ value: 'ALL', label: 'Todos' }, { value: 'ONLINE', label: 'En línea' }, { value: 'WARNING', label: 'Inestable' }, { value: 'OFFLINE', label: 'Desconectado' }, { value: 'UNKNOWN', label: 'Desconocido' }]} placeholder="Estado" />
           </div>

@@ -55,19 +55,19 @@ const EstadosPanel = () => {
 
             <div ref={formRef} className={`bg-zinc-900 border border-zinc-800 rounded-xl p-3 flex items-center gap-2 ${isSaving ? 'opacity-50' : ''}`}>
                 <form onSubmit={handleSave} className="flex items-center gap-2 w-full flex-wrap">
-                    <input type="text" disabled={isSaving} value={formData.nombre || ''} onChange={(e) => setFormData(prev => ({ ...prev, nombre: e.target.value }))} placeholder="Ej. 'Mantenimiento'" size={18}
-                        className="w-auto field-sizing-content max-w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm text-white placeholder:text-zinc-500 focus:border-zinc-600 focus:outline-none transition-colors" required />
-                    <div className="flex items-center gap-2 bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-1.5">
+                    <input type="text" disabled={isSaving} value={formData.nombre || ''} onChange={(e) => setFormData(prev => ({ ...prev, nombre: e.target.value }))} placeholder="Ej. 'Mantenimiento'"
+                        className="flex-1 min-w-0 bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm text-white placeholder:text-zinc-500 focus:border-zinc-600 focus:outline-none transition-colors" required />
+                    <div className="flex items-center gap-2 bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-1.5 shrink-0">
                         <input type="color" disabled={isSaving} value={formData.color_hex || '#10b981'} onChange={(e) => setFormData(prev => ({ ...prev, color_hex: e.target.value }))}
                             className="w-6 h-6 rounded border-none cursor-pointer bg-transparent" title="Color" />
-                        <span className="text-xs text-zinc-400 font-mono uppercase">{formData.color_hex}</span>
+                        <span className="text-xs text-zinc-400 font-mono uppercase whitespace-nowrap">{formData.color_hex}</span>
                     </div>
-                    <button type="submit" disabled={isSaving} className="inline-flex items-center gap-1.5 bg-transparent hover:bg-white/5 text-zinc-400 hover:text-white px-3 py-2 rounded-xl text-xs font-semibold transition-colors disabled:opacity-50 cursor-pointer">
+                    <button type="submit" disabled={isSaving} className="inline-flex items-center gap-1.5 bg-transparent hover:bg-white/5 text-zinc-400 hover:text-white px-3 py-2 rounded-xl text-xs font-semibold transition-colors disabled:opacity-50 cursor-pointer shrink-0 whitespace-nowrap">
                         {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />} {editingNode ? 'Actualizar' : 'Añadir'}
                     </button>
                     {editingNode && (
                         <button type="button" disabled={isSaving} onClick={() => { setEditingNode(null); setFormData({ nombre: '', color_hex: '#10b981' }); }}
-                            className="w-8 h-8 grid place-items-center rounded-lg bg-transparent hover:bg-white/5 text-zinc-500 hover:text-white transition-colors disabled:opacity-50 cursor-pointer">
+                            className="w-9 h-9 grid place-items-center rounded-lg bg-transparent hover:bg-white/5 text-zinc-500 hover:text-white transition-colors disabled:opacity-50 cursor-pointer shrink-0">
                             <X className="w-4 h-4" />
                         </button>
                     )}
@@ -91,7 +91,7 @@ const EstadosPanel = () => {
                                 Seleccionar todo
                             </label>
                         </div>
-                        <div className="grid grid-cols-3 gap-3 auto-rows-min items-start content-start">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 auto-rows-min items-start content-start">
                             <AnimatePresence>
                                 {estados.map(estado => (
                                     <motion.div key={estado.id} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
@@ -100,14 +100,14 @@ const EstadosPanel = () => {
                                         <input type="checkbox" checked={selectedIds.includes(estado.id)} onChange={() => toggleSelect(estado.id)}
                                             className="w-4 h-4 rounded border-zinc-700 bg-zinc-800 text-white focus:ring-0 cursor-pointer shrink-0" />
                                         <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: estado.color_hex }} />
-                                        <span className={`text-sm font-medium truncate flex-1 ${selectedIds.includes(estado.id) ? 'text-zinc-900' : 'text-white'}`}>{estado.nombre}</span>
+                                        <span className={`text-sm font-medium truncate break-words flex-1 ${selectedIds.includes(estado.id) ? 'text-zinc-900' : 'text-white'}`}>{estado.nombre}</span>
                                         <div className="flex items-center gap-1 shrink-0">
                                             <button onClick={() => { setEditingNode(estado); setFormData({ nombre: estado.nombre, color_hex: estado.color_hex }); formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }}
-                                                className={`w-7 h-7 grid place-items-center rounded-lg bg-transparent hover:bg-white/5 transition-colors ${selectedIds.includes(estado.id) ? 'text-zinc-600 hover:text-zinc-900' : 'text-zinc-500 hover:text-white'}`}>
+                                                className={`w-9 h-9 grid place-items-center rounded-lg bg-transparent hover:bg-white/5 transition-colors ${selectedIds.includes(estado.id) ? 'text-zinc-600 hover:text-zinc-900' : 'text-zinc-500 hover:text-white'}`}>
                                                 <Edit2 className="w-3.5 h-3.5" />
                                             </button>
                                             <button onClick={() => { setItemToDelete(estado); setIsDeleteOpen(true); }}
-                                                className={`w-7 h-7 grid place-items-center rounded-lg bg-transparent hover:bg-white/5 transition-colors ${selectedIds.includes(estado.id) ? 'text-zinc-600 hover:text-red-600' : 'text-zinc-500 hover:text-red-400'}`}>
+                                                className={`w-9 h-9 grid place-items-center rounded-lg bg-transparent hover:bg-white/5 transition-colors ${selectedIds.includes(estado.id) ? 'text-zinc-600 hover:text-red-600' : 'text-zinc-500 hover:text-red-400'}`}>
                                                 <Trash2 className="w-3.5 h-3.5" />
                                             </button>
                                         </div>

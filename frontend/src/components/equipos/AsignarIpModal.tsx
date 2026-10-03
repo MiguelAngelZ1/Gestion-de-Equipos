@@ -69,7 +69,7 @@ const AsignarIpModal = ({ isOpen, ip, redId, onClose, onAssign }) => {
                     initial={{ opacity: 0, scale: 0.9, y: 20 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                    className="bg-[#0f172a] border border-white/10 shadow-2xl rounded-[2.5rem] w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]"
+                    className="bg-[#0f172a] border border-white/10 shadow-2xl rounded-[2.5rem] w-full max-w-2xl overflow-hidden flex flex-col max-h-[90dvh]"
                     onClick={(e) => e.stopPropagation()}
                 >
                     {/* Header */}

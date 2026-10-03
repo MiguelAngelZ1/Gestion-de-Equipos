@@ -139,12 +139,12 @@ const Componentes = () => {
 
     return (
         <div className="flex-1 min-h-0 flex flex-col space-y-4 w-full max-w-full overflow-hidden">
-            <div className="flex flex-col sm:flex-row gap-2">
-                <div className="min-w-0 w-auto max-w-full">
+            <div className="flex flex-row gap-2">
+                <div className="min-w-0 flex-1">
                     <SearchInput
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        placeholder="Buscar por Nombre, NNE o Serie..."
+                        placeholder="Buscar repuesto..."
                     />
                 </div>
                 {userRole === ROLES.ADMIN && (
@@ -160,20 +160,20 @@ const Componentes = () => {
             </div>
 
             {loading && componentes.length === 0 ? (
-                <div className="flex-1 min-h-[calc(100vh-280px)] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 content-start overflow-y-auto custom-scrollbar pr-1">
+                <div className="flex-1 min-h-[calc(100dvh-280px)] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 content-start overflow-y-auto custom-scrollbar pr-1">
                     {[1,2,3,4,5,6].map(i => <div key={i} className="h-44 rounded-xl bg-zinc-900 border border-zinc-800 animate-pulse" />)}
                 </div>
             ) : filtered.length === 0 ? (
-                <div className="flex-1 min-h-[calc(100vh-280px)] flex flex-col items-center justify-center bg-zinc-900 border border-zinc-800 rounded-xl">
+                <div className="flex-1 min-h-[calc(100dvh-280px)] flex flex-col items-center justify-center bg-zinc-900 border border-zinc-800 rounded-xl">
                     <Boxes className="w-8 h-8 text-zinc-600 mb-3" />
                     <p className="font-semibold">Sin resultados</p>
                     <p className="text-sm text-zinc-500 mt-1">{search ? `No hay repuestos para "${search}"` : 'No hay repuestos registrados'}</p>
                 </div>
             ) : (
               <div className="flex-1 min-h-0 flex flex-col space-y-3 overflow-hidden">
-                <div className="flex items-center gap-3 text-xs text-zinc-500">
-                  <div className="h-px flex-1 bg-zinc-800" />
-                  <span className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-zinc-500">
+                  <div className="h-px flex-1 min-w-4 bg-zinc-800" />
+                  <span className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
                     {userRole === ROLES.ADMIN && (
                       <button onClick={toggleAll} className="inline-flex items-center gap-1.5 font-semibold hover:text-zinc-300">
                         <span className={`w-4 h-4 rounded border grid place-items-center ${filtered.every(c => selectedIds.includes(c.id)) ? 'bg-white border-white text-zinc-900' : 'border-zinc-700'}`}>
@@ -181,9 +181,9 @@ const Componentes = () => {
                         </span> Seleccionar todo
                       </button>
                     )}
-                    <span>{filtered.length} {filtered.length === 1 ? 'repuesto' : 'repuestos'}</span>
+                    <span className="whitespace-nowrap">{filtered.length} {filtered.length === 1 ? 'repuesto' : 'repuestos'}</span>
                   </span>
-                  <div className="h-px flex-1 bg-zinc-800" />
+                  <div className="h-px flex-1 min-w-4 bg-zinc-800" />
                 </div>
 
                 <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar pr-1">
@@ -211,10 +211,10 @@ const Componentes = () => {
                                     onHistory={() => { setComponenteForHistory(comp); setIsHistoryOpen(true); }}
                                 >
                                     <div className="flex flex-col gap-1.5">
-                                        <div className="flex items-center gap-1.5 text-xs text-zinc-400"><Package className="w-3 h-3 text-zinc-500 shrink-0" /><span className="truncate">NNE: {comp.nne || '-'}</span></div>
-                                        <div className="flex items-center gap-1.5 text-xs text-zinc-300"><Tag className="w-3 h-3 text-zinc-500 shrink-0" /><span className="truncate font-medium">Serie: {comp.serie || '-'}</span></div>
-                                        <div className="flex items-center gap-1.5 text-xs text-zinc-400"><Calendar className="w-3 h-3 text-zinc-500 shrink-0" /><span className="truncate">{new Date(comp.fecha_ingreso).toLocaleDateString()}</span></div>
-                                        <div className="flex items-center gap-1.5 text-xs text-zinc-400"><Boxes className="w-3 h-3 text-zinc-500 shrink-0" /><span className="truncate">{comp.cantidad} en stock · {comp.total_ingresado || comp.cantidad} ingresados</span></div>
+                                        <div className="flex items-center gap-1.5 text-xs text-zinc-400"><Package className="w-3 h-3 text-zinc-500 shrink-0" /><span className="break-words min-w-0">NNE: {comp.nne || '-'}</span></div>
+                                        <div className="flex items-center gap-1.5 text-xs text-zinc-300"><Tag className="w-3 h-3 text-zinc-500 shrink-0" /><span className="break-words min-w-0 font-medium">Serie: {comp.serie || '-'}</span></div>
+                                        <div className="flex items-center gap-1.5 text-xs text-zinc-400"><Calendar className="w-3 h-3 text-zinc-500 shrink-0" /><span className="break-words min-w-0">{new Date(comp.fecha_ingreso).toLocaleDateString()}</span></div>
+                                        <div className="flex items-center gap-1.5 text-xs text-zinc-400"><Boxes className="w-3 h-3 text-zinc-500 shrink-0" /><span className="break-words min-w-0">{comp.cantidad} en stock · {comp.total_ingresado || comp.cantidad} ingresados</span></div>
                                     </div>
                                 </CommonCard>
                             </motion.div>

@@ -8,7 +8,7 @@ import { ROLES } from './config/constants';
 import theme from './theme';
 
 const PageLoader = () => (
-  <div className="min-h-screen bg-black flex items-center justify-center">
+  <div className="min-h-dvh bg-black flex items-center justify-center">
     <div className="w-10 h-10 border-[3px] border-white/10 border-t-cyan-400 rounded-full animate-spin" />
   </div>
 );

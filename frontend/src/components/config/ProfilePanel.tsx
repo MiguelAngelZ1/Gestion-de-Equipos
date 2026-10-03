@@ -49,10 +49,10 @@ const ProfilePanel = () => {
     }
 
     return (
-        <div className="flex flex-col gap-4">
-            <form onSubmit={handleSave} className="space-y-4">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 space-y-4">
+        <div className="flex flex-col gap-3 lg:gap-4">
+            <form onSubmit={handleSave} className="space-y-3 lg:space-y-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 lg:gap-4">
+                    <div className="space-y-4">
                         <h3 className="text-xs font-bold uppercase tracking-widest text-zinc-500 flex items-center gap-2">
                             <UserCircle className="w-4 h-4 text-zinc-500" /> Información de Cuenta
                         </h3>
@@ -70,7 +70,7 @@ const ProfilePanel = () => {
                         </div>
                     </div>
 
-                    <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 space-y-4">
+                    <div className="space-y-4">
                         <h3 className="text-xs font-bold uppercase tracking-widest text-zinc-500 flex items-center gap-2">
                             <Lock className="w-4 h-4 text-zinc-500" /> Seguridad
                         </h3>
@@ -91,7 +91,7 @@ const ProfilePanel = () => {
                 </div>
 
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                    <button disabled={saving} className="inline-flex items-center gap-2 bg-transparent hover:bg-white/5 text-zinc-400 hover:text-white border border-transparent disabled:opacity-50 px-5 py-2.5 rounded-xl text-sm font-semibold transition-colors cursor-pointer">
+                    <button disabled={saving} className="w-full sm:w-auto justify-center inline-flex items-center gap-2 bg-transparent hover:bg-white/5 text-zinc-400 hover:text-white border border-transparent disabled:opacity-50 px-5 py-2.5 rounded-xl text-sm font-semibold transition-colors cursor-pointer">
                         {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                         {saving ? 'Guardando...' : 'Guardar Cambios'}
                     </button>

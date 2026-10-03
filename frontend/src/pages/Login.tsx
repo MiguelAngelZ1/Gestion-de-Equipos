@@ -94,7 +94,7 @@ export default function Login() {
   })();
 
   return (
-    <div className="min-h-screen bg-black relative overflow-y-auto overflow-x-hidden flex flex-col items-center" style={{ fontFamily: 'Hanken Grotesk, sans-serif' }}>
+    <div className="min-h-dvh bg-black relative overflow-y-auto overflow-x-hidden flex flex-col items-center" style={{ fontFamily: 'Hanken Grotesk, sans-serif' }}>
       <SideRays speed={2.5} rayColor1="#06B6D4" rayColor2="#ffffff" intensity={2} spread={2} origin="top-left" tilt={0} saturation={1.5} blend={0.75} falloff={1.6} opacity={1} />
       <div className="relative z-10 flex flex-col items-center justify-center w-full max-w-[420px] px-4 sm:px-6 py-6 min-h-screen">
         <motion.div initial={{ opacity: 0, scale: 0.7, y: -20 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ type: 'spring', damping: 14, stiffness: 120 }} className="mb-3">

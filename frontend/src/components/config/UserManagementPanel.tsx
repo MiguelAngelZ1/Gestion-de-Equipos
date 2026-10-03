@@ -117,7 +117,7 @@ const UserManagementPanel = () => {
 
     return (
         <div className="flex flex-col flex-1 min-h-0 gap-4">
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-2 shrink-0 flex-wrap">
               <SearchInput
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -125,7 +125,7 @@ const UserManagementPanel = () => {
               />
             <button
                 onClick={() => handleOpenModal()}
-                className="inline-flex items-center gap-1.5 bg-transparent hover:bg-white/5 text-zinc-400 hover:text-white px-3 py-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer shrink-0"
+                className="inline-flex items-center gap-1.5 bg-transparent hover:bg-white/5 text-zinc-400 hover:text-white px-3 py-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer shrink-0 whitespace-nowrap"
             >
                 <Plus className="w-4 h-4" /> Nuevo Usuario
             </button>
@@ -149,7 +149,7 @@ const UserManagementPanel = () => {
                                 <p className="text-sm text-zinc-500">Sin resultados para la búsqueda.</p>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-[repeat(auto-fill,minmax(180px,210px))] justify-start gap-3 auto-rows-min content-start">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[repeat(auto-fill,minmax(180px,210px))] justify-start gap-3 auto-rows-min content-start">
                                 <AnimatePresence mode="popLayout">
                                     {filteredUsuarios.map(user => {
                                 const isAdmin = (user.rol || '').toLowerCase() === 'admin';
@@ -157,14 +157,14 @@ const UserManagementPanel = () => {
                                     <motion.div key={user.id} layout initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.97 }} className="bg-zinc-900 border border-zinc-800 rounded-xl p-3 flex flex-col gap-2.5 hover:border-zinc-700 transition-colors h-fit">
                                         <div className="flex items-center gap-2 min-w-0">
                                             <UserIcon className="w-4 h-4 text-zinc-500 shrink-0" />
-                                            <span className="text-sm font-semibold text-white truncate">{user.usuario}</span>
+                                            <span className="text-sm font-semibold text-white truncate break-words">{user.usuario}</span>
                                             <span className={`ml-auto text-[10px] font-bold uppercase tracking-widest shrink-0 ${isAdmin ? 'text-amber-400' : 'text-zinc-500'}`}>{user.rol}</span>
                                         </div>
-                                        <div className="flex items-center gap-1 pt-2.5 border-t border-zinc-800">
-                                            <button onClick={() => { setDetailsUser(user); setIsDetailsOpen(true); }} className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-transparent hover:bg-white/5 text-zinc-400 hover:text-white text-xs font-medium transition-colors cursor-pointer"><Eye className="w-3.5 h-3.5" /> Ver</button>
+                                        <div className="flex items-center gap-1 pt-2.5 border-t border-zinc-800 flex-wrap">
+                                            <button onClick={() => { setDetailsUser(user); setIsDetailsOpen(true); }} className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-transparent hover:bg-white/5 text-zinc-400 hover:text-white text-xs font-medium transition-colors cursor-pointer shrink-0 whitespace-nowrap"><Eye className="w-3.5 h-3.5" /> Ver</button>
                                             <div className="flex-1" />
-                                            <button onClick={() => handleOpenModal(user)} className="w-7 h-7 grid place-items-center rounded-lg bg-transparent hover:bg-white/5 text-zinc-400 hover:text-white transition-colors cursor-pointer"><Edit2 className="w-3.5 h-3.5" /></button>
-                                            <button onClick={() => { setUserToDelete(user); setIsDeleteOpen(true); }} className="w-7 h-7 grid place-items-center rounded-lg bg-transparent hover:bg-white/5 text-zinc-500 hover:text-red-400 transition-colors cursor-pointer"><Trash2 className="w-3.5 h-3.5" /></button>
+                                            <button onClick={() => handleOpenModal(user)} className="w-9 h-9 grid place-items-center rounded-lg bg-transparent hover:bg-white/5 text-zinc-400 hover:text-white transition-colors cursor-pointer shrink-0"><Edit2 className="w-3.5 h-3.5" /></button>
+                                            <button onClick={() => { setUserToDelete(user); setIsDeleteOpen(true); }} className="w-9 h-9 grid place-items-center rounded-lg bg-transparent hover:bg-white/5 text-zinc-500 hover:text-red-400 transition-colors cursor-pointer shrink-0"><Trash2 className="w-3.5 h-3.5" /></button>
                                         </div>
                                     </motion.div>
                                 );
@@ -185,9 +185,9 @@ const UserManagementPanel = () => {
                             initial={{ opacity: 0, scale: 0.95, y: 12 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 12 }}
-                            className="bg-zinc-900 border border-zinc-800 w-auto min-w-[340px] max-w-md rounded-xl shadow-2xl overflow-hidden h-auto"
+                            className="bg-zinc-900 border border-zinc-800 w-auto min-w-[340px] max-w-md rounded-xl shadow-2xl overflow-hidden h-auto max-h-[90dvh] flex flex-col"
                         >
-                            <form onSubmit={handleSave} className={`p-5 space-y-4 ${isSaving ? 'opacity-50' : ''}`}>
+                            <form onSubmit={handleSave} className={`p-5 space-y-4 ${isSaving ? 'opacity-50' : ''} flex-1 overflow-y-auto`}>
                                 <div className="flex items-center justify-between">
                                     <h3 className="text-sm font-bold text-white">{editingUser ? 'Editar Usuario' : 'Nuevo Usuario'}</h3>
                                     <button type="button" disabled={isSaving} onClick={() => setIsModalOpen(false)} className="text-zinc-500 hover:text-white transition-colors cursor-pointer">
@@ -285,9 +285,9 @@ const UserManagementPanel = () => {
                             initial={{ opacity: 0, scale: 0.95, y: 12 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 12 }}
-                            className="bg-zinc-900 border border-zinc-800 w-auto min-w-[340px] max-w-md rounded-xl shadow-2xl overflow-hidden h-auto"
+                            className="bg-zinc-900 border border-zinc-800 w-auto min-w-[340px] max-w-md rounded-xl shadow-2xl overflow-hidden h-auto max-h-[90dvh] flex flex-col"
                         >
-                            <div className="p-5 space-y-4">
+                            <div className="p-5 space-y-4 flex-1 overflow-y-auto">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-3">
                                         <UserIcon className="w-5 h-5 text-zinc-500" />

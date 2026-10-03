@@ -85,7 +85,7 @@ export default function EquipoFormModal({ isOpen, initialData, onClose, onSave, 
     <AnimatePresence>
       {isOpen && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={!isSaving ? onClose : undefined} className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-          <motion.div initial={{ opacity: 0, scale: 0.97, y: 8 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.97, y: 8 }} transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }} onClick={e => e.stopPropagation()} className="bg-[#1C1C1E] border border-white/5 rounded-2xl w-full max-w-3xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+          <motion.div initial={{ opacity: 0, scale: 0.97, y: 8 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.97, y: 8 }} transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }} onClick={e => e.stopPropagation()} className="bg-[#1C1C1E] border border-white/5 rounded-2xl w-full max-w-3xl max-h-[90dvh] flex flex-col shadow-2xl overflow-hidden">
             <div className="p-4 border-b border-white/5 flex items-center gap-3 shrink-0">
               <span className="material-symbols-outlined text-[#e4e2e4] text-[24px]">inventory_2</span>
               <div className="min-w-0">
@@ -107,7 +107,7 @@ export default function EquipoFormModal({ isOpen, initialData, onClose, onSave, 
                 </div>
               )}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 items-start">
                 <div className="space-y-4">
                   <h3 className="text-xs font-bold tracking-wide text-[#e4e2e4] flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-[#b8c3ff]" /> IDENTIFICACIÓN BÁSICA</h3>
                   <div>
@@ -166,9 +166,9 @@ export default function EquipoFormModal({ isOpen, initialData, onClose, onSave, 
                       {formData.especificaciones.map((spec: any, index: number) => (
                         <div key={index} draggable={!isSaving} onDragStart={() => handleDragStart(index)} onDragOver={e => handleDragOver(e, index)} onDragEnd={() => setDraggedIdx(null)} className={`flex gap-2 items-center bg-[#131315] border rounded-xl p-2 transition ${draggedIdx === index ? 'opacity-40 border-[#b8c3ff]/30' : 'border-white/5'}`}>
                           <span className="cursor-grab active:cursor-grabbing p-1 -ml-1 text-zinc-500 hover:text-zinc-300 touch-none" draggable={false}><GripVertical className="w-4 h-4" /></span>
-                          <input type="text" placeholder="Campo (Ej: RAM)" value={spec.clave} onChange={e => updateEspecificacion(index, 'clave', e.target.value)} disabled={isSaving} className="flex-1 bg-transparent text-sm placeholder:text-zinc-600 focus:outline-none" />
+                          <input type="text" placeholder="Campo (Ej: RAM)" value={spec.clave} onChange={e => updateEspecificacion(index, 'clave', e.target.value)} disabled={isSaving} className="w-[104px] sm:w-auto sm:flex-1 min-w-0 shrink-0 sm:shrink bg-transparent text-sm placeholder:text-zinc-600 focus:outline-none" />
                           <span className="text-zinc-600">:</span>
-                          <input type="text" placeholder="Valor (Ej: 16GB)" value={spec.valor} onChange={e => updateEspecificacion(index, 'valor', e.target.value)} disabled={isSaving} className="flex-[2] bg-transparent text-sm placeholder:text-zinc-600 focus:outline-none" />
+                          <input type="text" placeholder="Valor (Ej: 16GB)" value={spec.valor} onChange={e => updateEspecificacion(index, 'valor', e.target.value)} disabled={isSaving} className="flex-1 min-w-0 sm:flex-[2] bg-transparent text-sm placeholder:text-zinc-600 focus:outline-none" />
                           <button type="button" onClick={() => removeEspecificacion(index)} disabled={isSaving} className="p-1.5 text-red-400 hover:text-red-300">
                             <Trash2 className="w-4 h-4" />
                           </button>

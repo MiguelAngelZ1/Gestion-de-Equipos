@@ -62,10 +62,10 @@ export default function MainLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-[#e4e2e4] flex flex-col md:flex-row" style={{ fontFamily: 'Hanken Grotesk, sans-serif' }}>
+    <div className="min-h-dvh bg-black text-[#e4e2e4] flex flex-col md:flex-row" style={{ fontFamily: 'Hanken Grotesk, sans-serif' }}>
       <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
 
-      <header className="md:hidden sticky top-0 z-40 h-14 flex items-center justify-between px-4 bg-[#1b1b1d] border-b border-white/5">
+      <header className="md:hidden fixed top-0 inset-x-0 z-50 h-14 flex items-center justify-between px-4 bg-[#1b1b1d] border-b border-white/5">
         <div className="flex items-center gap-2.5">
           <img src={logoImage} alt="IMPERIO" className="w-7 h-7 object-contain rounded-full bg-white p-1" />
           <span className="font-semibold text-sm">{titles[location.pathname] || 'IMPERIO'}</span>
@@ -76,7 +76,7 @@ export default function MainLayout() {
         </div>
       </header>
 
-      <aside className="hidden md:flex fixed left-0 top-0 h-screen w-[260px] bg-[#1b1b1d] border-r border-white/5 z-50 flex-col pt-6 pb-1">
+      <aside className="hidden md:flex fixed left-0 top-0 h-dvh w-[260px] bg-[#1b1b1d] border-r border-white/5 z-50 flex-col pt-6 pb-1">
         <div className="px-6 mb-8 flex items-center justify-center">
           <div className="w-24 h-24 rounded-full flex items-center justify-center bg-white p-1.5 overflow-hidden shadow-[0_4px_16px_rgba(0,0,0,0.3)]">
             <img src={logoImage} alt="IMPERIO Logo" className="w-full h-full object-cover rounded-full" />
@@ -113,15 +113,15 @@ export default function MainLayout() {
         </div>
       </aside>
 
-      <div className="ml-0 md:ml-[260px] flex-1 flex flex-col h-screen w-full md:w-[calc(100%-260px)] overflow-hidden">
+      <div className="ml-0 md:ml-[260px] flex-1 flex flex-col min-h-dvh md:min-h-0 md:h-dvh w-full md:w-[calc(100%-260px)] md:overflow-hidden pt-16 md:pt-0">
         <div className="hidden md:flex justify-end items-center px-8 pt-4 pb-2 shrink-0">
           <div className="flex items-center gap-1">
             {role === ROLES.ADMIN && !IS_NETWORK_ONLY && <NotificationBell plain />}
           </div>
         </div>
 
-        <main className="flex-1 min-h-0 overflow-hidden px-4 md:px-8 pb-6 md:pb-8 w-full max-w-[1440px] mx-auto flex flex-col">
-          <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+        <main className="flex-1 min-h-0 px-4 md:px-8 pb-20 md:pb-8 w-full max-w-[1440px] mx-auto flex flex-col md:overflow-hidden">
+          <div className="flex-1 min-h-0 flex flex-col md:overflow-hidden">
             <Outlet />
           </div>
         </main>

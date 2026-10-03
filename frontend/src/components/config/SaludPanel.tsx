@@ -54,7 +54,7 @@ const SaludPanel = () => {
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
                     <p className="text-[11px] font-semibold uppercase tracking-widest text-zinc-500 mb-1">Espacio en Disco</p>
                     <p className="text-xl font-bold text-white">{stats?.databaseSize || '0 MB'}</p>
@@ -93,25 +93,25 @@ const SaludPanel = () => {
                         <p className="text-sm text-zinc-500">Papelera limpia.</p>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 auto-rows-min items-start content-start flex-1 overflow-y-auto pr-1 custom-scrollbar">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 auto-rows-min items-start content-start flex-1 overflow-y-auto pr-1 custom-scrollbar">
                         <AnimatePresence mode="popLayout">
                             {trash.map((item, idx) => (
                                 <motion.div key={item.id || idx} layout initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
                                     className="bg-zinc-900 border border-zinc-800 rounded-xl p-3 flex flex-col gap-2 hover:border-zinc-700 transition-colors h-fit">
                                     <div className="flex items-center gap-2">
                                         <Database className="w-4 h-4 text-zinc-500 shrink-0" />
-                                        <span className="text-sm font-semibold text-white truncate">{item.ine || `ID: ${item.id.toString().substring(0,6)}`}</span>
+                                        <span className="text-sm font-semibold text-white truncate break-words">{item.ine || `ID: ${item.id.toString().substring(0,6)}`}</span>
                                     </div>
                                     <div className="space-y-1 text-xs text-zinc-500 border-t border-zinc-800 pt-2">
-                                        <div className="flex items-center gap-1.5 truncate"><MapPin className="w-3 h-3 shrink-0" />{item.ubicacion || 'Sin ubicación'}</div>
-                                        <div className="flex items-center gap-1.5 truncate"><User className="w-3 h-3 shrink-0" />{item.responsable || 'Sin propietario'}</div>
+                                        <div className="flex items-center gap-1.5 truncate break-words"><MapPin className="w-3 h-3 shrink-0" />{item.ubicacion || 'Sin ubicación'}</div>
+                                        <div className="flex items-center gap-1.5 truncate break-words"><User className="w-3 h-3 shrink-0" />{item.responsable || 'Sin propietario'}</div>
                                     </div>
-                                    <div className="flex items-center gap-1 pt-2 border-t border-zinc-800">
-                                        <button onClick={() => handleRestore(item.id)} className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-transparent hover:bg-white/5 text-zinc-400 hover:text-emerald-400 text-xs font-medium transition-colors cursor-pointer">
+                                    <div className="flex items-center gap-1 pt-2 border-t border-zinc-800 flex-wrap">
+                                        <button onClick={() => handleRestore(item.id)} className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-transparent hover:bg-white/5 text-zinc-400 hover:text-emerald-400 text-xs font-medium transition-colors cursor-pointer whitespace-nowrap shrink-0">
                                             <RotateCcw className="w-3.5 h-3.5" /> Restaurar
                                         </button>
                                         <div className="flex-1" />
-                                        <button onClick={() => handleDeleteIndividual(item.id)} className="w-7 h-7 grid place-items-center rounded-lg bg-transparent hover:bg-white/5 text-zinc-500 hover:text-red-400 transition-colors cursor-pointer">
+                                        <button onClick={() => handleDeleteIndividual(item.id)} className="w-9 h-9 grid place-items-center rounded-lg bg-transparent hover:bg-white/5 text-zinc-500 hover:text-red-400 transition-colors cursor-pointer shrink-0">
                                             <Trash2 className="w-3.5 h-3.5" />
                                         </button>
                                     </div>

@@ -55,16 +55,16 @@ const GradosPanel = () => {
 
             <div ref={formRef} className={`bg-zinc-900 border border-zinc-800 rounded-xl p-3 flex items-center gap-2 ${isSaving ? 'opacity-50' : ''}`}>
                 <form onSubmit={handleSave} className="flex items-center gap-2 w-full flex-wrap">
-                    <input type="text" disabled={isSaving} value={formData.abreviatura || ''} onChange={(e) => setFormData(prev => ({ ...prev, abreviatura: e.target.value }))} placeholder="Abrev. (ej. Slc)" size={14}
-                        className="w-auto field-sizing-content max-w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm text-white placeholder:text-zinc-500 focus:border-zinc-600 focus:outline-none transition-colors" required />
-                    <input type="text" disabled={isSaving} value={formData.grado_completo || ''} onChange={(e) => setFormData(prev => ({ ...prev, grado_completo: e.target.value }))} placeholder="Nombre completo (ej. Soldado)" size={26}
-                        className="w-auto field-sizing-content max-w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm text-white placeholder:text-zinc-500 focus:border-zinc-600 focus:outline-none transition-colors" required />
-                    <button type="submit" disabled={isSaving} className="inline-flex items-center gap-1.5 bg-transparent hover:bg-white/5 text-zinc-400 hover:text-white px-3 py-2 rounded-xl text-xs font-semibold transition-colors disabled:opacity-50 cursor-pointer">
+                    <input type="text" disabled={isSaving} value={formData.abreviatura || ''} onChange={(e) => setFormData(prev => ({ ...prev, abreviatura: e.target.value }))} placeholder="Abrev. (ej. Slc)"
+                        className="w-24 bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm text-white placeholder:text-zinc-500 focus:border-zinc-600 focus:outline-none transition-colors" required />
+                    <input type="text" disabled={isSaving} value={formData.grado_completo || ''} onChange={(e) => setFormData(prev => ({ ...prev, grado_completo: e.target.value }))} placeholder="Nombre completo (ej. Soldado)"
+                        className="flex-1 min-w-0 bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm text-white placeholder:text-zinc-500 focus:border-zinc-600 focus:outline-none transition-colors" required />
+                    <button type="submit" disabled={isSaving} className="inline-flex items-center gap-1.5 bg-transparent hover:bg-white/5 text-zinc-400 hover:text-white px-3 py-2 rounded-xl text-xs font-semibold transition-colors disabled:opacity-50 cursor-pointer shrink-0 whitespace-nowrap">
                         {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />} {editingNode ? 'Actualizar' : 'Añadir'}
                     </button>
                     {editingNode && (
                         <button type="button" disabled={isSaving} onClick={() => { setEditingNode(null); setFormData({ abreviatura: '', grado_completo: '' }); }}
-                            className="w-8 h-8 grid place-items-center rounded-lg bg-transparent hover:bg-white/5 text-zinc-500 hover:text-white transition-colors disabled:opacity-50 cursor-pointer">
+                            className="w-9 h-9 grid place-items-center rounded-lg bg-transparent hover:bg-white/5 text-zinc-500 hover:text-white transition-colors disabled:opacity-50 cursor-pointer shrink-0">
                             <X className="w-4 h-4" />
                         </button>
                     )}
@@ -88,7 +88,7 @@ const GradosPanel = () => {
                                 Seleccionar todo
                             </label>
                         </div>
-                        <div className="grid grid-cols-3 gap-3 auto-rows-min items-start content-start">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 auto-rows-min items-start content-start">
                             <AnimatePresence>
                                 {grados.map(grado => (
                                     <motion.div key={grado.id} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
@@ -96,16 +96,16 @@ const GradosPanel = () => {
                                         <input type="checkbox" checked={selectedIds.includes(grado.id)} onChange={() => toggleSelect(grado.id)}
                                             className="w-4 h-4 rounded border-zinc-700 bg-zinc-800 text-white focus:ring-0 cursor-pointer shrink-0" />
                                         <div className="flex flex-col flex-1 min-w-0">
-                                            <span className={`text-sm font-semibold truncate ${selectedIds.includes(grado.id) ? 'text-zinc-900' : 'text-white'}`}>{grado.grado_completo}</span>
-                                            <span className={`text-xs truncate ${selectedIds.includes(grado.id) ? 'text-zinc-600' : 'text-zinc-500'}`}>{grado.abreviatura}</span>
+                                            <span className={`text-sm font-semibold truncate break-words ${selectedIds.includes(grado.id) ? 'text-zinc-900' : 'text-white'}`}>{grado.grado_completo}</span>
+                                            <span className={`text-xs truncate break-words ${selectedIds.includes(grado.id) ? 'text-zinc-600' : 'text-zinc-500'}`}>{grado.abreviatura}</span>
                                         </div>
                                         <div className="flex items-center gap-1 shrink-0">
                                             <button onClick={() => { setEditingNode(grado); setFormData({ abreviatura: grado.abreviatura, grado_completo: grado.grado_completo }); formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }}
-                                                className={`w-7 h-7 grid place-items-center rounded-lg bg-transparent hover:bg-white/5 transition-colors ${selectedIds.includes(grado.id) ? 'text-zinc-600 hover:text-zinc-900' : 'text-zinc-500 hover:text-white'}`}>
+                                                className={`w-9 h-9 grid place-items-center rounded-lg bg-transparent hover:bg-white/5 transition-colors ${selectedIds.includes(grado.id) ? 'text-zinc-600 hover:text-zinc-900' : 'text-zinc-500 hover:text-white'}`}>
                                                 <Edit2 className="w-3.5 h-3.5" />
                                             </button>
                                             <button onClick={() => { setItemToDelete(grado); setIsDeleteOpen(true); }}
-                                                className={`w-7 h-7 grid place-items-center rounded-lg bg-transparent hover:bg-white/5 transition-colors ${selectedIds.includes(grado.id) ? 'text-zinc-600 hover:text-red-600' : 'text-zinc-500 hover:text-red-400'}`}>
+                                                className={`w-9 h-9 grid place-items-center rounded-lg bg-transparent hover:bg-white/5 transition-colors ${selectedIds.includes(grado.id) ? 'text-zinc-600 hover:text-red-600' : 'text-zinc-500 hover:text-red-400'}`}>
                                                 <Trash2 className="w-3.5 h-3.5" />
                                             </button>
                                         </div>
