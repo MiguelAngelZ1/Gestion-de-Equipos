@@ -12,7 +12,7 @@ const logPath = destPath ? path.join(path.dirname(destPath), 'merge-portable-use
 function log(msg) {
   const line = `[${new Date().toISOString()}] ${msg}`;
   console.log(line);
-  if (logPath) { try { fs.appendFileSync(logPath, line + '\n'); } catch (_) {} }
+  if (logPath) { try { fs.appendFileSync(logPath, line + '\n'); } catch { /* log best-effort, continúa sin archivo */ } }
 }
 
 if (!seedPath || !destPath || !fs.existsSync(seedPath) || !fs.existsSync(destPath)) {
@@ -30,7 +30,7 @@ try {
 
 const get = (db, sql, p = []) => new Promise((res, rej) => db.get(sql, p, (e, r) => (e ? rej(e) : res(r))));
 const all = (db, sql, p = []) => new Promise((res, rej) => db.all(sql, p, (e, r) => (e ? rej(e) : res(r))));
-const run = (db, sql, p = []) => new Promise((res, rej) => db.run(sql, p, function (e) { e ? rej(e) : res(this); }));
+const run = (db, sql, p = []) => new Promise((res, rej) => db.run(sql, p, function (e) { if (e) rej(e); else res(this); }));
 
 (async () => {
   // Backup one-time por dia antes del primer merge
@@ -72,7 +72,7 @@ const run = (db, sql, p = []) => new Promise((res, rej) => db.run(sql, p, functi
         }
       }
       await run(dest, 'COMMIT;');
-    } catch (e) { try { await run(dest, 'ROLLBACK;'); } catch (_) {} throw e; }
+    } catch (e) { try { await run(dest, 'ROLLBACK;'); } catch { /* rollback best-effort */ } throw e; }
     log(`OK: insertados=${inserted} actualizados=${updated} omitidos=${skipped} (seed=${seedUsers.length})`);
   } catch (e) {
     log(`ERROR: ${e.message}`);

@@ -42,7 +42,7 @@ export class NetbiosProbe {
 
         try {
           socket.close();
-        } catch (_) {}
+        } catch { /* socket ya cerrado, nada que hacer */ }
 
         resolve({
           probeType: 'NETBIOS',

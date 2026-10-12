@@ -1,8 +1,7 @@
-// @ts-ignore
+// @ts-expect-error: módulo JS sin declaraciones de tipos
 import logger from '../utils/logger';
-// @ts-ignore
 import jwt from 'jsonwebtoken';
-// @ts-ignore
+// @ts-expect-error: módulo JS sin declaraciones de tipos
 import constants from '../config/constants';
 const { ROLES_ADMIN } = constants as any;
 

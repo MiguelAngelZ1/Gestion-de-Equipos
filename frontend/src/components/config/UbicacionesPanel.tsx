@@ -16,7 +16,7 @@ const UbicacionesPanel = () => {
     const [selectedIds, setSelectedIds] = useState([]);
 
     const fetchUbicaciones = async () => {
-        try { setLoading(true); const data = await apiRequest('/config/ubicaciones'); setUbicaciones(data); } catch {} finally { setLoading(false); }
+        try { setLoading(true); const data = await apiRequest('/config/ubicaciones'); setUbicaciones(data); } catch { /* fondo: si falla, el panel queda vacío hasta reentrar */ } finally { setLoading(false); }
     };
     useEffect(() => { fetchUbicaciones(); }, []);
     const handleSave = async (e) => {
@@ -27,7 +27,7 @@ const UbicacionesPanel = () => {
             if (editingNode) await apiRequest(`/config/ubicaciones/${editingNode.id}`, { method: 'PUT', body: JSON.stringify(formData) });
             else await apiRequest('/config/ubicaciones', { method: 'POST', body: JSON.stringify(formData) });
             setFormData({ nombre: '' }); setEditingNode(null); fetchUbicaciones();
-        } catch {} finally { setIsSaving(false); }
+        } catch { /* se conserva el formulario para reintentar */ } finally { setIsSaving(false); }
     };
     const handleDelete = async () => {
         try {
@@ -39,7 +39,7 @@ const UbicacionesPanel = () => {
                 setUbicaciones(prev => prev.filter(u => u.id !== itemToDelete.id)); setSelectedIds(selectedIds.filter(id => id !== itemToDelete.id));
             }
             setIsDeleteOpen(false); setItemToDelete(null); fetchUbicaciones();
-        } catch {}
+        } catch { /* se conserva la selección para reintentar */ }
     };
     const toggleSelectAll = () => { if (selectedIds.length === ubicaciones.length) setSelectedIds([]); else setSelectedIds(ubicaciones.map(u => u.id)); };
     const toggleSelect = (id) => { if (selectedIds.includes(id)) setSelectedIds(selectedIds.filter(v => v !== id)); else setSelectedIds([...selectedIds, id]); };

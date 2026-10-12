@@ -96,7 +96,7 @@ export default function Equipos() {
         apiRequest('/config/ubicaciones').catch(() => [])
       ]);
       setGrados(ueData); setGruposComodidad(gcData); setEstados(sData); setUbicaciones(uData);
-    } catch {}
+    } catch { /* con fallback por llamada, nada que hacer */ }
   };
 
   const fetchData = async (searchTerm = "", estadoFilter = "TODOS", ubicacionFilter = "TODAS", categoriaFilter = "TODOS", pageNum = 1) => {

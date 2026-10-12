@@ -1,6 +1,5 @@
-// @ts-ignore
+// @ts-expect-error: módulo sin declaraciones de tipos estrictos
 import db from '../db/database';
-// @ts-ignore
 import bcrypt from 'bcryptjs';
 
 const DEFAULT_USER_PERMISOS = [

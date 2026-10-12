@@ -131,7 +131,7 @@ export class EvidenceEngine {
     const positiveCount = evidences.filter(e => e.positive).length;
 
     // Generar resumen explicativo en lenguaje técnico claro
-    let summary = '';
+    let summary: string;
     if (positiveCount > 0) {
       const positiveDetails = evidences
         .filter(e => e.positive)

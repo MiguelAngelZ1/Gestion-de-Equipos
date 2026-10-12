@@ -16,7 +16,7 @@ const GruposComodidadPanel = () => {
     const [selectedIds, setSelectedIds] = useState([]);
 
     const fetchGrupos = async () => {
-        try { setLoading(true); const data = await apiRequest('/config/grupos-comodidad'); setGrupos(data); } catch {} finally { setLoading(false); }
+        try { setLoading(true); const data = await apiRequest('/config/grupos-comodidad'); setGrupos(data); } catch { /* fondo: si falla, el panel queda vacío hasta reentrar */ } finally { setLoading(false); }
     };
     useEffect(() => { fetchGrupos(); }, []);
     const handleSave = async (e) => {
@@ -27,7 +27,7 @@ const GruposComodidadPanel = () => {
             if (editingNode) await apiRequest(`/config/grupos-comodidad/${editingNode.id}`, { method: 'PUT', body: JSON.stringify(formData) });
             else await apiRequest('/config/grupos-comodidad', { method: 'POST', body: JSON.stringify(formData) });
             setFormData({ nombre: '' }); setEditingNode(null); fetchGrupos();
-        } catch {} finally { setIsSaving(false); }
+        } catch { /* se conserva el formulario para reintentar */ } finally { setIsSaving(false); }
     };
     const handleDelete = async () => {
         try {
@@ -39,7 +39,7 @@ const GruposComodidadPanel = () => {
                 setGrupos(prev => prev.filter(g => g.id !== itemToDelete.id)); setSelectedIds(selectedIds.filter(id => id !== itemToDelete.id));
             }
             setIsDeleteOpen(false); setItemToDelete(null); fetchGrupos();
-        } catch {}
+        } catch { /* se conserva la selección para reintentar */ }
     };
     const toggleSelectAll = () => { if (selectedIds.length === grupos.length) setSelectedIds([]); else setSelectedIds(grupos.map(g => g.id)); };
     const toggleSelect = (id) => { if (selectedIds.includes(id)) setSelectedIds(selectedIds.filter(v => v !== id)); else setSelectedIds([...selectedIds, id]); };

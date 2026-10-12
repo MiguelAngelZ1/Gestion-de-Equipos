@@ -26,12 +26,12 @@ module.exports = {
     }
   },
   down: async (_db: any, run: any) => {
-    try { await run(`DROP INDEX IF EXISTS idx_redes_created_by`); } catch {}
+    try { await run(`DROP INDEX IF EXISTS idx_redes_created_by`); } catch { /* rollback best-effort, continúa con el siguiente paso */ }
     const isPG = !!_db.client?.pool;
     if (isPG) {
-      try { await run(`ALTER TABLE redes DROP COLUMN IF EXISTS created_by`); } catch {}
+      try { await run(`ALTER TABLE redes DROP COLUMN IF EXISTS created_by`); } catch { /* rollback best-effort, continúa con el siguiente paso */ }
     } else {
-      try { await run(`ALTER TABLE redes DROP COLUMN created_by`); } catch {}
+      try { await run(`ALTER TABLE redes DROP COLUMN created_by`); } catch { /* rollback best-effort, continúa con el siguiente paso */ }
     }
   }
 };

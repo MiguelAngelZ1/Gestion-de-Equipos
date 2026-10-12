@@ -58,7 +58,7 @@ async function shutdown() {
   logger.info('Apagando servidor gracefulmente...');
   try {
     NetworkMonitorEngine.stop();
-  } catch (_) {}
+  } catch { /* apagado best-effort, continúa con el cierre */ }
   server.close(async () => {
     try {
       if (db.client) {

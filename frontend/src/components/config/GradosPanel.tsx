@@ -16,7 +16,7 @@ const GradosPanel = () => {
     const [selectedIds, setSelectedIds] = useState([]);
 
     const fetchGrados = async () => {
-        try { setLoading(true); const data = await apiRequest('/config/grados'); setGrados(data); } catch {} finally { setLoading(false); }
+        try { setLoading(true); const data = await apiRequest('/config/grados'); setGrados(data); } catch { /* fondo: si falla, el panel queda vacío hasta reentrar */ } finally { setLoading(false); }
     };
     useEffect(() => { fetchGrados(); }, []);
     const handleSave = async (e) => {
@@ -27,7 +27,7 @@ const GradosPanel = () => {
             if (editingNode) await apiRequest(`/config/grados/${editingNode.id}`, { method: 'PUT', body: JSON.stringify(formData) });
             else await apiRequest('/config/grados', { method: 'POST', body: JSON.stringify(formData) });
             setFormData({ abreviatura: '', grado_completo: '' }); setEditingNode(null); fetchGrados();
-        } catch {} finally { setIsSaving(false); }
+        } catch { /* se conserva el formulario para reintentar */ } finally { setIsSaving(false); }
     };
     const handleDelete = async () => {
         try {
@@ -39,7 +39,7 @@ const GradosPanel = () => {
                 setGrados(prev => prev.filter(g => g.id !== itemToDelete.id)); setSelectedIds(selectedIds.filter(id => id !== itemToDelete.id));
             }
             setIsDeleteOpen(false); setItemToDelete(null); fetchGrados();
-        } catch {}
+        } catch { /* se conserva la selección para reintentar */ }
     };
     const toggleSelectAll = () => { if (selectedIds.length === grados.length) setSelectedIds([]); else setSelectedIds(grados.map(g => g.id)); };
     const toggleSelect = (id) => { if (selectedIds.includes(id)) setSelectedIds(selectedIds.filter(v => v !== id)); else setSelectedIds([...selectedIds, id]); };

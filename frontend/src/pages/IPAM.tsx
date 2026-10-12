@@ -144,15 +144,15 @@ const IPAM = () => {
 
     useEffect(() => {
         if (!selectedRed) return;
-        try { localStorage.setItem(`graph:${getUid()}:${selectedRed.id}`, JSON.stringify(graphedDevices)); } catch {}
+        try { localStorage.setItem(`graph:${getUid()}:${selectedRed.id}`, JSON.stringify(graphedDevices)); } catch { /* best-effort: persistencia local del grafo, falla silencioso por diseño */ }
     }, [graphedDevices, selectedRed]);
     useEffect(() => {
         if (!selectedRed) return;
-        try { localStorage.setItem(`graphLinks:${getUid()}:${selectedRed.id}`, JSON.stringify(graphLinks)); } catch {}
+        try { localStorage.setItem(`graphLinks:${getUid()}:${selectedRed.id}`, JSON.stringify(graphLinks)); } catch { /* best-effort: persistencia local de enlaces, falla silencioso por diseño */ }
     }, [graphLinks, selectedRed]);
     useEffect(() => {
         if (!selectedRed) return;
-        try { localStorage.setItem(`graphPos:${getUid()}:${selectedRed.id}`, JSON.stringify(graphPositions)); } catch {}
+        try { localStorage.setItem(`graphPos:${getUid()}:${selectedRed.id}`, JSON.stringify(graphPositions)); } catch { /* best-effort: persistencia local de posiciones, falla silencioso por diseño */ }
     }, [graphPositions, selectedRed]);
 
     useEffect(() => {
@@ -337,13 +337,13 @@ const IPAM = () => {
         } catch (e: any) { showToast("Error", e.message || "No se pudo renombrar.", "error"); }
     };
     const handleScannerPing = async (ip: string) => {
-        try { pingAbortRef.current?.abort(); } catch {}
+        try { pingAbortRef.current?.abort(); } catch { /* best-effort: abort previo del ping, falla silencioso por diseño */ }
         const ac = new AbortController(); pingAbortRef.current = ac;
         setPingIp(ip); setPingOutput(`C:\\WINDOWS\\system32> ping -t ${ip}\n\n`); setIsPingOpen(true);
         let gotData = false;
         const fallback = setTimeout(async () => {
             if (gotData || ac.signal.aborted) return;
-            try { ac.abort(); } catch {}
+            try { ac.abort(); } catch { /* best-effort: abort del stream antes del fallback, falla silencioso por diseño */ }
             const ac2 = new AbortController(); pingAbortRef.current = ac2;
             setPingOutput(prev => (prev || '') + `Haciendo ping a ${ip} con 32 bytes de datos:\n`);
             const iv = setInterval(async () => {
@@ -353,9 +353,9 @@ const IPAM = () => {
                     const chunk: string = r.output || '';
                     const line = chunk.split('\n').find((l: string) => /Respuesta|Reply|bytes=|TTL|tiempo|time/i.test(l)) || chunk.split('\n').pop() || 'Tiempo de espera agotado.';
                     if (!ac2.signal.aborted) setPingOutput(p => (p || '') + line.trim() + '\n');
-                } catch {}
+                } catch { /* ping en vivo: el error ya se refleja en la salida, evita crash del intervalo */ }
             }, 850);
-            try { const r: any = await apiRequest(`/network/ping/${encodeURIComponent(ip)}?fast=1`); const c: string = r.output || ''; const l = c.split('\n').find((x: string) => /Respuesta|Reply/i.test(x)) || ''; if (l) setPingOutput(p => (p || '') + l.trim() + '\n'); } catch {}
+            try { const r: any = await apiRequest(`/network/ping/${encodeURIComponent(ip)}?fast=1`); const c: string = r.output || ''; const l = c.split('\n').find((x: string) => /Respuesta|Reply/i.test(x)) || ''; if (l) setPingOutput(p => (p || '') + l.trim() + '\n'); } catch { /* ping en vivo: el error ya se refleja en la salida, evita crash del fallback */ }
             ac2.signal.addEventListener('abort', () => clearInterval(iv));
             (pingAbortRef as any).current = ac2;
         }, 2500);
@@ -377,7 +377,7 @@ const IPAM = () => {
             clearTimeout(fallback);
         }
     };
-    const closePing = () => { try { pingAbortRef.current?.abort(); } catch {} setIsPingOpen(false); };
+    const closePing = () => { try { pingAbortRef.current?.abort(); } catch { /* best-effort: abort al cerrar el modal de ping, falla silencioso por diseño */ } setIsPingOpen(false); };
     const handleTracert = async (ip: string) => {
         try {
             setTracertIp(ip); setTracertOutput('C:\\WINDOWS\\system32> tracert -d -h 15 ' + ip + '\n\nEjecutando tracert...\n'); setIsTracertOpen(true);

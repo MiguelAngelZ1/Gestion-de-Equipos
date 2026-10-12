@@ -75,7 +75,7 @@ export class DiscoveryEngine {
                   const fresh = await ArpProbe.readArpTable();
                   const freshEntry = fresh.get(ip);
                   if (freshEntry?.mac) macToUse = freshEntry.mac;
-                } catch (_) {}
+                } catch { /* sonda opcional, sigue con el siguiente fallback */ }
                 if (!macToUse) {
                   const localMac = DiscoveryEngine.getLocalMacForIp(ip);
                   if (localMac) macToUse = localMac;
@@ -90,13 +90,13 @@ export class DiscoveryEngine {
                 try {
                   const nb = await NetbiosProbe.probeIp(ip, 1000);
                   if (nb.success && nb.metadata?.hostname) hostname = nb.metadata.hostname;
-                } catch (_) {}
+                } catch { /* sonda opcional, sigue con el siguiente fallback */ }
                 if (!hostname) {
                   try {
                     const { promises: dns } = require('dns');
                     const names: any = await (dns as any).reverse(ip).catch(() => []);
                     if (Array.isArray(names) && names[0]) hostname = String(names[0]).split('.')[0].toUpperCase().slice(0, 32);
-                  } catch (_) {}
+                  } catch { /* sonda opcional, sigue con el siguiente fallback */ }
                 }
               }
 
@@ -188,7 +188,7 @@ export class DiscoveryEngine {
           }
         }
       }
-    } catch (_) {}
+    } catch { /* sonda opcional, sigue con el siguiente fallback */ }
     return null;
   }
 
@@ -203,7 +203,7 @@ export class DiscoveryEngine {
           }
         }
       }
-    } catch (_) {}
+    } catch { /* sonda opcional, sigue con el siguiente fallback */ }
     return null;
   }
 }

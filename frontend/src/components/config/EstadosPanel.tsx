@@ -16,7 +16,7 @@ const EstadosPanel = () => {
     const [selectedIds, setSelectedIds] = useState([]);
 
     const fetchEstados = async () => {
-        try { setLoading(true); const data = await apiRequest('/config/estados'); setEstados(data); } catch {} finally { setLoading(false); }
+        try { setLoading(true); const data = await apiRequest('/config/estados'); setEstados(data); } catch { /* fondo: si falla, el panel queda vacío hasta reentrar */ } finally { setLoading(false); }
     };
     useEffect(() => { fetchEstados(); }, []);
     const handleSave = async (e) => {
@@ -27,7 +27,7 @@ const EstadosPanel = () => {
             if (editingNode) await apiRequest(`/config/estados/${editingNode.id}`, { method: 'PUT', body: JSON.stringify(formData) });
             else await apiRequest('/config/estados', { method: 'POST', body: JSON.stringify(formData) });
             setFormData({ nombre: '', color_hex: '#10b981' }); setEditingNode(null); fetchEstados();
-        } catch {} finally { setIsSaving(false); }
+        } catch { /* se conserva el formulario para reintentar */ } finally { setIsSaving(false); }
     };
     const handleDelete = async () => {
         try {
@@ -39,7 +39,7 @@ const EstadosPanel = () => {
                 setEstados(prev => prev.filter(e => e.id !== itemToDelete.id)); setSelectedIds(selectedIds.filter(id => id !== itemToDelete.id));
             }
             setIsDeleteOpen(false); setItemToDelete(null); fetchEstados();
-        } catch {}
+        } catch { /* se conserva la selección para reintentar */ }
     };
     const toggleSelectAll = () => { if (selectedIds.length === estados.length) setSelectedIds([]); else setSelectedIds(estados.map(e => e.id)); };
     const toggleSelect = (id) => { if (selectedIds.includes(id)) setSelectedIds(selectedIds.filter(v => v !== id)); else setSelectedIds([...selectedIds, id]); };

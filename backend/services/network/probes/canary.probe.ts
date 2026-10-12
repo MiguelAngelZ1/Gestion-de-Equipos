@@ -71,7 +71,7 @@ export class CanaryProbe {
     }
 
     // 5. Verificación de resolución DNS local/inversa básica
-    let dnsOk = false;
+    let dnsOk: boolean;
     try {
       await new Promise<void>((resolve, reject) => {
         dns.reverse(localIp, (err) => {

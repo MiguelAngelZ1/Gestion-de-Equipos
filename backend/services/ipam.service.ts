@@ -283,13 +283,13 @@ class IPAMService {
         const reserved: any[] = (await db.all('SELECT * FROM ips_reservadas WHERE red_id = ?', [redId]))
             .filter((row: any) => this.isValidIp(row.ip) && this.isIpInNetwork(row.ip, meta));
 
-        let scannedRows: any[] = [];
+        let scannedRows: any[];
         try {
             const rawScanned: any[] = userId != null
                 ? await db.all(`SELECT d.ip, d.mac_actual, d.hostname_actual, d.fabricante_actual, d.interfaz_id, dau.alias as alias_scanner FROM dispositivos_red d LEFT JOIN dispositivo_alias_usuario dau ON dau.dispositivo_id = d.id AND dau.user_id = ? WHERE d.red_id = ?`, [userId, redId])
                 : await db.all(`SELECT d.ip, d.mac_actual, d.hostname_actual, d.fabricante_actual, d.interfaz_id, NULL as alias_scanner FROM dispositivos_red d WHERE d.red_id = ?`, [redId]);
             scannedRows = rawScanned.filter((r: any) => this.isValidIp(r.ip) && this.isIpInNetwork(r.ip, meta));
-        } catch (_) { scannedRows = []; }
+        } catch { scannedRows = []; }
 
         const occupiedByIp = new Map(occupied.map((row: any) => [row.ip, row]));
         const reservedByIp = new Map(reserved.map((row: any) => [row.ip, row]));

@@ -1,4 +1,4 @@
-// @ts-ignore
+// @ts-expect-error: módulo sin declaraciones de tipos estrictos
 import db from '../db/database';
 
 class EquiposService {

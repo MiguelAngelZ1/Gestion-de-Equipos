@@ -18,7 +18,7 @@ const SaludPanel = () => {
         try {
             const [statsData, trashData] = await Promise.all([apiRequest('/mantenimiento/stats'), apiRequest('/mantenimiento/trash')]);
             setStats(statsData); setTrash(trashData);
-        } catch {} finally { setLoading(false); }
+        } catch { /* fondo: si falla, el panel queda vacío hasta reentrar */ } finally { setLoading(false); }
     };
     useEffect(() => { fetchData(); }, []);
     const handleOptimize = async () => {

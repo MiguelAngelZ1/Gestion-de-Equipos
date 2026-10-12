@@ -31,7 +31,7 @@ export class IcmpProbe {
         }
 
         // Intento de parseo de RTT del output de ping (Windows: tiempo=Xms o tiempo<1ms; Unix: time=X.X ms)
-        let parsedRtt: number | null = null;
+        let parsedRtt: number | null;
         const timeMatch = stdout.match(/(?:tiempo|time)[=<](\d+(?:\.\d+)?)\s*ms/i);
         if (timeMatch && timeMatch[1]) {
           parsedRtt = Math.round(parseFloat(timeMatch[1]));

@@ -29,7 +29,7 @@ export default function MainLayout() {
         const { publicKey } = await apiRequest('/notificaciones/public-key'); if (!publicKey) return;
         const sub = await notificationManager.subscribeUser(publicKey); if (!sub) return;
         await apiRequest('/notificaciones/subscribe', { method: 'POST', body: { subscription: sub, deviceInfo: navigator.userAgent } });
-      } catch {}
+      } catch { /* best-effort: notificaciones opcionales */ }
     })();
   }, []);
 

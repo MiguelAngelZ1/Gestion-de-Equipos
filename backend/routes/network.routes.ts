@@ -220,7 +220,7 @@ router.get(
       res.setHeader('X-Accel-Buffering', 'no');
       res.write(`Haciendo ping a ${ip} con 32 bytes de datos:\n`);
       let closed = false;
-      req.on('close', () => { closed = true; try { res.end(); } catch {} });
+      req.on('close', () => { closed = true; try { res.end(); } catch { /* socket ya cerrado, nada que hacer */ } });
       const tick = () => {
         if (closed) return;
         const args = isWin ? ['-n', '1', '-w', '1000', ip] : ['-c', '1', '-W', '1', ip];
@@ -228,7 +228,7 @@ router.get(
           if (closed) return;
           const out = (stdout || stderr || '').trim();
           const line = out.split('\n').find(l => /Respuesta|Reply|bytes=|TTL|tiempo|time/i.test(l)) || (out.includes('100%') || out.includes('perdidos') || /100% packet loss|unreachable/i.test(out) ? 'Tiempo de espera agotado para esta solicitud.' : out.split('\n').pop() || '');
-          try { res.write((line.trim() ? line.trim() : 'Sin respuesta') + '\n'); } catch {}
+          try { res.write((line.trim() ? line.trim() : 'Sin respuesta') + '\n'); } catch { /* socket ya cerrado, nada que hacer */ }
         });
       };
       tick();
