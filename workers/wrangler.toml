@@ -1,6 +1,6 @@
 # Control de Equipos 3.0 — Worker API + frontend (mismo origen), D1 como DB.
 # Secrets (nunca en este archivo): wrangler secret put JWT_SECRET
-name = "app"
+name = "equipos"
 main = "src/api.ts"
 compatibility_date = "2026-09-01"
 workers_dev = true
