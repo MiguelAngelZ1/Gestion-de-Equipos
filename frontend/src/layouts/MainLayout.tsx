@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { removeAuthToken, apiRequest } from '../services/api';
-import logoImage from '../assets/LogoIMPERIO.webp';
+import logoImage from '../assets/LogoIMP.webp';
 import { notificationManager } from '../services/notificationManager';
 import NotificationBell from '../components/common/NotificationBell';
 import { ROLES } from '../config/constants';

@@ -1,5 +1,6 @@
 const logger = require('../utils/logger');
 const nodemailer = require('nodemailer');
+const fs = require('fs');
 const path = require('path');
 
 const transporter = nodemailer.createTransport({
@@ -11,8 +12,12 @@ const transporter = nodemailer.createTransport({
 });
 
 const sendRecoveryCode = async (to, code) => {
-    const logoRelPath = '../../frontend/src/assets/LogoIMPERIO.webp';
-    const logoAbsPath = path.join(__dirname, logoRelPath);
+    const candidates = [
+        '../../frontend/src/assets/LogoIMP.webp',
+        '../../frontend/src/assets/LogoIMPERIO.webp',
+        '../../frontend/public/icon-192x192.png',
+    ];
+    const logoAbsPath = candidates.map(p => path.join(__dirname, p)).find(p => fs.existsSync(p));
 
     const mailOptions = {
         from: `"IMPERIO - Gestión de Equipos" <${process.env.EMAIL_USER || process.env.SMTP_USER}>`,
@@ -54,11 +59,11 @@ const sendRecoveryCode = async (to, code) => {
             </body>
             </html>
         `,
-        attachments: [{
-            filename: 'logo.png',
+        attachments: logoAbsPath ? [{
+            filename: 'logo.webp',
             path: logoAbsPath,
             cid: 'logo'
-        }]
+        }] : []
     };
 
     try {

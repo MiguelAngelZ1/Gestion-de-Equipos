@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { apiRequest } from '../services/api';
-import logoImage from '../assets/LogoIMPERIO.webp';
+import logoImage from '../assets/LogoIMP.webp';
 import { useToast } from '../context/ToastContext';
 import SideRays from '../components/effects/SideRays';
 import { User, Lock, MailCheck, KeyRound, Check, ArrowLeft, Eye, EyeOff } from 'lucide-react';
