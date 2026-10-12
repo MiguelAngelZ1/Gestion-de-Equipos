@@ -31,7 +31,7 @@ const sendRecoveryCode = async (to, code) => {
                     body { font-family: 'Inter', 'Segoe UI', sans-serif; background-color: #09090b; margin: 0; padding: 0; }
                     .container { max-width: 480px; margin: 32px auto; background: #18181b; border: 1px solid #27272a; border-radius: 16px; overflow: hidden; }
                     .header { background: #09090b; padding: 28px; text-align: center; border-bottom: 1px solid #27272a; }
-                    .logo { width: 64px; height: 64px; border-radius: 50%; background: #ffffff; padding: 5px; object-fit: contain; }
+                    .logo { width: 96px; height: 96px; object-fit: contain; }
                     .content { padding: 32px 28px; text-align: center; }
                     h1 { font-size: 18px; font-weight: 800; color: #fafafa; margin: 0 0 8px 0; letter-spacing: -0.02em; }
                     .subtitle { font-size: 13px; line-height: 1.5; color: #a1a1aa; margin: 0 0 24px 0; }

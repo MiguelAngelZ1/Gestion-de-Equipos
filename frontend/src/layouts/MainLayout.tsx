@@ -67,7 +67,7 @@ export default function MainLayout() {
 
       <header className="md:hidden fixed top-0 inset-x-0 z-50 h-14 flex items-center justify-between px-4 bg-[#1b1b1d] border-b border-white/5">
         <div className="flex items-center gap-2.5">
-          <img src={logoImage} alt="IMPERIO" className="w-7 h-7 object-contain rounded-full bg-white p-1" />
+          <img src={logoImage} alt="IMPERIO" className="w-7 h-7 object-contain" />
           <span className="font-semibold text-sm">{titles[location.pathname] || 'IMPERIO'}</span>
         </div>
         <div className="flex items-center gap-1">
@@ -78,9 +78,7 @@ export default function MainLayout() {
 
       <aside className="hidden md:flex fixed left-0 top-0 h-dvh w-[260px] bg-[#1b1b1d] border-r border-white/5 z-50 flex-col pt-6 pb-1">
         <div className="px-6 mb-8 flex items-center justify-center">
-          <div className="w-24 h-24 rounded-full flex items-center justify-center bg-white p-1.5 overflow-hidden shadow-[0_4px_16px_rgba(0,0,0,0.3)]">
-            <img src={logoImage} alt="IMPERIO Logo" className="w-full h-full object-cover rounded-full" />
-          </div>
+          <img src={logoImage} alt="IMPERIO" className="w-24 h-24 object-contain drop-shadow-[0_0_20px_rgba(6,182,212,0.3)]" />
         </div>
 
         <nav className="flex-1 overflow-y-auto px-2">
