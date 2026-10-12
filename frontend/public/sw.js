@@ -98,8 +98,8 @@ self.addEventListener('push', (event) => {
   const origin = self.location.origin;
   const options = {
     body: data.body,
-    icon: `${origin}/notification-icon.png?v=8`,
-    badge: `${origin}/notification-badge.png?v=8`,
+    icon: `${origin}/notification-icon.png?v=9`,
+    badge: `${origin}/notification-badge.png?v=9`,
     vibrate: [100, 50, 100],
     data: data.data || {},
     actions: [

@@ -98,8 +98,8 @@ class NotificationManager {
     async showLocalNotification(title, options = {}) {
         const origin = window.location.origin;
         const defaultOptions = {
-            icon: `${origin}/notification-icon.png?v=4`,
-            badge: `${origin}/notification-badge.png?v=4`,
+            icon: `${origin}/notification-icon.png?v=5`,
+            badge: `${origin}/notification-badge.png?v=5`,
             vibrate: [100, 50, 100],
             data: {
                 dateOfArrival: Date.now(),
