@@ -13,6 +13,7 @@ import Select from '../components/common/Select';
 import CommonCard from '../components/common/CommonCard';
 import ConfirmModal from '../components/common/ConfirmModal';
 import LoanModal from '../components/equipos/LoanModal';
+import { friendlyErrorMessage } from '../utils/friendlyError';
 
 export function buildEquiposParams({ searchTerm, estadoFilter, ubicacionFilter, categoriaFilter, pageNum }: { searchTerm: string; estadoFilter: string; ubicacionFilter: string; categoriaFilter: string; pageNum: number }) {
   const params = new URLSearchParams();
@@ -266,7 +267,7 @@ export default function Equipos() {
       <EquipoDetalleModal isOpen={!!selectedEquipo} equipo={selectedEquipo} estados={estados} sharedTitleId={selectedEquipo ? `eq-title-${selectedEquipo.id}` : undefined} onClose={() => setSelectedEquipo(null)} onEquipoUpdated={() => fetchData(search, filterEstado, filterUbicacion, filterGrupo, currentPage)} />
       <EquipoFormModal isOpen={isFormOpen} initialData={formData} onClose={() => setIsFormOpen(false)} onSave={async (data: any) => {
         try { const id = data.id || formData.id; await apiRequest('/equipos', { method: 'POST', body: { ...data, id, responsable_id: data.responsable_id || formData.responsable_id } }); setIsFormOpen(false); fetchData(search, filterEstado, filterUbicacion, filterGrupo, currentPage); showToast(id ? 'Actualizado' : 'Creado', `"${data.ine}" guardado.`, 'success'); }
-        catch (err: any) { showToast("Error", err.message || "No se pudo guardar.", "error"); }
+        catch (err: any) { showToast("Error", friendlyErrorMessage(err, 'No se pudo guardar.'), "error"); }
       }} grados={grados} gruposComodidad={gruposComodidad} estados={estados} ubicaciones={ubicaciones} />
       <LoanModal isOpen={isLoanModalOpen} equipo={equipoForLoan} onClose={() => { setIsLoanModalOpen(false); setEquipoForLoan(null); }} onConfirm={async (d: any) => {
         try { await apiRequest('/prestamos', { method: 'POST', body: JSON.stringify({ ...d, equipo_id: equipoForLoan.id }) }); setIsLoanModalOpen(false); setEquipoForLoan(null); fetchData(search, filterEstado, filterUbicacion, filterGrupo, currentPage); showToast("Préstamo", `"${equipoForLoan?.ine}" prestado.`, "success"); }

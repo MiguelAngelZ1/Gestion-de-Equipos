@@ -123,6 +123,28 @@ export function rateLimit(max: number, windowMs: number, message: string, bindin
 }
 
 export const W15M = 15 * 60 * 1000;
+
+// Como rateLimit pero solo cuenta respuestas exitosas: si el handler
+// responde 4xx+, se devuelve la cuota (los intentos fallidos no bloquean).
+export function rateLimitSuccess(max: number, windowMs: number, message: string, keyOf: (c: Context) => string) {
+  return async (c: Context, next: Next) => {
+    const key = keyOf(c);
+    const now = Date.now();
+    const b = buckets.get(key);
+    if (!b || now > b.reset) {
+      buckets.set(key, { count: 1, reset: now + windowMs });
+    } else {
+      b.count += 1;
+      if (b.count > max) return c.json({ error: message }, 429);
+    }
+    await next();
+    const status = (c.res as unknown as Response | undefined)?.status ?? 200;
+    if (status >= 400) {
+      const cur = buckets.get(key);
+      if (cur) cur.count = Math.max(0, cur.count - 1);
+    }
+  };
+}
 export const limiters = {
   // Mismos umbrales que backend/utils/rateLimiter.ts
   auth: (c: Context, n: Next) => rateLimit(10, W15M, 'Demasiados intentos de login. Intenta mas tarde.', 'AUTH_LIMITER')(c, n),
