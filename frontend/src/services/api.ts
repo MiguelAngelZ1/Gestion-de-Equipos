@@ -55,7 +55,9 @@ export async function apiRequest(endpoint: string, options: Record<string, any> 
                 throw new Error("Acceso denegado: No tiene los permisos necesarios para realizar esta acción.");
             }
             const errorMessage = (data && data.error) ? data.error : `Error ${response.status}: ${response.statusText}`;
-            throw new Error(errorMessage);
+            const err: any = new Error(errorMessage);
+            err.status = response.status;
+            throw err;
         }
 
         if (!isJson && response.ok) {
@@ -70,7 +72,8 @@ export async function apiRequest(endpoint: string, options: Record<string, any> 
             throw new Error(`La solicitud tardó demasiado (${REQUEST_TIMEOUT / 1000}s). Intenta nuevamente.`);
         }
 
-        if (retries > 0 && !error.message.includes('No autorizado') && !error.message.includes('Acceso denegado')) {
+        const noRetryStatus = typeof error?.status === 'number' && error.status < 500 && error.status !== 408;
+        if (retries > 0 && !noRetryStatus && !error.message.includes('No autorizado') && !error.message.includes('Acceso denegado')) {
             const delay = Math.min(1000 * Math.pow(2, MAX_RETRIES - retries), 4000) * (0.5 + Math.random() * 0.5);
             await new Promise(r => setTimeout(r, delay));
             return apiRequest(endpoint, options, retries - 1);

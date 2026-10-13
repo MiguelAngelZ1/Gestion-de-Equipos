@@ -13,7 +13,7 @@ router.put('/perfil', verificarAutenticacion, usuariosController.updatePerfil);
 // Rutas de gestión (Solo Admins)
 router.get('/', verificarAutenticacion, verificarAdmin, usuariosController.getUsuarios);
 router.get('/:id', verificarAutenticacion, verificarAdmin, usuariosController.getUsuarioById);
-router.post('/', registerLimiter, verificarAutenticacion, verificarAdmin, validateBody(createUsuarioSchema), usuariosController.createUsuario);
+router.post('/', verificarAutenticacion, verificarAdmin, registerLimiter, validateBody(createUsuarioSchema), usuariosController.createUsuario);
 router.put('/:id', usuarioWriteLimiter, verificarAutenticacion, verificarAdmin, validateBody(updateUsuarioSchema), usuariosController.updateUsuario);
 router.delete('/:id', usuarioWriteLimiter, verificarAutenticacion, verificarAdmin, usuariosController.deleteUsuario);
 

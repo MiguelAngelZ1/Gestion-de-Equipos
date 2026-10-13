@@ -1,4 +1,5 @@
 const rateLimit = require('express-rate-limit');
+const { ipKeyGenerator } = require('express-rate-limit');
 const logger = require('./logger');
 
 function createLimiter(options) {
@@ -8,7 +9,10 @@ function createLimiter(options) {
     message: { error: options.message },
     standardHeaders: true,
     legacyHeaders: false,
-    handler: (req, res, next, options) => {
+    ...(options.keyGenerator ? { keyGenerator: options.keyGenerator } : {}),
+    ...(options.skipFailedRequests ? { skipFailedRequests: true } : {}),
+    ...(options.skipSuccessfulRequests ? { skipSuccessfulRequests: true } : {}),
+    handler: (req, res) => {
       logger.warn({ ip: req.ip, path: req.path, method: req.method }, `Rate limit exceeded: ${options.message}`);
       res.status(429).json({ error: options.message });
     },
@@ -20,7 +24,7 @@ const W15M = 15 * 60 * 1000;
 const authLimiter = createLimiter({ windowMs: W15M, max: 10, message: 'Demasiados intentos de login. Intenta mas tarde.' });
 const forgotPasswordLimiter = createLimiter({ windowMs: W15M, max: 5, message: 'Demasiados intentos de envío de código. Intenta de nuevo en 15 minutos.' });
 const resetPasswordLimiter = createLimiter({ windowMs: W15M, max: 3, message: 'Demasiados intentos de restablecimiento de contraseña. Intenta de nuevo en 15 minutos.' });
-const registerLimiter = createLimiter({ windowMs: 60 * 60 * 1000, max: 5, message: 'Demasiadas cuentas creadas desde esta IP. Intenta en 1 hora.' });
+const registerLimiter = createLimiter({ windowMs: 60 * 60 * 1000, max: 20, skipFailedRequests: true, keyGenerator: (req) => (req.user && (req.user.userId || req.user.id) ? `user:${req.user.userId || req.user.id}` : ipKeyGenerator(req.ip)), message: 'Demasiadas cuentas creadas. Intenta de nuevo en unos minutos.' });
 const exportLimiter = createLimiter({ windowMs: W15M, max: 20, message: 'Demasiadas exportaciones. Intenta en 15 minutos.' });
 const ipamLimiter = createLimiter({ windowMs: W15M, max: 50, message: 'Demasiadas operaciones IPAM. Intenta en 15 minutos.' });
 const usuarioWriteLimiter = createLimiter({ windowMs: W15M, max: 30, message: 'Demasiadas operaciones de usuario. Intenta en 15 minutos.' });

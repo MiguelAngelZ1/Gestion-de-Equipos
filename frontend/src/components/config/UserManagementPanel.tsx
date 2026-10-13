@@ -9,6 +9,7 @@ import CommonCard from '../common/CommonCard';
 import SearchInput from '../common/SearchInput';
 import Select from '../common/Select';
 import { matchesSearch } from '../../utils/search';
+import { friendlyErrorMessage } from '../../utils/friendlyError';
 
 const UserManagementPanel = () => {
     const { showToast } = useToast();
@@ -70,6 +71,17 @@ const UserManagementPanel = () => {
     const handleSave = async (e) => {
         e.preventDefault();
         if (isSaving) return;
+
+        const validationErrors: string[] = [];
+        if ((formData.usuario || '').trim().length < 3) validationErrors.push('El usuario debe tener al menos 3 caracteres.');
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((formData.email || '').trim())) validationErrors.push('Ingresa un email válido.');
+        if (!editingUser || (formData.password || '').length > 0) {
+            if ((formData.password || '').length < 12) validationErrors.push('La contraseña debe tener al menos 12 caracteres.');
+        }
+        if (validationErrors.length > 0) {
+            showToast('Revisa los datos', validationErrors[0], 'warning');
+            return;
+        }
         
         setIsSaving(true);
         try {
@@ -91,7 +103,7 @@ const UserManagementPanel = () => {
               'success'
             );
         } catch (error) {
-            showToast("Error de Usuario", error.message || 'No se pudo procesar la solicitud del usuario.', "error");
+            showToast("Error de Usuario", friendlyErrorMessage(error, 'No se pudo procesar la solicitud del usuario.'), "error");
         } finally {
             setIsSaving(false);
         }

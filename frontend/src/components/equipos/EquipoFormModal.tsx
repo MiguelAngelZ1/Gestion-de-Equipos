@@ -38,9 +38,15 @@ export default function EquipoFormModal({ isOpen, initialData, onClose, onSave, 
     }
   }, [isOpen, initialData]);
 
+  const isIdentBlank = (v: any) => {
+    const s = String(v ?? '').trim();
+    return s === '' || s === '-';
+  };
+
   const validate = () => {
     const e: Record<string, string> = {};
     if (!formData.ine.trim()) e.ine = 'El INE es obligatorio';
+    if (isIdentBlank(formData.nne) && isIdentBlank(formData.serie)) e.identificacion = 'Ingresa el NNE o el Número de Serie (al menos uno es obligatorio)';
     if (!formData.categoria_id) e.categoria_id = 'Debe seleccionar un grupo';
     if (!formData.estado_id) e.estado_id = 'Debe seleccionar un estado';
     if (!formData.ubicacion_id) e.ubicacion_id = 'Debe seleccionar una ubicación';
@@ -53,6 +59,9 @@ export default function EquipoFormModal({ isOpen, initialData, onClose, onSave, 
   const handleChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) { const n = { ...errors }; delete n[field]; setErrors(n); }
+    if ((field === 'nne' || field === 'serie') && errors.identificacion) {
+      const n = { ...errors }; delete n.identificacion; setErrors(n);
+    }
     if (showErrorSummary && Object.keys(errors).length <= 1) setShowErrorSummary(false);
   };
 
@@ -104,6 +113,7 @@ export default function EquipoFormModal({ isOpen, initialData, onClose, onSave, 
                   <div>
                     <p className="text-sm font-semibold text-[#ffb4ab]">Información faltante</p>
                     <p className="text-xs text-[#ffb4ab]/70 mt-0.5">Completa los campos obligatorios resaltados.</p>
+                    {errors.identificacion && <p className="text-xs text-[#ffb4ab] mt-1 font-medium">{errors.identificacion}</p>}
                   </div>
                 </div>
               )}
@@ -117,12 +127,13 @@ export default function EquipoFormModal({ isOpen, initialData, onClose, onSave, 
                     {errors.ine && <InputError message={errors.ine} />}
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-[#c4c5d9] mb-1.5">NNE</label>
-                    <input type="text" placeholder="Ej: 7010-00-111-2222" value={formData.nne} onChange={e => handleChange('nne', e.target.value)} disabled={isSaving} className="w-full bg-[#131315] border border-white/5 text-sm rounded-xl px-3 py-2.5 focus:outline-none focus:border-white/10" />
+                    <label className={`block text-xs font-semibold mb-1.5 ${errors.identificacion ? 'text-[#ffb4ab]' : 'text-[#c4c5d9]'}`}>NNE</label>
+                    <input type="text" placeholder="Ej: 7010-00-111-2222" value={formData.nne} onChange={e => handleChange('nne', e.target.value)} disabled={isSaving} className={`w-full bg-[#131315] border text-sm rounded-xl px-3 py-2.5 focus:outline-none transition-colors ${errors.identificacion ? 'border-[#ffb4ab]/50 bg-[#ffb4ab]/5 focus:border-[#ffb4ab]/40' : 'border-white/5 focus:border-white/10'}`} />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-[#c4c5d9] mb-1.5">Número de Serie</label>
-                    <input type="text" placeholder="Ej: SN-XXXXXXXX" value={formData.serie} onChange={e => handleChange('serie', e.target.value)} disabled={isSaving} className="w-full bg-[#131315] border border-white/5 text-sm rounded-xl px-3 py-2.5 focus:outline-none focus:border-white/10" />
+                    <label className={`block text-xs font-semibold mb-1.5 ${errors.identificacion ? 'text-[#ffb4ab]' : 'text-[#c4c5d9]'}`}>Número de Serie</label>
+                    <input type="text" placeholder="Ej: SN-XXXXXXXX" value={formData.serie} onChange={e => handleChange('serie', e.target.value)} disabled={isSaving} className={`w-full bg-[#131315] border text-sm rounded-xl px-3 py-2.5 focus:outline-none transition-colors ${errors.identificacion ? 'border-[#ffb4ab]/50 bg-[#ffb4ab]/5 focus:border-[#ffb4ab]/40' : 'border-white/5 focus:border-white/10'}`} />
+                    {errors.identificacion && <InputError message={errors.identificacion} />}
                   </div>
                   <div className="space-y-1.5">
                     <h3 className="hidden md:block text-xs font-bold tracking-wide opacity-0 select-none flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-transparent" /> -</h3>

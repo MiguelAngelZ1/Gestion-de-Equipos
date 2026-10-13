@@ -1,6 +1,6 @@
 // Puerto de backend/routes/usuarios.routes.ts + controllers/usuarios.controller.ts.
 import { Hono } from 'hono';
-import { requireAuth, requireAdmin, validateBody, rateLimit, W15M } from '../middleware';
+import { requireAuth, requireAdmin, validateBody, rateLimit, rateLimitSuccess, W15M } from '../middleware';
 import { createUsuarioSchema, updateUsuarioSchema } from '../schemas';
 import { usuariosService } from '../services/usuarios.service';
 import type { Db } from '../db';
@@ -39,7 +39,11 @@ r.get('/:id', async (c) => {
   return c.json(usuario);
 });
 
-const registerLimit = (c: any, n: any) => rateLimit(5, 60 * 60 * 1000, 'Demasiadas cuentas creadas desde esta IP. Intenta en 1 hora.')(c, n);
+const registerLimit = (c: any, n: any) =>
+  rateLimitSuccess(20, 60 * 60 * 1000, 'Demasiadas cuentas creadas. Intenta de nuevo en unos minutos.', (ctx: any) => {
+    const uid = ctx.get('user')?.userId;
+    return `register:${uid ?? 'ip:' + (ctx.req.header('cf-connecting-ip') || 'unknown')}`;
+  })(c, n);
 const writeLimit = (c: any, n: any) => rateLimit(30, W15M, 'Demasiadas operaciones de usuario. Intenta en 15 minutos.')(c, n);
 
 r.post('/', registerLimit, validateBody(createUsuarioSchema), async (c) => {

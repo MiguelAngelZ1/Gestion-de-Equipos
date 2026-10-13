@@ -132,8 +132,27 @@ app.get('*', async (c) => {
   if (path.startsWith('/api/') || path === '/health') return c.text('Not found', 404);
   return serveAsset(c, path);
 });
+// Errores de validación conocidos (paridad con backend/error.middleware.ts):
+// se responden 400 con el mensaje tal cual; el resto es 500 genérico.
+const VALIDATION_HINTS = [
+  'obligatorio',
+  'invalido',
+  'invalida',
+  'debe',
+  'ya existe',
+  'ya esta',
+  'no pertenece',
+  'no se puede',
+  'no encontrada',
+  'no encontrado',
+];
+
 app.onError((err, c) => {
   console.error('[worker]', err);
+  const msg = (err as Error)?.message || '';
+  if (VALIDATION_HINTS.some((f) => msg.toLowerCase().includes(f))) {
+    return c.json({ error: msg }, 400);
+  }
   return c.json({ error: 'Error interno del servidor' }, 500);
 });
 

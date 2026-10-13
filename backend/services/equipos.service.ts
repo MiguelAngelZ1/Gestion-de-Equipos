@@ -149,7 +149,7 @@ class EquiposService {
         const hasSerie = serie && serie.trim() !== "" && serie.trim() !== "-";
         
         if (!hasNNE && !hasSerie) {
-            throw new Error("Error de validación: El equipo debe poseer obligatoriamente un NNE o un Número de Serie para ser identificado.");
+            throw new Error("Falta el NNE o el Número de Serie: uno de los dos es obligatorio para identificar el equipo.");
         }
 
         await db.beginTransaction();
@@ -190,7 +190,7 @@ class EquiposService {
                     [serie.trim(), targetId || '']
                 );
                 if (existingSerie) {
-                    throw new Error(`Atención: El Número de Serie "${serie}" ya se encuentra registrado.`);
+                    throw new Error(`El Número de Serie "${serie.trim()}" ya existe en otro equipo.`);
                 }
             }
 
