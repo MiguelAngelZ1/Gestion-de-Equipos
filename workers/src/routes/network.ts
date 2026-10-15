@@ -57,6 +57,12 @@ r.get('/redes/:redId/eventos', validarRedId, async (c) => {
 r.post('/vincular', ipamLimit, async (c) => {
   const { dispositivoId, equipoId } = await c.req.json().catch(() => ({}));
   if (!dispositivoId || !equipoId) return c.json({ error: 'dispositivoId y equipoId son obligatorios.' }, 400);
+  const userId = c.get('user')?.userId ?? c.get('user')?.id;
+  const owned = await c.get('db').get(
+    'SELECT d.id FROM dispositivos_red d JOIN redes r ON d.red_id = r.id WHERE d.id = ? AND r.created_by = ?',
+    [dispositivoId, userId]
+  );
+  if (!owned) return c.json({ error: 'La red especificada no existe o no te pertenece.' }, 404);
   await reconciliationService(c.get('db')).linkToEquipo(dispositivoId, equipoId);
   return c.json({ success: true, message: 'Dispositivo vinculado al inventario correctamente.' });
 });

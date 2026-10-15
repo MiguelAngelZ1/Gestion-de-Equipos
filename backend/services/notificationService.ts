@@ -108,10 +108,10 @@ class NotificationService {
         return result?.total || 0;
     }
 
-    async markAsRead(alertId) {
+    async markAsRead(alertId, userId) {
         return await db.run(
-            `UPDATE alertas_notificaciones SET leido = 1 WHERE id = ?`,
-            [parseInt(alertId)]
+            `UPDATE alertas_notificaciones SET leido = 1 WHERE id = ? AND usuario_id = ?`,
+            [parseInt(alertId), parseInt(userId)]
         );
     }
 

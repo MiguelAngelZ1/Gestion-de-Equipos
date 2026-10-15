@@ -44,7 +44,7 @@ const login = async (req, res, next) => {
 
         if (user && match) {
             const permisos = (() => { try { return JSON.parse(user.permisos_json || '[]'); } catch { return []; } })();
-            const token = jwt.sign({ userId: user.id, rol: user.rol, usuario: user.usuario, permisos }, JWT_SECRET, { expiresIn: "24h" });
+            const token = jwt.sign({ userId: user.id, rol: user.rol, usuario: user.usuario, permisos, tv: user.token_version ?? 0 }, JWT_SECRET, { expiresIn: "24h" });
 
             const refreshToken = crypto.randomBytes(32).toString('hex');
             const refreshExpires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
@@ -110,6 +110,8 @@ const resetPassword = async (req, res, next) => {
 
         const password_hash = await bcrypt.hash(newPassword, 12);
         await usuariosService.resetPasswordSync(email, password_hash);
+        const account = await usuariosService.findByEmail(email);
+        if (account) await refreshTokenService.revokeAllUserTokens(account.id);
         await usuariosService.deleteRecoveryCode(email);
 
         res.json({ success: true, message: "Contraseña actualizada correctamente." });
@@ -162,7 +164,7 @@ const refresh = async (req, res) => {
             return res.status(401).json({ error: "Usuario no encontrado" });
         }
         const permisos = (() => { try { return JSON.parse(user.permisos_json || '[]'); } catch { return []; } })();
-        const newToken = jwt.sign({ userId: user.id, rol: user.rol, usuario: user.usuario, permisos }, JWT_SECRET, { expiresIn: "24h" });
+        const newToken = jwt.sign({ userId: user.id, rol: user.rol, usuario: user.usuario, permisos, tv: user.token_version ?? 0 }, JWT_SECRET, { expiresIn: "24h" });
         const newRefreshToken = crypto.randomBytes(32).toString('hex');
         const newRefreshExpires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
         await refreshTokenService.saveRefreshToken(user.id, newRefreshToken, newRefreshExpires);

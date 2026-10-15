@@ -53,7 +53,7 @@ export function usuariosService(db: Db) {
       const params: any[] = [usuario, email, rol, JSON.stringify(permisos_json), new Date().toISOString()];
       if (password) {
         const password_hash = await bcrypt.hash(password, 12);
-        sql = 'UPDATE usuarios SET usuario = ?, email = ?, password_hash = ?, rol = ?, permisos_json = ?, updated_at = ?';
+        sql = 'UPDATE usuarios SET usuario = ?, email = ?, password_hash = ?, rol = ?, permisos_json = ?, updated_at = ?, token_version = token_version + 1';
         params.splice(2, 0, password_hash);
       }
       sql += ' WHERE id = ?';
@@ -67,7 +67,7 @@ export function usuariosService(db: Db) {
       return db.run(`UPDATE usuarios SET last_login = ? WHERE id = ?`, [new Date().toISOString(), parseInt(String(id))]);
     },
     async resetPasswordSync(email: string, password_hash: string) {
-      return db.run(`UPDATE usuarios SET password_hash = ?, updated_at = ? WHERE email = ?`, [password_hash, new Date().toISOString(), email]);
+      return db.run(`UPDATE usuarios SET password_hash = ?, updated_at = ?, token_version = token_version + 1 WHERE email = ?`, [password_hash, new Date().toISOString(), email]);
     },
     async saveRecoveryCode(email: string, codigo: string, expires: Date) {
       await db.run(`DELETE FROM recuperacion_claves WHERE email = ?`, [email]);

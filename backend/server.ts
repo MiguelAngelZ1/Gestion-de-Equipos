@@ -129,13 +129,17 @@ server.on("error", (error) => {
   }
 });
 
-io.use((socket, next) => {
+io.use(async (socket, next) => {
   const token = socket.handshake.auth.token || getCookieValue(socket.handshake.headers.cookie, 'token');
   if (!token) {
     return next(new Error('Autenticación requerida'));
   }
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
+    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    const row = await db.get('SELECT id, token_version FROM usuarios WHERE id = ?', [decoded.userId]);
+    if (!row || String(decoded.tv ?? 'legacy') !== String(row.token_version ?? 0)) {
+      return next(new Error('Token inválido o expirado'));
+    }
     socket.userId = decoded.userId;
     next();
   } catch (err) {
@@ -150,9 +154,18 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('network:subscribe', (data) => {
-    if (data?.redId) {
+  socket.on('network:subscribe', async (data) => {
+    try {
+      const userId = socket.userId;
+      if (!data?.redId || userId == null) return;
+      const red = await db.get('SELECT id FROM redes WHERE id = ? AND created_by = ?', [data.redId, userId]);
+      if (!red) {
+        socket.emit('network:subscribe_error', { redId: data.redId });
+        return;
+      }
       socket.join(`network:${data.redId}`);
+    } catch {
+      socket.emit('network:subscribe_error', { redId: data?.redId });
     }
   });
 

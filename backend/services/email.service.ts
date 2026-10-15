@@ -70,7 +70,7 @@ const sendRecoveryCode = async (to, code) => {
         const user = process.env.EMAIL_USER || process.env.SMTP_USER;
         const pass = process.env.EMAIL_PASS || process.env.SMTP_PASS;
         if (!user || !pass) {
-            logger.warn({ code }, "Email no configurado. Código de recuperación visible en log.");
+            logger.warn({ to, simulated: true }, "Email no configurado. Código de recuperación no enviado.");
             return { success: true, simulated: true };
         }
         await transporter.sendMail(mailOptions);

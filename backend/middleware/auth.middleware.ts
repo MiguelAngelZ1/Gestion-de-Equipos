@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 // @ts-expect-error: módulo JS sin declaraciones de tipos
 import constants from '../config/constants';
 const { ROLES_ADMIN } = constants as any;
+const db = require('../db/database');
 
 // En producción esto DEBE venir de variables de entorno. 
 // No permitimos un fallback inseguro si estamos en Railway/Producción.
@@ -22,7 +23,7 @@ if (!JWT_SECRET) {
 
 const SECRET_TO_USE = JWT_SECRET;
 
-const verificarAutenticacion = (req, res, next) => {
+const verificarAutenticacion = async (req, res, next) => {
     const authHeader = req.headers.authorization;
     const token = authHeader && authHeader.startsWith("Bearer ")
         ? authHeader.split(" ")[1]
@@ -33,7 +34,15 @@ const verificarAutenticacion = (req, res, next) => {
     }
 
     try {
-        const decodificado = jwt.verify(token, SECRET_TO_USE);
+        const decodificado = jwt.verify(token, SECRET_TO_USE) as any;
+        const row = await db.get('SELECT id, token_version FROM usuarios WHERE id = ?', [decodificado.userId]);
+        if (!row) {
+            return res.status(401).json({ error: "Token inválido o expirado." });
+        }
+        // Versión de credencial: un reset o cambio de clave invalida los JWT previos.
+        if (String(decodificado.tv ?? 'legacy') !== String(row.token_version ?? 0)) {
+            return res.status(401).json({ error: "Token inválido o expirado." });
+        }
         req.user = decodificado;
         next();
     } catch (error) {

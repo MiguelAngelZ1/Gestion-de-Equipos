@@ -81,7 +81,7 @@ class UsuariosService {
 
         if (password) {
             const password_hash = await bcrypt.hash(password, 12);
-            sql = "UPDATE usuarios SET usuario = ?, email = ?, password_hash = ?, rol = ?, permisos_json = ?, updated_at = ?";
+            sql = "UPDATE usuarios SET usuario = ?, email = ?, password_hash = ?, rol = ?, permisos_json = ?, updated_at = ?, token_version = token_version + 1";
             params.splice(2, 0, password_hash);
         }
 
@@ -101,7 +101,7 @@ class UsuariosService {
 
     async resetPasswordSync(email, password_hash) {
         return await db.run(`
-            UPDATE usuarios SET password_hash = ?, updated_at = ? 
+            UPDATE usuarios SET password_hash = ?, updated_at = ?, token_version = token_version + 1
             WHERE email = ?
         `, [password_hash, new Date().toISOString(), email]);
     }

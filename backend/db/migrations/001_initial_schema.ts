@@ -77,6 +77,7 @@ module.exports = {
         password_hash TEXT NOT NULL,
         rol TEXT DEFAULT 'USER',
         permisos_json TEXT DEFAULT '[]',
+        token_version INTEGER NOT NULL DEFAULT 0,
         last_login TIMESTAMP,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -89,6 +90,7 @@ module.exports = {
         password_hash TEXT NOT NULL,
         rol TEXT DEFAULT 'USER',
         permisos_json TEXT DEFAULT '[]',
+        token_version INTEGER NOT NULL DEFAULT 0,
         last_login DATETIME,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
