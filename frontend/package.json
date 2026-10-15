@@ -6,7 +6,6 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "postbuild": "powershell -ExecutionPolicy Bypass -Command \"$m=$env:VITE_PORTABLE_MODE; if([string]::IsNullOrEmpty($m)){$m='full'}; & ../scripts/sync-portable.ps1 -SkipBuild -SkipInstall -Mode $m\"",
     "lint": "eslint . --max-warnings 200",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",

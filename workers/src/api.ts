@@ -52,7 +52,7 @@ app.route('/api/ipam', ipam);
 app.route('/api/network', network);
 app.route('/api', exp);
 
-const LOCAL_ONLY = { error: 'Disponible solo en red local. Usa el portable en la red a monitorear.' };
+const LOCAL_ONLY = { error: 'Disponible solo en red local.' };
 
 // --- Sondeo LAN: sin equivalente físico desde la nube (ver decisión #16) ---
 app.post('/api/network/redes/:redId/scan', requireAuth, (c) => c.json(LOCAL_ONLY, 501));
