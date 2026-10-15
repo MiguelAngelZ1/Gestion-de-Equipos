@@ -129,13 +129,17 @@ server.on("error", (error) => {
   }
 });
 
-io.use((socket, next) => {
+io.use(async (socket, next) => {
   const token = socket.handshake.auth.token || getCookieValue(socket.handshake.headers.cookie, 'token');
   if (!token) {
     return next(new Error('Autenticación requerida'));
   }
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
+    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    const row = await db.get('SELECT id, token_version FROM usuarios WHERE id = ?', [decoded.userId]);
+    if (!row || String(decoded.tv ?? 'legacy') !== String(row.token_version ?? 0)) {
+      return next(new Error('Token inválido o expirado'));
+    }
     socket.userId = decoded.userId;
     next();
   } catch (err) {

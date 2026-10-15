@@ -34,7 +34,14 @@ export async function requireAuth(c: Context<{ Bindings: Env; Variables: { db: D
   const token = auth?.startsWith('Bearer ') ? auth.slice(7) : getCookie(c, 'token');
   if (!token) return c.json({ error: 'No autorizado. Inicie sesión.' }, 401);
   try {
-    c.set('user', await verifyJwt(token, secret(c)));
+    const payload = await verifyJwt(token, secret(c)) as any;
+    const row = await c.get('db').get('SELECT id, token_version FROM usuarios WHERE id = ?', [payload.userId]);
+    if (!row) return c.json({ error: 'Token inválido o expirado.' }, 401);
+    // Versión de credencial: un reset o cambio de clave invalida los JWT previos.
+    if (String(payload.tv ?? 'legacy') !== String(row.token_version ?? 0)) {
+      return c.json({ error: 'Token inválido o expirado.' }, 401);
+    }
+    c.set('user', payload);
     await next();
   } catch {
     return c.json({ error: 'Token inválido o expirado.' }, 401);

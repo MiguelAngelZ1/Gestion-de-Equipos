@@ -36,7 +36,7 @@ auth.post('/login', limiters.auth, validateBody(loginSchema), async (c) => {
   const user = await svc.findByUsuarioOrEmail(usuario);
   const match = await bcrypt.compare(password, user?.password_hash || DUMMY_HASH);
   if (!user || !match) return c.json({ error: 'Credenciales incorrectas' }, 401);
-  const token = await signJwt({ userId: user.id, rol: user.rol, usuario: user.usuario, permisos: permsOf(user) }, c.env.JWT_SECRET);
+  const token = await signJwt({ userId: user.id, rol: user.rol, usuario: user.usuario, permisos: permsOf(user), tv: user.token_version ?? 0 }, c.env.JWT_SECRET);
   const refreshToken = randomHex(32);
   const refreshExpires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
   await refreshTokenService(c.get('db')).saveRefreshToken(user.id, refreshToken, refreshExpires);
@@ -124,7 +124,7 @@ auth.post('/refresh', limiters.auth, async (c) => {
     await svc.revokeRefreshToken(token);
     const user = await usuariosService(c.get('db')).getUsuarioById(stored.user_id);
     if (!user) return c.json({ error: 'Usuario no encontrado' }, 401);
-    const newToken = await signJwt({ userId: user.id, rol: user.rol, usuario: user.usuario, permisos: permsOf(user) }, c.env.JWT_SECRET);
+    const newToken = await signJwt({ userId: user.id, rol: user.rol, usuario: user.usuario, permisos: permsOf(user), tv: user.token_version ?? 0 }, c.env.JWT_SECRET);
     const newRefreshToken = randomHex(32);
     await svc.saveRefreshToken(user.id, newRefreshToken, new Date(Date.now() + 7 * 24 * 60 * 60 * 1000));
     setCookie(c, 'token', newToken, tokenCookie);
