@@ -86,6 +86,8 @@ auth.post('/reset-password', limiters.reset, validateBody(resetPasswordSchema), 
   if (!stored || new Date() > new Date(stored.expires)) return c.json({ error: 'Código inválido o expirado.' }, 400);
   if (!timingSafeEqualStr(stored.codigo, await sha256hex(code))) return c.json({ error: 'Código inválido o expirado.' }, 400);
   await svc.resetPasswordSync(email, await bcrypt.hash(newPassword, 12));
+  const account = await svc.findByEmail(email);
+  if (account) await refreshTokenService(c.get('db')).revokeAllUserTokens(account.id);
   await svc.deleteRecoveryCode(email);
   return c.json({ success: true, message: 'Contraseña actualizada correctamente.' });
 });

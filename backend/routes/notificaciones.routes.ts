@@ -102,7 +102,7 @@ router.patch('/:id/read', verificarAutenticacion, async (req, res, next) => {
         if (isNaN(alertId)) {
             return res.status(400).json({ error: "ID de notificación no válido" });
         }
-        await notificationService.markAsRead(alertId);
+        await notificationService.markAsRead(alertId, req.user?.userId ?? req.user?.id);
         res.json({ success: true });
     } catch (error) {
         next(error);

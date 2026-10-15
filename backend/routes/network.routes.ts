@@ -135,6 +135,14 @@ router.post(
       if (!dispositivoId || !equipoId) {
         return res.status(400).json({ error: 'dispositivoId y equipoId son obligatorios.' });
       }
+      const userId = req.user?.userId ?? req.user?.id;
+      const owned = await db.get(
+        'SELECT d.id FROM dispositivos_red d JOIN redes r ON d.red_id = r.id WHERE d.id = ? AND r.created_by = ?',
+        [dispositivoId, userId]
+      );
+      if (!owned) {
+        return res.status(404).json({ error: 'La red especificada no existe o no te pertenece.' });
+      }
 
       await ReconciliationService.linkToEquipo(dispositivoId, equipoId);
       res.json({ success: true, message: 'Dispositivo vinculado al inventario correctamente.' });

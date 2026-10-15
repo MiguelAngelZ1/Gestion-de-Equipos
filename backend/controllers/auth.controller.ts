@@ -110,6 +110,8 @@ const resetPassword = async (req, res, next) => {
 
         const password_hash = await bcrypt.hash(newPassword, 12);
         await usuariosService.resetPasswordSync(email, password_hash);
+        const account = await usuariosService.findByEmail(email);
+        if (account) await refreshTokenService.revokeAllUserTokens(account.id);
         await usuariosService.deleteRecoveryCode(email);
 
         res.json({ success: true, message: "Contraseña actualizada correctamente." });

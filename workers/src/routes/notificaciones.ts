@@ -59,7 +59,8 @@ r.patch('/all/read', async (c) => {
 r.patch('/:id/read', async (c) => {
   const alertId = parseInt(c.req.param('id'));
   if (isNaN(alertId)) return c.json({ error: 'ID de notificación no válido' }, 400);
-  await notificationService(c.get('db')).markAsRead(alertId);
+  const userId = c.get('user')?.userId ?? c.get('user')?.id;
+  await notificationService(c.get('db')).markAsRead(alertId, userId);
   return c.json({ success: true });
 });
 

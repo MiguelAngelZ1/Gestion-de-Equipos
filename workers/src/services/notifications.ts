@@ -38,8 +38,8 @@ export function notificationService(db: Db) {
       return result?.total || 0;
     },
 
-    async markAsRead(alertId: unknown) {
-      return db.run(`UPDATE alertas_notificaciones SET leido = 1 WHERE id = ?`, [parseInt(String(alertId))]);
+    async markAsRead(alertId: unknown, userId: unknown) {
+      return db.run(`UPDATE alertas_notificaciones SET leido = 1 WHERE id = ? AND usuario_id = ?`, [parseInt(String(alertId)), parseInt(String(userId))]);
     },
 
     async markAllAsRead(userId: unknown) {

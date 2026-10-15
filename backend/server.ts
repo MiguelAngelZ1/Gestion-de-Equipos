@@ -150,9 +150,18 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('network:subscribe', (data) => {
-    if (data?.redId) {
+  socket.on('network:subscribe', async (data) => {
+    try {
+      const userId = socket.userId;
+      if (!data?.redId || userId == null) return;
+      const red = await db.get('SELECT id FROM redes WHERE id = ? AND created_by = ?', [data.redId, userId]);
+      if (!red) {
+        socket.emit('network:subscribe_error', { redId: data.redId });
+        return;
+      }
       socket.join(`network:${data.redId}`);
+    } catch {
+      socket.emit('network:subscribe_error', { redId: data?.redId });
     }
   });
 
