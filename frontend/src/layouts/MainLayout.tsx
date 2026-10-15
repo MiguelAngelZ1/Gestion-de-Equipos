@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
+import { NavLink, useNavigate, useLocation, useOutlet } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { removeAuthToken, apiRequest } from '../services/api';
 import logoImage from '../assets/LogoIMP.webp';
 import { notificationManager } from '../services/notificationManager';
@@ -9,6 +10,7 @@ import { ROLES } from '../config/constants';
 export default function MainLayout() {
   const navigate = useNavigate();
   const location = useLocation();
+  const outlet = useOutlet();
   const user = JSON.parse(localStorage.getItem("equipos_user_data") || "{}");
   const role = (user.rol || ROLES.USER).toUpperCase();
 
@@ -58,7 +60,6 @@ export default function MainLayout() {
 
   return (
     <div className="min-h-dvh bg-black text-[#e4e2e4] flex flex-col md:flex-row" style={{ fontFamily: 'Hanken Grotesk, sans-serif' }}>
-      <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
 
       <header className="md:hidden fixed top-0 inset-x-0 z-50 h-14 flex items-center justify-between px-4 bg-[#1b1b1d] border-b border-white/5">
         <div className="flex items-center gap-2.5">
@@ -114,9 +115,18 @@ export default function MainLayout() {
         </div>
 
         <main className="flex-1 min-h-0 px-4 md:px-8 pb-20 md:pb-8 w-full max-w-[1440px] mx-auto flex flex-col md:overflow-hidden">
-          <div className="flex-1 min-h-0 flex flex-col md:overflow-hidden">
-            <Outlet />
-          </div>
+          <AnimatePresence mode="popLayout" initial={false}>
+            <motion.div
+              key={location.pathname}
+              initial={{ opacity: 0, x: 28 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -28 }}
+              transition={{ duration: 0.16, ease: [0.22, 1, 0.36, 1] }}
+              className="flex-1 min-h-0 flex flex-col md:overflow-hidden"
+            >
+              {outlet}
+            </motion.div>
+          </AnimatePresence>
         </main>
       </div>
 
