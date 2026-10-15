@@ -93,7 +93,9 @@ export default function Dashboard() {
           </div>
           <div className="md:flex-1 md:overflow-y-auto p-2 md:custom-scrollbar min-h-0">
             {loading ? (
-              <div className="p-8 grid place-items-center"><div className="w-6 h-6 rounded-full border-2 border-white/10 border-t-[#b8c3ff] animate-spin" /></div>
+              <div className="p-4 md:p-6 space-y-3">
+                {[1, 2, 3].map(i => <div key={i} className="h-20 rounded-xl bg-white/5 border border-white/5 animate-pulse" />)}
+              </div>
             ) : critical.length === 0 && lowStock.length === 0 ? (
               <div className="p-4 md:p-8 text-center">
                 <p className="font-geist text-sm text-[#c4c5d9]">Sin alertas — todo operativo</p>
@@ -143,7 +145,9 @@ export default function Dashboard() {
           </div>
           <div className="md:flex-1 md:min-h-0 rounded-xl border border-white/5 bg-[#131315] p-3 md:p-6 flex flex-col md:overflow-hidden">
             {loading ? (
-              <div className="flex-1 grid place-items-center"><div className="w-6 h-6 rounded-full border-2 border-white/10 border-t-[#b8c3ff] animate-spin" /></div>
+              <div className="flex-1 flex flex-col gap-3 md:gap-4 p-1">
+                {[1, 2, 3, 4].map(i => <div key={i} className="h-12 rounded-xl bg-white/5 border border-white/5 animate-pulse" />)}
+              </div>
             ) : chartData.length === 0 ? (
               <p className="font-geist text-sm text-[#c4c5d9] text-center py-12">Sin datos de ubicaciones</p>
             ) : (
