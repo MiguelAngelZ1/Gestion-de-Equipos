@@ -6,7 +6,6 @@ export default function NotFound() {
   const { isAuthenticated } = useAuth();
   return (
     <div className="min-h-screen bg-black flex flex-col items-center justify-center px-6 py-8 relative overflow-hidden" style={{ fontFamily: 'Hanken Grotesk, sans-serif' }}>
-      <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute -top-32 -left-32 w-[520px] h-[520px] rounded-full bg-[#2e5bff]/10 blur-[80px]" />
         <div className="absolute -bottom-32 -right-32 w-[520px] h-[520px] rounded-full bg-cyan-500/5 blur-[80px]" />

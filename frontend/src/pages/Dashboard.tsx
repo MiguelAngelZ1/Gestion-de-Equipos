@@ -48,8 +48,6 @@ export default function Dashboard() {
 
   return (
     <div className="w-full max-w-full flex flex-col flex-1 min-h-0 md:overflow-hidden gap-2.5 md:gap-6">
-      <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Hanken+Grotesk:wght@100..900&display=swap" rel="stylesheet" />
-      <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
 
       <div className="grid grid-cols-2 md:grid-cols-12 gap-2 md:gap-6 shrink-0 w-full auto-rows-min">
         <div className="col-span-1 md:col-span-3 card-glass p-2.5 md:p-4 rounded-xl flex flex-col items-center justify-center text-center gap-1 md:gap-2 md:py-5">

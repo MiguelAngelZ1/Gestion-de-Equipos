@@ -58,7 +58,6 @@ export default function MainLayout() {
 
   return (
     <div className="min-h-dvh bg-black text-[#e4e2e4] flex flex-col md:flex-row" style={{ fontFamily: 'Hanken Grotesk, sans-serif' }}>
-      <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
 
       <header className="md:hidden fixed top-0 inset-x-0 z-50 h-14 flex items-center justify-between px-4 bg-[#1b1b1d] border-b border-white/5">
         <div className="flex items-center gap-2.5">
